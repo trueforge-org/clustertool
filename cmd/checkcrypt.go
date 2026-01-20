@@ -20,7 +20,7 @@ var checkcrypt = &cobra.Command{
 	Use:     "checkcrypt",
 	Short:   "Checks if all files are encrypted correctly in accordance with .sops.yaml",
 	Aliases: []string{"checkencrypt"},
-	Example: "clustertool checkcrypt",
+	Example: "forgetool checkcrypt",
 	Long:    checkcyptLongHelp,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := sops.CheckFilesAndReportEncryption(false, false); err != nil {

@@ -9,7 +9,7 @@ import (
 )
 
 var decryptLongHelp = strings.TrimSpace(`
-The decryption feature of ClusterTool goes over all config files and, if encrypted, checks if ".sops.yaml" specifies that they should be decrypted.
+The decryption feature of ForgeTool goes over all config files and, if encrypted, checks if ".sops.yaml" specifies that they should be decrypted.
 If so, they are decrypted using your "age.agekey" file as specified in ".sops.yaml".
 
 `)
@@ -17,7 +17,7 @@ If so, they are decrypted using your "age.agekey" file as specified in ".sops.ya
 var decrypt = &cobra.Command{
 	Use:     "decrypt",
 	Short:   "Decrypt all high-risk data using sops",
-	Example: "clustertool decrypt",
+	Example: "forgetool decrypt",
 	Long:    decryptLongHelp,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := sops.DecryptFiles(); err != nil {

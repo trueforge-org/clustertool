@@ -18,7 +18,7 @@ var fluxBootstrapLongHelp = strings.TrimSpace(`
 var fluxbootstrap = &cobra.Command{
 	Use:     "bootstrap",
 	Short:   "Manually bootstrap fluxcd on existing cluster",
-	Example: "clustertool flux bootstrap",
+	Example: "forgetool flux bootstrap",
 	Long:    fluxBootstrapLongHelp,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()

@@ -48,7 +48,7 @@ var apply = &cobra.Command{
 	Use:     "apply",
 	Short:   "apply",
 	Aliases: []string{"apply-config"},
-	Example: "clustertool apply <NodeIP>",
+	Example: "forgetool apply <NodeIP>",
 	Long:    applyLongHelp,
 	Run: func(cmd *cobra.Command, args []string) {
 		var extraArgs []string

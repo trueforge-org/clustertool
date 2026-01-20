@@ -18,9 +18,9 @@ It also ensures the same configmap is always added by updating the patches.
 
 var genConfig = &cobra.Command{
 	Use:     "genconfig",
-	Short:   "generate Configuration files",
+	Short:   "generate Cluster Configuration files",
 	Long:    genConfigLongHelp,
-	Example: "clustertool genconfig",
+	Example: "forgetool cluster genconfig",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		gencmd.GenConfig(args)
@@ -28,5 +28,5 @@ var genConfig = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(genConfig)
+	clusterCmd.AddCommand(genConfig)
 }

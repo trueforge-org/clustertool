@@ -16,7 +16,7 @@ var hrInstalLongHelp = strings.TrimSpace(`
 var hrinstall = &cobra.Command{
 	Use:     "install",
 	Short:   "install a helm-release file without flux, helm-release file needs to be called helm-release.yaml",
-	Example: "clustertool helmrelease install",
+	Example: "forgetool helmrelease install",
 	Long:    hrInstalLongHelp,
 	Run: func(cmd *cobra.Command, args []string) {
 		initfiles.LoadTalEnv(false)

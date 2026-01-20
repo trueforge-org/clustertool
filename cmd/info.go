@@ -24,7 +24,7 @@ var infoCmd = &cobra.Command{
 	Use:     "info",
 	Short:   "Prints information about the clustertool binary",
 	Long:    infoLongHelp,
-	Example: "clustertool info",
+	Example: "forgetool info",
 	Run: func(cmd *cobra.Command, args []string) {
 		info.NewInfo().Print()
 	},

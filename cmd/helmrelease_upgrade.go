@@ -17,7 +17,7 @@ var hrupgrade = &cobra.Command{
 	Use:     "upgrade",
 	Short:   "run helm-upgrade using a helm-release file without flux",
 	Aliases: []string{"update", "edit"},
-	Example: "clustertool helmrelease upgrade",
+	Example: "forgetool helmrelease upgrade",
 	Long:    hrUpgradeLongHelp,
 	Run: func(cmd *cobra.Command, args []string) {
 		initfiles.LoadTalEnv(false)

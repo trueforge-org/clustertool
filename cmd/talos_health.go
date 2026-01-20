@@ -19,7 +19,7 @@ var advHealthLongHelp = strings.TrimSpace(`
 var health = &cobra.Command{
 	Use:     "health",
 	Short:   "Check Talos Cluster Health",
-	Example: "clustertool talos health",
+	Example: "forgetool talos health",
 	Long:    advHealthLongHelp,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := sops.DecryptFiles(); err != nil {

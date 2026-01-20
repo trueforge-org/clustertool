@@ -1,4 +1,4 @@
-## The Following are required by ClusterTool and CANNOT be removed
+## The Following are required by ForgeTool and CANNOT be removed
 # Ensure VIP is different from all master IPs
 VIP: 192.168.20.200
 ## Defines the MasterNode IP

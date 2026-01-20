@@ -17,7 +17,7 @@ var depsCmd = &cobra.Command{
 	Use:     "deps",
 	Short:   "Download, Update and Verify Helm dependencies",
 	Long:    chartsDepsLongHelp,
-	Example: "clustertool charts deps <chart> <chart> <chart>",
+	Example: "forgetool charts deps <chart> <chart> <chart>",
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := deps.LoadGPGKey(); err != nil {
 			log.Fatal().Err(err).Msg("failed to load gpg key")

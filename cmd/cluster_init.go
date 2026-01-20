@@ -9,7 +9,7 @@ import (
 )
 
 var initLongHelp = strings.TrimSpace(`
-ClusterTool requires a specific directory layout to ensure smooth operators and standardised environments.
+ForgeTool requires a specific directory layout to ensure smooth operators and standardised environments.
 
 To ensure smooth deployment, the init function can pre-generate all required files in the right places.
 Afterwards, you can edit talconfig.yaml and clusterenv.yaml to reflect your personal settings.
@@ -19,9 +19,9 @@ When done, please run clustertool genconfig to generate all configurations based
 
 var initFiles = &cobra.Command{
 	Use:     "init",
-	Short:   "generate Basic ClusterTool file-and-folder structure in current folder",
+	Short:   "generate Basic cluster file-and-folder structure in current folder",
 	Long:    initLongHelp,
-	Example: "clustertool init",
+	Example: "forgetool cluster init",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		sops.DecryptFiles()
@@ -31,5 +31,5 @@ var initFiles = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(initFiles)
+	clusterCmd.AddCommand(initFiles)
 }

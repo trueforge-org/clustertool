@@ -19,7 +19,7 @@ var chartsGenMetaLongHelp = strings.TrimSpace(`
 var genMetaCmd = &cobra.Command{
 	Use:     "genmeta",
 	Short:   "Generate and update Chart.yaml metadata",
-	Example: "clustertool charts genmeta",
+	Example: "forgetool charts genmeta",
 	Long:    chartsGenMetaLongHelp,
 	Run: func(cmd *cobra.Command, args []string) {
 		bump := ""

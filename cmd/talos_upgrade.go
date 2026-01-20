@@ -23,7 +23,7 @@ On top of this, after upgrading Talos on all nodes, it also executes kubernetes-
 var upgrade = &cobra.Command{
 	Use:     "upgrade",
 	Short:   "Upgrade Talos Nodes and Kubernetes",
-	Example: "clustertool talos upgrade <NodeIP>",
+	Example: "forgetool talos upgrade <NodeIP>",
 	Long:    upgradeLongHelp,
 	Run: func(cmd *cobra.Command, args []string) {
 		var extraArgs []string
