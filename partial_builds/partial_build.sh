@@ -37,6 +37,6 @@ for i in "${!os_names[@]}"; do
         # cd clustertool
         GOOS=$os GOARCH=$arch go build -o $output ./partial_builds/precommit/main.go
         ls -l "./embed/${os}_${arch}/" || echo "ls failed"
-        cd -
+        # cd -
     done
 done
