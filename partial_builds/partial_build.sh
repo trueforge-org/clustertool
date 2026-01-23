@@ -14,7 +14,8 @@ architectures=("amd64" "arm64")
 for i in "${!os_names[@]}"; do
     os=${os_names[i]}
     for arch in "${architectures[@]}"; do
-        mkdir -p "./clustertool/embed/${os}_${arch}"
+        # mkdir -p "./clustertool/embed/${os}_${arch}"
+        mkdir -p "./embed/${os}_${arch}"        
     done
 done
 
@@ -26,13 +27,14 @@ for i in "${!os_names[@]}"; do
 
         # Determine output file name and extension
         output="./embed/${os}_${arch}/precommit"
-        mkdir "./clustertool/embed/${os}_${arch}/" || echo "mkdir failed or not needed"
+        # mkdir "./clustertool/embed/${os}_${arch}/" || echo "mkdir failed or not needed"
+        mkdir "./embed/${os}_${arch}/" || echo "mkdir failed or not needed"
         if [ "$os" == "windows" ]; then
             output+=".exe"
         fi
 
         # Build the binary
-        cd clustertool
+        # cd clustertool
         GOOS=$os GOARCH=$arch go build -o $output ./partial_builds/precommit/main.go
         ls -l "./embed/${os}_${arch}/" || echo "ls failed"
         cd -
