@@ -1,0 +1,29 @@
+name: forgetool-go-release
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  goreleaser:
+    runs-on:
+      group: default
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+        with:
+          go-version: stable
+          cache: true
+          cache-dependency-path: |
+            **/go.mod
+            **/go.sum
+      - uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6
+        with:
+          args: release --clean
+          distribution: goreleaser # or 'goreleaser-pro'
+          version: "~> v2" # or 'latest', 'nightly', semver
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
