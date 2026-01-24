@@ -36,10 +36,18 @@ jobs:
         run:  |
           go mod tidy
 
-      
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
         with:
-          create_branch: true
-          commit_message: "chore(go): go mod tidy"
           branch: chore/go-mod-tidy
+          delete-branch: true
+          commit-message: "chore(go): go mod tidy"
+          title: "chore(go): go mod tidy"
+          body: |
+            Automated `go mod tidy` run.
+
+            - Triggered by: `${{ github.event_name }}`
+            - Workflow: `${{ github.workflow }}`
+          labels: |
+            chore
+            go
