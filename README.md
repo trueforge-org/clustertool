@@ -2,8 +2,8 @@
   <img align="center" width="100" height="100" src="docs/docs/img/logo.svg">
   <h3 align="center">forgetool</h3>
 
-  [![GitHub release (release name instead of tag name)](https://img.shields.io/github/v/release/forgetool?include_prereleases)](https://github.com/trueforge-org/forgetool/releases)
-  [![GitHub issues](https://img.shields.io/github/issues/forgetool)](https://github.com/trueforge-org/forgetool/issues)
+  [![GitHub release (release name instead of tag name)](https://img.shields.io/github/v/release/trueforge-org/forgetool?include_prereleases)](https://github.com/trueforge-org/forgetool/releases)
+  [![GitHub issues](https://img.shields.io/github/issues/trueforge-org/forgetool)](https://github.com/trueforge-org/forgetool/issues)
 
   <p align="center">
     A helper tool to help building <a href="https://truecharts.org">TrueCharts</a> helm charts
