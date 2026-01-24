@@ -32,15 +32,15 @@ changelog:
       - "^test"
     include:
       - "forgetool"
-      - "forgetool"
-      - "forgetool"
+      - "Forgetool"
+      - "ForgeTool"
 release:
   name_template: "{{.ProjectName}}-{{.Tag}}"
   github:
     owner: trueforge-org
-    name: truecharts
+    name: forgetool
   extra_files:
-    - glob: "forgetool/forgetool.LICENSE"
+    - glob: "forgetool.LICENSE"
   draft: false
   make_latest: false
   mode: append

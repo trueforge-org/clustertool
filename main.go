@@ -66,7 +66,7 @@ func main() {
 	k8slog.SetLogger(logger)
 
 	fmt.Printf("\n%s\n", helper.Logo)
-	fmt.Printf("---\nClustertool Version: %s\n---\n", Version)
+	fmt.Printf("---\nForgetool Version: %s\n---\n", Version)
 
 	embed.AllToCache()
 
