@@ -20,9 +20,5 @@ ssh-public-key.txt
 *.DS_Store
 !/embed/**
 .DS_Store
-embeded/linux*
-embeded/darwin*
-embeded/windows*
-embeded/freebsd*
 .devcontainer
 .envrc
