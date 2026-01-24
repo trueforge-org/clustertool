@@ -7,5 +7,5 @@ import (
 	"embed"
 )
 
-//go:embed linux_amd64
+//go:embed linux_amd64/*
 var StaticFiles embed.FS
