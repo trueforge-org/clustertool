@@ -40,10 +40,10 @@ for combo in "${combinations[@]}"; do
 
     # Construct the download URL and target directory
     download_url="${base_url}/${file_name}"
-    target_dir="./clustertool/embed/${os}_${arch}"
+    target_dir="./embed/${os}_${arch}"
 
     # Create target directory if it doesn't exist
-    mkdir -p "./clustertool/embed/windows_arm64"
+    mkdir -p "./embed/windows_arm64"
     mkdir -p "${target_dir}"
 
     # Download the file

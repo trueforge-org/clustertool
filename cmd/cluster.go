@@ -14,7 +14,7 @@ These are all commands that can be used to maintain cluster OS
 var clusterCmd = &cobra.Command{
 	Use:           "cluster",
 	Short:         "Commands for handling cluster management",
-	Example:       "clustertool cluster init",
+	Example:       "forgetool cluster init",
 	Long:          clusterLongHelp,
 	SilenceUsage:  true,
 	SilenceErrors: true,

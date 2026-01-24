@@ -14,7 +14,7 @@ ForgeTool requires a specific directory layout to ensure smooth operators and st
 To ensure smooth deployment, the init function can pre-generate all required files in the right places.
 Afterwards, you can edit talconfig.yaml and clusterenv.yaml to reflect your personal settings.
 
-When done, please run clustertool genconfig to generate all configurations based on your personal settings.
+When done, please run forgetool cluster genconfig to generate all configurations based on your personal settings.
 `)
 
 var initFiles = &cobra.Command{

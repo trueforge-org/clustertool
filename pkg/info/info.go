@@ -46,7 +46,7 @@ func NewInfo() *Data {
 
 func (d *Data) Print() {
     log.Info().Msgf(`
-clustertool is a tool for managing TrueCharts charts.
+forgetool is a tool for managing TrueCharts charts.
 
 Go
     Version: %s

@@ -86,8 +86,8 @@ func IsFileIgnored(file string) (bool, error) {
         return true, nil // Return true if the file is ignored as-is
     }
 
-    // Check if the file is ignored with "clustertool/" prefix
-    prefixedFile := "clustertool/" + file
+    // Check if the file is ignored with "forgetool/" prefix
+    prefixedFile := "forgetool/" + file
     ignored, err = checkIgnore(prefixedFile)
     if err != nil {
         return false, err // Return error if checking fails
@@ -109,8 +109,8 @@ func checkIgnore(file string) (bool, error) {
         if isPathIgnored(file, []string{
             "repositories",
             "clusters",
-            "clustertool/repositories",
-            "clustertool/clusters",
+            "forgetool/repositories",
+            "forgetool/clusters",
         }) {
             return true, nil // Skip ignoring check
         }
@@ -145,7 +145,7 @@ func isPathIgnored(file string, prefixes []string) bool {
 }
 
 // IsFileFullyStaged checks if a file is fully staged (no pending unstaged changes)
-// for both the unprefixed path and the path prefixed with /clustertool.
+// for both the unprefixed path and the path prefixed with /forgetool.
 // It ignores files that are listed in .gitignore.
 func IsFileFullyStaged(filePath string) (bool, error) {
     // Get the Git root directory
@@ -158,15 +158,15 @@ func IsFileFullyStaged(filePath string) (bool, error) {
     }
     gitRoot := strings.TrimSpace(out.String())
 
-    // Check if the clustertool directory exists in the Git root
-    clustertoolPath := filepath.Join(gitRoot, "clustertool")
-    _, err = exec.Command("test", "-d", clustertoolPath).Output()
-    clustertoolExists := (err == nil)
+    // Check if the forgetool directory exists in the Git root
+    forgetoolPath := filepath.Join(gitRoot, "forgetool")
+    _, err = exec.Command("test", "-d", forgetoolPath).Output()
+    forgetoolExists := (err == nil)
 
     // Create a slice of file paths to check
     filePaths := []string{filePath}
-    if clustertoolExists {
-        filePaths = append(filePaths, "clustertool/"+filePath)
+    if forgetoolExists {
+        filePaths = append(filePaths, "forgetool/"+filePath)
     }
 
     // Check if the files are ignored

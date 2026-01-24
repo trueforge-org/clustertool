@@ -12,7 +12,7 @@ import (
 var thisversion string
 
 var RootCmd = &cobra.Command{
-	Use:           "clustertool",
+	Use:           "forgetool",
 	Short:         "A tool to help with creating Talos cluster",
 	Long:          infoLongHelp,
 	SilenceUsage:  true,
