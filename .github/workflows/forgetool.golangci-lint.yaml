@@ -1,0 +1,42 @@
+name: forgetool-go-lint
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'main.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'cmd/**'
+      - 'embed/**'
+      - 'pkg/**'
+      - 'partial_builds/**'
+      - 'pkg/**'
+      - ".github/workflows/forgetool.test.yaml"
+permissions:
+  contents: read
+jobs:
+  golangci:
+    name: lint
+    runs-on:
+      group: default
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Setup Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+        with:
+          go-version: stable
+          cache: false
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9
+        with:
+          version: latest
+          working-directory: clustertool
+          args: >
+            --timeout=3m
+            --enable-only=ineffassign,unused  # As a first start, can always add more linters later
