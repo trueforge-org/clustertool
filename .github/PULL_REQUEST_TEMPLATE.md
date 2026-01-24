@@ -8,6 +8,7 @@ Please include a summary of the change and which issue is fixed. Please also inc
 
 - [ ] 🆕 New feature (e.g., bootstrap, cluster config, or automation)
 - [ ] 🐛 Bugfix (e.g., node setup, config generation)
+- [ ] 🔃 Chart Updates/Changes included with Forgetool
 - [ ] 🔃 Refactor (internal changes, no functional impact)
 - [ ] ⚠️ Breaking change (changes Talos cluster behavior)
 
