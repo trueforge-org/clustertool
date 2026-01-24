@@ -6,6 +6,7 @@ import (
     "github.com/spf13/cobra"
 )
 
+//nolint:unused
 var fluxLongHelp = strings.TrimSpace(`
 These are all commands that can be used to maintain FluxCD
 

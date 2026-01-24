@@ -488,6 +488,12 @@ func GetSecKey() (string, error) {
 func GenSopsSecret() error {
 	secretPath := filepath.Join(helper.ClusterPath, "kubernetes", "flux-system", "flux", "sopssecret.secret.yaml")
 	ageSecKey, err := GetSecKey()
+
+	// Added by Boemeltrein, for linting purposes
+	if err != nil {
+		return fmt.Errorf("failed to get age secret key: %w", err)
+	}
+
 	// Generate Kubernetes secret YAML content
 	secret := map[string]interface{}{
 		"apiVersion": "v1",

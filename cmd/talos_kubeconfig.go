@@ -11,6 +11,7 @@ import (
 	"github.com/trueforge-org/forgetool/pkg/talassist"
 )
 
+//nolint:unused
 var advKubeconfigLongHelp = strings.TrimSpace(`
 
 `)

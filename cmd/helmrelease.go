@@ -6,6 +6,7 @@ import (
     "github.com/spf13/cobra"
 )
 
+//nolint:unused
 var helmreleaseHelp = strings.TrimSpace(`
 A toolkit to load helm-release files onto a cluster without flux.
 originally created to make it easier to install/upgrade/edit flux-based clusterresources without flux
