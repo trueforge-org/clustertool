@@ -3,7 +3,7 @@ dist/
 .cr-gpg
 tgz_cache
 index_cache
-clustertool
+forgetool
 talconfig.json
 /talconfig.yaml
 /talenv.yaml

@@ -22,7 +22,7 @@ func ToolDocs(tmpDir string, outputDir string) {
         return
     }
 
-    renameClustertoolToIndex(outputDir)
+    renameForgetoolToIndex(outputDir)
 
     log.Info().Msg("File processing completed successfully")
 }
@@ -40,7 +40,7 @@ func processFiles(tmpDir string, outputDir string) error {
             continue
         }
 
-        fileName := strings.Replace(file.Name(), "clustertool_", "", 1)
+        fileName := strings.Replace(file.Name(), "forgetool_", "", 1)
         subDir, newFileName := determinePaths(fileName)
         newPath := filepath.Join(outputDir, subDir, newFileName)
 
@@ -95,10 +95,10 @@ func addYamlTitle(content []byte, isPrimaryIndex bool) []byte {
         log.Debug().Msg("Set primary index title to 'commands'")
     } else if scanner.Scan() && strings.HasPrefix(scanner.Text(), "## ") {
         title := strings.TrimPrefix(scanner.Text(), "## ")
-        if title == "clustertool" {
+        if title == "forgetool" {
             title = "command"
         }
-        title = strings.TrimPrefix(title, "clustertool ")
+        title = strings.TrimPrefix(title, "forgetool ")
         builder.WriteString(title + "\n---\n")
         builder.WriteString(scanner.Text() + "\n")
         log.Debug().Str("title", title).Msg("Set title from first line")
@@ -161,18 +161,18 @@ func moveMatchingFilesToSubdirs(outputDir string) error {
     return nil
 }
 
-// renameClustertoolToIndex renames clustertool.md to index.md in the given directory.
-func renameClustertoolToIndex(dir string) error {
-    oldPath := filepath.Join(dir, "clustertool.md")
+// renameForgetoolToIndex renames forgetool.md to index.md in the given directory.
+func renameForgetoolToIndex(dir string) error {
+    oldPath := filepath.Join(dir, "forgetool.md")
     newPath := filepath.Join(dir, "index.md")
 
-    // Check if clustertool.md exists
+    // Check if forgetool.md exists
     if _, err := os.Stat(oldPath); os.IsNotExist(err) {
-        log.Warn().Str("file", oldPath).Msg("clustertool.md does not exist")
+        log.Warn().Str("file", oldPath).Msg("forgetool.md does not exist")
         return nil // No error, just return since file doesn't exist
     }
 
-    // Rename clustertool.md to index.md
+    // Rename forgetool.md to index.md
     if err := os.Rename(oldPath, newPath); err != nil {
         return fmt.Errorf("renaming %s to %s: %w", oldPath, newPath, err)
     }

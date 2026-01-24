@@ -8,21 +8,21 @@ import (
 )
 
 var infoLongHelp = strings.TrimSpace(`
-clustertool is a tool to help you easily deploy and maintain a Talos Kubernetes Cluster.
+Forgetool is a tool to help you easily deploy and maintain a Talos Kubernetes Cluster.
 
 
 Workflow:
   Create talconfig.yaml file defining your nodes information like so:
 
  Available commands
-  > clustertool init
-  > clustertool genconfig
+  > forgetool cluster init
+  > forgetool cluster genconfig
 
 `)
 
 var infoCmd = &cobra.Command{
 	Use:     "info",
-	Short:   "Prints information about the clustertool binary",
+	Short:   "Prints information about the forgetool binary",
 	Long:    infoLongHelp,
 	Example: "forgetool info",
 	Run: func(cmd *cobra.Command, args []string) {

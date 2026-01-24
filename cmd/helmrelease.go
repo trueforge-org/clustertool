@@ -14,7 +14,7 @@ originally created to make it easier to install/upgrade/edit flux-based clusterr
 var helmrelease = &cobra.Command{
     Use:           "helmrelease",
     Short:         "A toolkit to load helm-release files onto a cluster without flux",
-    Example:       "clustertool helmrelease <install/upgrade>",
+    Example:       "forgetool helmrelease <install/upgrade>",
     Long:          advLongHelp,
     SilenceUsage:  true,
     SilenceErrors: true,

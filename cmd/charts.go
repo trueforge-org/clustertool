@@ -8,7 +8,7 @@ import (
 
 var chartsLongHelp = strings.TrimSpace(`
 charttool was a tool to help you build TrueCharts Charts.
-It has since been merged into Clustertool as "clustertool charts"
+It has since been merged into Forgetool as "forgetool charts"
 
  Example commands
   > charttool bump 1.2.3 patch
