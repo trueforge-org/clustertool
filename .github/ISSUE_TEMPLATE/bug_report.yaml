@@ -1,0 +1,54 @@
+name: 🐛 Bug Report
+description: Report a bug or issue in Forgetool (e.g., cluster bootstrap failure, config issue)
+title: "[BUG] "
+labels: bug
+assignees: []
+
+body:
+  - type: input
+    id: description
+    attributes:
+      label: Description
+      placeholder: Describe the bug and its impact
+    validations:
+      required: true
+  - type: input
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How to reproduce the issue (commands, configs, Talos version)
+      placeholder: Forgetool commands and cluster setup steps
+    validations:
+      required: true
+  - type: input
+    id: expected
+    attributes:
+      label: Expected Behavior
+      placeholder: What you expected to happen
+    validations:
+      required: true
+  - type: input
+    id: actual
+    attributes:
+      label: Actual Behavior
+      placeholder: What actually happened
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Local machine
+        - CI/CD
+        - Cloud provider
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: I've read and agree with the following
+      options:
+        - label: I've checked all open and closed issues and my issue is not there.
+          required: true
