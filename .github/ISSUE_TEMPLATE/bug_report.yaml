@@ -39,7 +39,8 @@ body:
     attributes:
       label: Environment
       options:
-        - Local machine
+        - Linux
+        - Windows
         - CI/CD
         - Cloud provider
         - Other
