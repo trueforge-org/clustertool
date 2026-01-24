@@ -1,0 +1,45 @@
+name: "Chore: Go mod tidy"
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  go-mod-tidy:
+    runs-on: ubuntu-latest
+    name: "Chore: Go mod tidy"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        ## DISABLED by Boemeltrein 
+        # with:
+        #   token: ${{ secrets.OR_PAT }}
+        #   fetch-depth: 1
+
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+        with:
+          go-version: stable
+          cache: true
+          cache-dependency-path: |
+            **/go.mod
+            **/go.sum
+
+      - name: Ensure Go Mod Tidy
+        run:  |
+          go mod tidy
+
+      
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
+        with:
+          create_branch: true
+          commit_message: "chore(go): go mod tidy"
+          branch: chore/go-mod-tidy
