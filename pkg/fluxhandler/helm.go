@@ -101,7 +101,7 @@ func HelmPull(repo string, name string, version string, dest string, silent bool
 		link = name
 		repoName := cleanRepoURL(repo)
 		updateHelmRepo(repoName, repo, silent)
-		repo = repoName
+		// repo = repoName  (Commented out by Boemeltrein, seems unused, changed for linting purposes)
 	} else {
 		link = repo + "/" + name
 		client.RepoURL = ""

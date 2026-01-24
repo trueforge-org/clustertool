@@ -89,6 +89,12 @@ func RunBootstrap(args []string) {
 	helmRepoPath := filepath.Join("./repositories", "helm")
 	HelmRepos, err = fluxhandler.LoadAllHelmRepos(helmRepoPath)
 
+	// Added by Boemeltrein, for linting purposes
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to load Helm repositories")
+		return
+	}
+
 	// Call ApprovePendingCertificates with clientset and stopCh
 	go kubectlcmds.ApprovePendingCertificates(clientset, stopCh)
 

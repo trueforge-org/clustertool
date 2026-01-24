@@ -15,6 +15,7 @@ func ExecCmd(cmd string) {
 	log.Trace().Msgf("command", argslice[:])
 
 	// log.Info().Msg("test", strings.Join(argslice, " "))
+	//nolint:ineffassign
 	out, err := helper.RunCommand(argslice, false)
 	if err != nil {
 		log.Info().Msgf("err:  %v", err)
