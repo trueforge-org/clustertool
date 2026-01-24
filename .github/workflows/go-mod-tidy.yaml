@@ -40,5 +40,6 @@ jobs:
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
         with:
+          create_branch: true
           commit_message: "chore(go): go mod tidy"
           branch: chore/go-mod-tidy
