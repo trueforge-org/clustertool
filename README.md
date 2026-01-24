@@ -1,6 +1,6 @@
 <div align="center">
   <img align="center" width="100" height="100" src="https://github.com/trueforge-org/website/blob/main/public/svg/logo.svg">
-  <h3 align="center">forgetool</h3>
+  <h3 align="center">Forgetool</h3>
 
   [![GitHub release (release name instead of tag name)](https://img.shields.io/github/v/release/trueforge-org/forgetool?include_prereleases)](https://github.com/trueforge-org/forgetool/releases)
   [![GitHub issues](https://img.shields.io/github/issues/trueforge-org/forgetool)](https://github.com/trueforge-org/forgetool/issues)
