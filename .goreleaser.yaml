@@ -2,7 +2,7 @@ version: 2
 project_name: forgetool
 builds:
   - id: forgetool
-    dir: forgetool
+    main: .
     env:
       - CGO_ENABLED=0
     goos:
