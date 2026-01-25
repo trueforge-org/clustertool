@@ -1,14 +1,8 @@
 {
     "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
-    "name": "ForgeTool Cluster",
-    "image": "oci.trueforge.org/tccr/devcontainer:v2.0.0@sha256:d8a12070a88e36cf1eb5b14fbeb1d5c866a1e5f8b52cc9e5989fb7f53c154b2b",
-    "postCreateCommand": {
-      "setup": "bash ${containerWorkspaceFolder}/.devcontainer/postCreateCommand.sh"
-    },
+    "name": "ForgeTool",
+    "image": "oci.trueforge.org/containerforge/devcontainer:2.0.6@sha256:b8f8a95a0edf58aaab4076fa477bd8e3c6efcb68fb41cb4c37da05e618ff0320",
     "postStartCommand": {
       "git": "git config --global --add safe.directory ${containerWorkspaceFolder}"
-    },
-    "postAttachCommand": "fish",
-    "updateRemoteUserUID": false,
-    "runArgs": ["--privileged"]
+    }
   }
