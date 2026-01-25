@@ -20,5 +20,4 @@ ssh-public-key.txt
 *.DS_Store
 !/embed/**
 .DS_Store
-.devcontainer
 .envrc
