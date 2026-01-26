@@ -1,8 +1,11 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    'config:recommended',
     'github>trueforge-org/renovate-config',
-    'github>trueforge-org/renovate-config:autoMergeLabels.json5',
+    'github>trueforge-org/renovate-config:autoMergeLabels.json5'
+  ],
+  ignorePaths: [
+    'porting/**',
+    '*.mise.toml*',
   ],
 }
