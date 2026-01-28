@@ -3,28 +3,7 @@ on:
   workflow_dispatch:
   workflow_call:
   push:
-    branches:
-      - main
-    tags:
-      - "*"
-    paths:
-      - 'main.go'
-      - 'go.mod'
-      - 'go.sum'
-      - 'pkg/**'
-      - 'cmd/**'
-      - ".github/workflows/forgetool.test.yaml"
-  #pull_request:
-  #  branches:
-  #    - main
-  #  paths:
-  #    - 'main.go'
-  #    - 'go.mod'
-  #    - 'go.sum'
-  #    - 'pkg/**'
-  #    - 'cmd/**'
-  #    - 'clustertool/**'
-  #    - ".github/workflows/clsutertool.test.yaml"
+  pull_request:
 permissions:
   contents: read
 jobs:
