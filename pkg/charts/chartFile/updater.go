@@ -129,7 +129,7 @@ func GetTrain(chartPath string, chart *HelmChart) string {
 	train := detectTrainFromFile(chartPath)
 	if train == "" {
 		// If the train cannot be detected from the path, fallback to detect it from the annotations
-		if val, exists := chart.Metadata.Annotations["truecharts.org/train"]; exists {
+		if val, exists := chart.Metadata.Annotations["trueforge.org/train"]; exists {
 			train = val
 		} else {
 			log.Error().Msgf("Unable to detect train for chart [%s]. Setting as [unknown]", chart.Metadata.Name)
@@ -141,9 +141,9 @@ func GetTrain(chartPath string, chart *HelmChart) string {
 }
 
 func setMetadata(chart *HelmChart, train string) {
-	chart.Metadata.Annotations["truecharts.org/train"] = train
-	chart.Metadata.Icon = fmt.Sprintf("https://truecharts.org/img/hotlink-ok/chart-icons/%s.webp", chart.Metadata.Name)
-	chart.Metadata.Home = fmt.Sprintf("https://truecharts.org/charts/%s/%s", train, chart.Metadata.Name)
+	chart.Metadata.Annotations["trueforge.org/train"] = train
+	chart.Metadata.Icon = fmt.Sprintf("https://trueforge.org/img/hotlink-ok/chart-icons/%s.webp", chart.Metadata.Name)
+	chart.Metadata.Home = fmt.Sprintf("https://trueforge.org/truetech/truecharts/charts/%s/%s", train, chart.Metadata.Name)
 }
 
 // UpdateSources updates the sources in Chart.yaml using Go.

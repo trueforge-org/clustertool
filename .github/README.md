@@ -6,7 +6,7 @@
   [![GitHub issues](https://img.shields.io/github/issues/trueforge-org/forgetool)](https://github.com/trueforge-org/forgetool/issues)
 
   <p align="center">
-    A helper tool to help building <a href="https://truecharts.org">TrueCharts</a> helm charts
+    A helper tool to help building <a href="https://trueforge.org">TrueCharts</a> helm charts
     <br />
     ·
     <a href="https://github.com/trueforge-org/forgetool/issues">Report Bug</a>

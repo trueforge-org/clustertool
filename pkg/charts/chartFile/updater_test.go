@@ -78,7 +78,7 @@ func TestGetTrain(t *testing.T) {
 				Metadata: ChartMetadata{
 					Name: "test-chart",
 					Annotations: map[string]string{
-						"truecharts.org/train": "express",
+						"trueforge.org/train": "express",
 					},
 				},
 			},
@@ -91,7 +91,7 @@ func TestGetTrain(t *testing.T) {
 				Metadata: ChartMetadata{
 					Name: "test-chart",
 					Annotations: map[string]string{
-						"truecharts.org/train": "dev",
+						"trueforge.org/train": "dev",
 					},
 				},
 			},
@@ -146,10 +146,10 @@ func TestSetMetadata(t *testing.T) {
 				Metadata: ChartMetadata{
 					Name: "test-chart",
 					Annotations: map[string]string{
-						"truecharts.org/train": "stable",
+						"trueforge.org/train": "stable",
 					},
-					Icon: "https://truecharts.org/img/hotlink-ok/chart-icons/test-chart.webp",
-					Home: "https://truecharts.org/charts/stable/test-chart",
+					Icon: "https://trueforge.org/img/hotlink-ok/chart-icons/test-chart.webp",
+					Home: "https://trueforge.org/charts/stable/test-chart",
 				},
 			},
 		},

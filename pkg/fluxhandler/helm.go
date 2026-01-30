@@ -84,9 +84,9 @@ func HelmPull(repo string, name string, version string, dest string, silent bool
 	}
 
 	switch repo {
-	case "https://charts.truecharts.org",
-		"https://library-charts.truecharts.org",
-		"https://deps.truecharts.org":
+	case "https://charts.trueforge.org",
+		"https://library-charts.trueforge.org",
+		"https://deps.trueforge.org":
 		client.Keyring = helper.GpgDir + "/pubring.gpg"
 		client.Verify = true
 	case "https://charts.jetstack.io":

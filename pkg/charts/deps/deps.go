@@ -22,7 +22,7 @@ func LoadGPGKey() error {
 		log.Fatal().Err(err).Msg("❌ Failed to create GPG directory")
 	}
 
-	keybaseURL := "https://truecharts.org/pub_key.gpg"
+	keybaseURL := "https://trueforge.org/pub_key.gpg"
 	pubringPath := path.Join(helper.GpgDir, "pubring.gpg")
 	if err := downloadFile(keybaseURL, pubringPath); err != nil {
 		log.Fatal().Err(err).Msg("❌ Failed to download keybase public key")

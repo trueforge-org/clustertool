@@ -22,12 +22,12 @@ const (
 	apiVersion         = "v2"
 	chartType          = "application"
 	maintainerName     = "TrueCharts"
-	maintainerEmail    = "info@truecharts.org"
-	maintainerURL      = "https://truecharts.org"
+	maintainerEmail    = "info@trueforge.org"
+	maintainerURL      = "https://trueforge.org"
 	defaultCategory    = "unsorted"
 	defaultAppVersion  = "unknown"
 	defaultDescription = "No description provided."
-	defaultHome        = "https://truecharts.org"
+	defaultHome        = "https://trueforge.org"
 	defaultIcon        = "https://github.com/trueforge-org/truecharts/blob/main/website/static/svg/logo.svg"
 	supportUrl         = `- name: support
 url: https://discord.com/invite/tVsPTHWTtr`
@@ -133,11 +133,11 @@ func (h *HelmChart) setDefaultValues() {
 		h.Metadata.Annotations = make(map[string]string)
 	}
 
-	h.setAnnotation("truecharts.org/category", defaultCategory, false)
-	h.setAnnotation("truecharts.org/min_helm_version", minHelmVersion, true)
-	h.setAnnotation("truecharts.org/max_helm_version", maxHelmVersion, true)
-	h.setAnnotation("truecharts.org/min_kubernetes_version", minKubeVersion, true)
-	h.setAnnotation("truecharts.org/max_kubernetes_version", maxKubeVersion, true)
+	h.setAnnotation("trueforge.org/category", defaultCategory, false)
+	h.setAnnotation("trueforge.org/min_helm_version", minHelmVersion, true)
+	h.setAnnotation("trueforge.org/max_helm_version", maxHelmVersion, true)
+	h.setAnnotation("trueforge.org/min_kubernetes_version", minKubeVersion, true)
+	h.setAnnotation("trueforge.org/max_kubernetes_version", maxKubeVersion, true)
 	h.setAnnotation("artifacthub.io/links", supportUrl, true)
 
 	// Set default values for other fields as needed

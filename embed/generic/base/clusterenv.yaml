@@ -18,7 +18,7 @@ BLOCKY_IP: 192.168.20.213
 # Sets the Kubernetes Dashboard IP
 DASHBOARD_IP: 192.168.20.214
 ## Configures Traefik, ClusterIssuer and Blocky for said domain, using these credentials
-# domain is the base/highest level of your domain, so without subdomain, example: truecharts.org, not somesite.truecharts.org
+# domain is the base/highest level of your domain, so without subdomain, example: trueforge.org, not somesite.trueforge.org
 # To disable, please see the comments in their respective helm-values.yaml files!
 # When disabled, please use placeholder values instead.
 DOMAIN_0: ""
