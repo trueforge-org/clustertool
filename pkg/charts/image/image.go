@@ -95,7 +95,7 @@ func constructLink(repository string) string {
 		repository = strings.TrimPrefix(repository, "lscr.io/")
 	case strings.HasPrefix(repository, "oci.trueforge.org/containerforge/"):
 		prefix = "https://github.com/trueforge-org/containers/tree/main/apps/"
-		repository = strings.TrimPrefix(repository, "oci.trueforge.org/tccr/")
+		repository = strings.TrimPrefix(repository, "oci.trueforge.org/containerforge/")
 	case strings.HasPrefix(repository, "mcr.microsoft.com/"):
 		prefix = "https://mcr.microsoft.com/en-us/product/"
 		repository = strings.TrimPrefix(repository, "mcr.microsoft.com/")
