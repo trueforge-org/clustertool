@@ -159,6 +159,7 @@ func updateSources(chart *HelmChart, train string, imageLinks []string) error {
 			!strings.HasPrefix(source, "https://fleet.linuxserver") &&
 			!strings.HasPrefix(source, "https://mcr.microsoft") &&
 			!strings.HasPrefix(source, "https://cr.hotio.dev") &&
+			!strings.HasPrefix(source, "https://github.com/trueforge-org") &&
 			!strings.HasPrefix(source, "https://github.com/truecharts") &&
 			!strings.HasPrefix(source, "https://gallery.ecr.aws") &&
 			!strings.HasPrefix(source, "https://gcr") &&
