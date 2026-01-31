@@ -15,9 +15,9 @@ import (
 
 const (
 	minHelmVersion     = "3.14"
-	maxHelmVersion     = "3.17"
+	maxHelmVersion     = "3.20"
 	minKubeVersion     = "1.24.0"
-	maxKubeVersion     = "1.32.0"
+	maxKubeVersion     = "1.35.0"
 	kubeVersion        = ">=1.24.0-0"
 	apiVersion         = "v2"
 	chartType          = "application"
@@ -28,7 +28,7 @@ const (
 	defaultAppVersion  = "unknown"
 	defaultDescription = "No description provided."
 	defaultHome        = "https://trueforge.org"
-	defaultIcon        = "https://github.com/trueforge-org/truecharts/blob/main/website/static/svg/logo.svg"
+	defaultIcon        = "https://github.com/trueforge-org/website/blob/main/public/svg/logo.svg"
 	supportUrl         = `- name: support
 url: https://discord.com/invite/tVsPTHWTtr`
 )
