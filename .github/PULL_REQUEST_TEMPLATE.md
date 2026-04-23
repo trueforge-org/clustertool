@@ -8,7 +8,7 @@ Please include a summary of the change and which issue is fixed. Please also inc
 
 - [ ] 🆕 New feature (e.g., bootstrap, cluster config, or automation)
 - [ ] 🐛 Bugfix (e.g., node setup, config generation)
-- [ ] 🔃 Chart Updates/Changes included with Forgetool
+- [ ] 🔃 Chart Updates/Changes included with clustertool
 - [ ] 🔃 Refactor (internal changes, no functional impact)
 - [ ] ⚠️ Breaking change (changes Talos cluster behavior)
 
@@ -16,7 +16,7 @@ Please include a summary of the change and which issue is fixed. Please also inc
 <!--
 Describe how you verified the change. Include steps to reproduce on a Talos cluster.
 -->
-- [ ] Run forgetool commands locally
+- [ ] Run clustertool commands locally
 - [ ] Verified cluster bootstrap on Talos nodes
 - [ ] Checked generated configs are valid
 - [ ] Validated cluster state after changes
@@ -30,9 +30,9 @@ Describe how you verified the change. Include steps to reproduce on a Talos clus
 - [ ] 👀 Self-reviewed my changes
 - [ ] 🧪 Documented testing steps
 - [ ] 🏷️ PR title follows convention:
-  - `feat(forgetool):`
-  - `fix(forgetool):`
-  - `chore(forgetool):`
+  - `feat(clustertool):`
+  - `fix(clustertool):`
+  - `chore(clustertool):`
 
 _Please don't blindly check all the boxes. Read them and only check those that apply.
 Those checkboxes are there for the reviewer to see what is this all about and

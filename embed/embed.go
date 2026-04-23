@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/leaanthony/debme"
-	"github.com/trueforge-org/forgetool/pkg/helper"
+	"github.com/trueforge-org/clustertool/pkg/helper"
 )
 
 //go:embed generic/*

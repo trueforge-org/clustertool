@@ -1,7 +1,7 @@
 version: 2
-project_name: forgetool
+project_name: clustertool
 builds:
-  - id: forgetool
+  - id: clustertool
     main: .
     env:
       - CGO_ENABLED=0
@@ -31,16 +31,16 @@ changelog:
       - "^docs"
       - "^test"
     include:
-      - "forgetool"
-      - "Forgetool"
-      - "ForgeTool"
+      - "clustertool"
+      - "Clustertool"
+      - "ClusterTool"
 release:
   name_template: "{{.ProjectName}}-{{.Tag}}"
   github:
     owner: trueforge-org
-    name: forgetool
+    name: clustertool
   extra_files:
-    - glob: "forgetool.LICENSE"
+    - glob: "clustertool.LICENSE"
   draft: false
   make_latest: false
   mode: append
@@ -68,7 +68,7 @@ before:
 #     artifacts: source
 
 nfpms:
-  - package_name: forgetool
+  - package_name: clustertool
     maintainer: "TrueForge <info@TrueForge.org>"
     homepage: "https://trueforge.org"
     description: "Tool to help bootstrap a Kubernetes cluster"
@@ -77,18 +77,18 @@ nfpms:
     formats: [apk, deb, rpm, termux.deb, archlinux]
 
 aurs:
-  - name: "forgetool-bin"
+  - name: "clustertool-bin"
     maintainers:
       - "TrueCharts <info@trueforge.org>"
     homepage: "https://trueforge.org"
     description: "Tool to help bootstrap a Kubernetes cluster"
     license: "BUSL-1.1"
-    git_url: "ssh://aur@aur.archlinux.org/forgetool-bin.git"
+    git_url: "ssh://aur@aur.archlinux.org/clustertool-bin.git"
     skip_upload: auto
     package: |
       # Install binary
-      bsdtar -xvf forgetool_${pkgver}_linux_${CARCH}.tar.gz -C "${pkgdir}"
-      install -Dm755 "${pkgdir}/forgetool" "${pkgdir}/usr/bin/forgetool"
+      bsdtar -xvf clustertool_${pkgver}_linux_${CARCH}.tar.gz -C "${pkgdir}"
+      install -Dm755 "${pkgdir}/clustertool" "${pkgdir}/usr/bin/clustertool"
 
       # Install license
       install -Dm644 "${pkgdir}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"

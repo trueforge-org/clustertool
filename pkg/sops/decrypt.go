@@ -7,7 +7,7 @@ import (
 
 	"github.com/getsops/sops/v3/decrypt"
 	"github.com/rs/zerolog/log"
-	"github.com/trueforge-org/forgetool/pkg/initfiles"
+	"github.com/trueforge-org/clustertool/pkg/initfiles"
 )
 
 // Custom error type for MAC failures

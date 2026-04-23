@@ -6,9 +6,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/trueforge-org/forgetool/pkg/fluxhandler"
-	"github.com/trueforge-org/forgetool/pkg/initfiles"
-	"github.com/trueforge-org/forgetool/pkg/sops"
+	"github.com/trueforge-org/clustertool/pkg/fluxhandler"
+	"github.com/trueforge-org/clustertool/pkg/initfiles"
+	"github.com/trueforge-org/clustertool/pkg/sops"
 )
 
 var fluxBootstrapLongHelp = strings.TrimSpace(`

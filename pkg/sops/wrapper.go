@@ -15,7 +15,7 @@ import (
 	"github.com/getsops/sops/v3/keyservice"
 	"github.com/getsops/sops/v3/version"
 	"github.com/rs/zerolog/log"
-	"github.com/trueforge-org/forgetool/pkg/helper"
+	"github.com/trueforge-org/clustertool/pkg/helper"
 )
 
 //nolint:unused

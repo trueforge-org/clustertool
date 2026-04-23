@@ -1,5 +1,5 @@
 name: 🐛 Bug Report
-description: Report a bug or issue in Forgetool (e.g., cluster bootstrap failure, config issue)
+description: Report a bug or issue in clustertool (e.g., cluster bootstrap failure, config issue)
 title: "[BUG] "
 labels: bug
 assignees: []
@@ -17,7 +17,7 @@ body:
     attributes:
       label: Steps to Reproduce
       description: How to reproduce the issue (commands, configs, Talos version)
-      placeholder: Forgetool commands and cluster setup steps
+      placeholder: clustertool commands and cluster setup steps
     validations:
       required: true
   - type: input

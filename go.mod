@@ -1,4 +1,4 @@
-module github.com/trueforge-org/forgetool
+module github.com/trueforge-org/clustertool
 
 go 1.25.5
 
