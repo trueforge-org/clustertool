@@ -17,7 +17,7 @@ require (
 	github.com/knadh/koanf/providers/file v1.2.1
 	github.com/knadh/koanf/v2 v2.3.2
 	github.com/leaanthony/debme v1.2.1
-	github.com/rs/zerolog v1.34.0
+	github.com/rs/zerolog v1.35.1
 	github.com/siderolabs/talos/pkg/machinery v1.13.0-alpha.0
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/crypto v0.47.0
