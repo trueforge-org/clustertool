@@ -2,7 +2,7 @@ words:
   - azurecr
   - certman
   - CHARTPLACEHOLDER
-  - forgetool-dev
+  - clustertool-dev
   - devcontainer
   - helmignore
   - keybase

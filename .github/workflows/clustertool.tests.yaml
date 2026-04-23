@@ -1,4 +1,4 @@
-name: forgetool-go-tests
+name: clustertool-go-tests
 on:
   workflow_dispatch:
   workflow_call:
@@ -36,6 +36,6 @@ jobs:
           go-version: stable
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - run:  |
-          go build -o /usr/local/bin/forgetool
+          go build -o /usr/local/bin/clustertool
           go test -v ./... -race -covermode=atomic
-          forgetool-dev
+          clustertool-dev

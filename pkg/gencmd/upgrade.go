@@ -8,9 +8,9 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/budimanjojo/talhelper/v3/pkg/generate"
-	"github.com/trueforge-org/forgetool/embed"
-	"github.com/trueforge-org/forgetool/pkg/helper"
-	"github.com/trueforge-org/forgetool/pkg/talassist"
+	"github.com/trueforge-org/clustertool/embed"
+	"github.com/trueforge-org/clustertool/pkg/helper"
+	"github.com/trueforge-org/clustertool/pkg/talassist"
 )
 
 // TODO: remove talhelper dependency for cmd creation

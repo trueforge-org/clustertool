@@ -5,12 +5,12 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/trueforge-org/forgetool/pkg/gencmd"
-	"github.com/trueforge-org/forgetool/pkg/helper"
-	"github.com/trueforge-org/forgetool/pkg/initfiles"
-	"github.com/trueforge-org/forgetool/pkg/nodestatus"
-	"github.com/trueforge-org/forgetool/pkg/sops"
-	"github.com/trueforge-org/forgetool/pkg/talassist"
+	"github.com/trueforge-org/clustertool/pkg/gencmd"
+	"github.com/trueforge-org/clustertool/pkg/helper"
+	"github.com/trueforge-org/clustertool/pkg/initfiles"
+	"github.com/trueforge-org/clustertool/pkg/nodestatus"
+	"github.com/trueforge-org/clustertool/pkg/sops"
+	"github.com/trueforge-org/clustertool/pkg/talassist"
 )
 
 var applyLongHelp = strings.TrimSpace(`

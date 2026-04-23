@@ -1,6 +1,6 @@
-# 🚀 Kubernetes Cluster (ForgeTool)
+# 🚀 Kubernetes Cluster (clustertool)
 
-This repository contains a Kubernetes cluster bootstrapped with **TrueForge ForgeTool**.
+This repository contains a Kubernetes cluster bootstrapped with **TrueForge clustertool**.
 
 🌍 **TrueForge** is a community-driven organization building and maintaining awesome open-source projects.  
 Learn more at 👉 https://trueforge.org/
@@ -12,4 +12,4 @@ Learn more at 👉 https://trueforge.org/
 
 🎯 The goal is a **simple, GitOps-driven Kubernetes cluster** with minimal manual effort.
 
-**Powered by TrueForge ForgeTool**.
+**Powered by TrueForge clustertool**.

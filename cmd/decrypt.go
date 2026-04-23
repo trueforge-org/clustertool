@@ -5,7 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/trueforge-org/forgetool/pkg/sops"
+	"github.com/trueforge-org/clustertool/pkg/sops"
 )
 
 var decryptLongHelp = strings.TrimSpace(`

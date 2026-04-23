@@ -1,4 +1,4 @@
-name: forgetool-go-lint
+name: clustertool-go-lint
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 on:
@@ -14,7 +14,7 @@ on:
       - 'pkg/**'
       - 'partial_builds/**'
       - 'pkg/**'
-      - ".github/workflows/forgetool.test.yaml"
+      - ".github/workflows/clustertool.test.yaml"
 permissions:
   contents: read
 jobs:

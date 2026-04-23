@@ -4,9 +4,9 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"github.com/trueforge-org/forgetool/embed"
-	"github.com/trueforge-org/forgetool/pkg/helper"
-	"github.com/trueforge-org/forgetool/pkg/talassist"
+	"github.com/trueforge-org/clustertool/embed"
+	"github.com/trueforge-org/clustertool/pkg/helper"
+	"github.com/trueforge-org/clustertool/pkg/talassist"
 )
 
 func GenPlain(command string, node string, extraArgs []string) []string {

@@ -2,7 +2,7 @@ name: Automerge and Approve
 
 on:
   workflow_run:
-    workflows: ["forgetool-go-lint"]  # Name of the main CI workflow
+    workflows: ["clustertool-go-lint"]  # Name of the main CI workflow
     types:
       - completed
 
