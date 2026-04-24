@@ -15,7 +15,7 @@ import (
 	"github.com/getsops/sops/v3/keyservice"
 	"github.com/getsops/sops/v3/version"
 	"github.com/rs/zerolog/log"
-	"github.com/trueforge-org/clustertool/pkg/helper"
+	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
 )
 
 //nolint:unused
@@ -52,7 +52,7 @@ func EncryptWithAgeKey(body []byte, regex string, format string) ([]byte, error)
 
 	log.Debug().Strs("ageKeys", ageKeys).Msg("Collected age keys from creation rules")
 
-	for _, ageKey := range helper.UniqueNonEmptyElementsOf(ageKeys) {
+	for _, ageKey := range fthelper.UniqueNonEmptyElementsOf(ageKeys) {
 		var keyGroup sops.KeyGroup
 		keyGroup = append(keyGroup, NewMasterKey(ageKey))
 		groups = append(groups, keyGroup)
