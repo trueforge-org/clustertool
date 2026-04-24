@@ -666,6 +666,8 @@ github.com/trueforge-org/forgetool v0.0.7-0.20260424102409-17753a830700 h1:vFjDL
 github.com/trueforge-org/forgetool v0.0.7-0.20260424102409-17753a830700/go.mod h1:ipHtOHTX35ox6npijIFGEXADXzcsGIRTh/v8tFKxCN0=
 github.com/trueforge-org/forgetool v0.0.7-0.20260424123047-cad0c9dab49d h1:+5iq2PHMEdPImct1IGeYq59KR9aHnD6aED+BmrQAw2E=
 github.com/trueforge-org/forgetool v0.0.7-0.20260424123047-cad0c9dab49d/go.mod h1:bUgvllwBxiMIZNR5r6K6WOeqWc8ZQAsguPrME74mfrg=
+github.com/trueforge-org/forgetool v0.0.7-0.20260424193959-a12a8007aaac h1:JiMnio7JQIW90xJXrvQCndHHx09yuqTpDnDUnfhrjc4=
+github.com/trueforge-org/forgetool v0.0.7-0.20260424193959-a12a8007aaac/go.mod h1:bUgvllwBxiMIZNR5r6K6WOeqWc8ZQAsguPrME74mfrg=
 github.com/urfave/cli v1.22.17 h1:SYzXoiPfQjHBbkYxbew5prZHS1TOLT3ierW8SYLqtVQ=
 github.com/urfave/cli v1.22.17/go.mod h1:b0ht0aqgH/6pBYzzxURyrM4xXNgsoT/n2ZzwQiEhNVo=
 github.com/vbatts/tar-split v0.12.1 h1:CqKoORW7BUWBe7UL/iqTVvkTBOF8UvOMKOIZykxnnbo=
