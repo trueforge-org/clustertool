@@ -12,6 +12,7 @@ import (
 	"github.com/trueforge-org/clustertool/cmd"
 	"github.com/trueforge-org/clustertool/embed"
 	"github.com/trueforge-org/clustertool/pkg/helper"
+	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
 	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -70,8 +71,8 @@ func main() {
 
 	embed.AllToCache()
 
-	helper.CheckSystemTime()
-	helper.CheckReqDomains()
+	fthelper.CheckSystemTime()
+	fthelper.CheckReqDomains()
 
 	err := cmd.Execute()
 	if err != nil {

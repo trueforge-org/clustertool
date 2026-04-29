@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/embed"
 	"github.com/trueforge-org/clustertool/pkg/helper"
+	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
 )
 
 func baseStatusCMD(node string) []string {
@@ -21,13 +22,13 @@ func CheckNeedBootstrap(node string) (bool, error) {
 	log.Info().Str("node", node).Msg("Checking if bootstrap is needed")
 
 	argsslice := append(baseStatusCMD(node), "-o", "jsonpath={.spec.stage}")
-	out, err := helper.RunCommand(argsslice, true)
+	out, err := fthelper.RunCommand(argsslice, true)
 	if err != nil {
 		log.Warn().Err(err).Str("output", string(out)).Msg("Error running command, checking for certificate issue")
 		if strings.Contains(string(out), "certificate signed by unknown authority") {
 			log.Debug().Msg("Certificate signed by unknown authority; retrying with insecure flag")
 			argsslice := append(baseStatusCMD(node), "-o", "jsonpath={.spec.stage}", "--insecure")
-			out2, err2 := helper.RunCommand(argsslice, true)
+			out2, err2 := fthelper.RunCommand(argsslice, true)
 			if err2 != nil {
 				errstring := "status: " + string(out) + " error: " + err2.Error()
 				log.Error().Msg(errstring)
@@ -51,13 +52,13 @@ func CheckStatus(node string) (string, error) {
 	log.Info().Str("node", node).Msg("Checking node status")
 
 	argsslice := append(baseStatusCMD(node), "-o", "jsonpath={.spec.stage}")
-	out, err := helper.RunCommand(argsslice, true)
+	out, err := fthelper.RunCommand(argsslice, true)
 	if err != nil {
 		log.Debug().Err(err).Str("output", string(out)).Msg("Error running command, checking for certificate issue")
 		if strings.Contains(string(out), "certificate signed by unknown authority") {
 			log.Debug().Msg("Certificate signed by unknown authority; retrying with insecure flag")
 			argsslice = append(baseStatusCMD(node), "-o", "jsonpath={.spec.stage}", "--insecure")
-			out2, err2 := helper.RunCommand(argsslice, true)
+			out2, err2 := fthelper.RunCommand(argsslice, true)
 			if err2 != nil {
 				errstring := "status: " + string(out) + " error: " + err2.Error()
 				log.Error().Msg(errstring)
@@ -79,7 +80,7 @@ func CheckReadyStatus(node string, silent bool) (string, error) {
 	log.Info().Str("node", node).Msg("Checking node readiness status")
 
 	argsslice := append(baseStatusCMD(node), "-o", "jsonpath={.spec.status.ready}")
-	out, err := helper.RunCommand(argsslice, true)
+	out, err := fthelper.RunCommand(argsslice, true)
 
 	if err != nil {
 		errstring := "status: " + string(out) + " error: " + err.Error()
