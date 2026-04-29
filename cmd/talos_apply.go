@@ -11,6 +11,7 @@ import (
 	"github.com/trueforge-org/clustertool/pkg/nodestatus"
 	"github.com/trueforge-org/clustertool/pkg/sops"
 	"github.com/trueforge-org/clustertool/pkg/talassist"
+	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
 )
 
 var applyLongHelp = strings.TrimSpace(`
@@ -82,9 +83,9 @@ var apply = &cobra.Command{
 
 			} else if bootstrapNeeded {
 				log.Info().Msg("First Node requires to be bootstrapped before it can be used.")
-				if helper.GetYesOrNo("Do you want to bootstrap now? (yes/no) [y/n]: ") {
+				if fthelper.GetYesOrNo("Do you want to bootstrap now? (yes/no) [y/n]: ", false) {
 					gencmd.RunBootstrap(extraArgs)
-					if helper.GetYesOrNo("Do you want to apply config to all remaining clusternodes as well? (yes/no) [y/n]: ") {
+					if fthelper.GetYesOrNo("Do you want to apply config to all remaining clusternodes as well? (yes/no) [y/n]: ", false) {
 						RunApply(false, "", extraArgs)
 					}
 				} else {

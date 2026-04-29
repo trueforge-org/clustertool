@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/helper"
 	"github.com/trueforge-org/clustertool/pkg/kubectlcmds"
+	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
 )
 
 func init() {
@@ -21,10 +22,10 @@ func FluxBootstrap(ctx context.Context) {
 
 	if helper.TalEnv["GITHUB_REPOSITORY"] != "" {
 		log.Info().Msg("GITHUB_Repository for Flux configured.")
-		if helper.GetYesOrNo("Do you want to (re)bootstrap FluxCD as well? (yes/no) [y/n]: ") {
+		if fthelper.GetYesOrNo("Do you want to (re)bootstrap FluxCD as well? (yes/no) [y/n]: ", false) {
 			if err := bootstrapFluxCD(ctx); err != nil {
 				log.Fatal().Err(err).Msg("Error during FluxCD bootstrap")
-				if helper.GetYesOrNo("Do you want to retry? (yes/no) [y/n]: ") {
+				if fthelper.GetYesOrNo("Do you want to retry? (yes/no) [y/n]: ", false) {
 					if err2 := bootstrapFluxCD(ctx); err2 != nil {
 						log.Fatal().Err(err2).Msg("Error during FluxCD bootstrap")
 					}
@@ -62,7 +63,7 @@ func bootstrapFluxCD(ctx context.Context) error {
 
 // checkGitRepo verifies if the current directory is a valid Git repository.
 func checkGitRepo() error {
-	isRepo, err := helper.IsCurrentDirGitRepo()
+	isRepo, err := fthelper.IsCurrentDirGitRepo()
 	if err != nil {
 		log.Error().Err(err).Msg("Error checking Git repository")
 		return err
