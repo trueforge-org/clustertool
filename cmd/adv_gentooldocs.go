@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 	"github.com/trueforge-org/clustertool/pkg/helper"
+	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
 )
 
 var gendocsCmd = &cobra.Command{
@@ -26,7 +27,7 @@ var gendocsCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		helper.ToolDocs(tmpdir, outdir)
+		fthelper.ToolDocs(tmpdir, outdir)
 	},
 }
 

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
 	"gopkg.in/yaml.v3"
 
 	age "filippo.io/age"
@@ -45,21 +46,21 @@ func InitFiles() error {
 		log.Info().Msg("Kustomizations processed successfully.")
 	}
 
-	helper.CreateEncrPreCommitHook()
+	fthelper.CreateEncrPreCommitHook()
 	log.Info().Msg("Init: Completed Successfully!")
 	return nil
 }
 
 func genKubernetes() error {
 
-	err := helper.CopyDir(helper.KubeCache, helper.ClusterPath+"/kubernetes", false)
+	err := fthelper.CopyDir(helper.KubeCache, helper.ClusterPath+"/kubernetes", false)
 	if err != nil {
 		log.Info().Msgf("Error: %v", err)
 	} else {
 		log.Info().Msgf("Kubernetes files copied successfully.")
 	}
 
-	helper.ReplaceInFile(path.Join(helper.ClusterPath, "/kubernetes/flux-entry.yaml"), "REPLACEWITHCLUSTERNAME", helper.ClusterName)
+	fthelper.ReplaceInFile(path.Join(helper.ClusterPath, "/kubernetes/flux-entry.yaml"), "REPLACEWITHCLUSTERNAME", helper.ClusterName)
 	if err != nil {
 		log.Fatal().Err(err).Msgf("Error: %s", err)
 	}
@@ -93,9 +94,9 @@ func GenTalEnvConfigMap() error {
 	clusterSettingsDest := filepath.Join(helper.ClusterPath+"/kubernetes", clusterSettings)
 	clusterSettingsSrc := filepath.Join(helper.KubeCache, clusterSettings)
 	os.MkdirAll(filepath.Join(helper.ClusterPath, "/kubernetes", "flux-system", "flux"), os.ModePerm)
-	err = helper.CopyFile(clusterSettingsSrc, clusterSettingsDest, true)
+	err = fthelper.CopyFile(clusterSettingsSrc, clusterSettingsDest, true)
 	log.Debug().Msgf("clusterSettingsDest %v", clusterSettingsDest)
-	helper.ReplaceInFile(clusterSettingsDest, "REPLACEWITHENV", indentedTalenvContent)
+	fthelper.ReplaceInFile(clusterSettingsDest, "REPLACEWITHENV", indentedTalenvContent)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error: %s")
 	}
@@ -107,7 +108,7 @@ func UpdateGitRepo() {
 	if helper.TalEnv["GITHUB_REPOSITORY"] != "" {
 		repoPath := filepath.Join("repositories", "git", "this-repo.yaml")
 		gitrepo := FormatGitURL(helper.TalEnv["GITHUB_REPOSITORY"])
-		helper.ReplaceInFile(repoPath, "ssh://REPLACEWITHGITREPO", gitrepo)
+		fthelper.ReplaceInFile(repoPath, "ssh://REPLACEWITHGITREPO", gitrepo)
 	}
 }
 
@@ -158,7 +159,7 @@ func genBaseFiles() error {
 		return err
 	}
 
-	err := helper.CopyDir(helper.BaseCache, helper.ClusterPath+"", false)
+	err := fthelper.CopyDir(helper.BaseCache, helper.ClusterPath+"", false)
 	if err != nil {
 		log.Error().Msgf("Error: %v", err)
 	} else {
@@ -217,8 +218,8 @@ func UpdateBaseFiles() error {
 	// Process each file in the target directory
 	for _, filename := range sourceFiles {
 		sourceFilePath := filepath.Join(helper.BaseCache, filename)
-		targetFilePath := filepath.Join(helper.ClusterPath+"", helper.ReplaceDotInFilename(filename))
-		helper.ReplaceContentBetweenLines(targetFilePath, sourceFilePath, "## Do not edit between this and DO NOT REMOVE", "## DO NOT REMOVE: Personal setting go under this line")
+		targetFilePath := filepath.Join(helper.ClusterPath+"", fthelper.ReplaceDotInFilename(filename))
+		fthelper.ReplaceContentBetweenLines(targetFilePath, sourceFilePath, "## Do not edit between this and DO NOT REMOVE", "## DO NOT REMOVE: Personal setting go under this line")
 	}
 	log.Info().Msg("basefiles successfully updated.")
 
@@ -230,7 +231,7 @@ func UpdateBaseFiles() error {
 
 func genRootFiles() error {
 
-	err := helper.CopyDir(helper.RootCache, "./", false)
+	err := fthelper.CopyDir(helper.RootCache, "./", false)
 	if err != nil {
 		log.Info().Msgf("Error: %v", err)
 	} else {
@@ -242,7 +243,7 @@ func genRootFiles() error {
 		log.Fatal().Err(err).Msg("error: %v")
 	}
 	log.Info().Msgf("Public Key: %v", agePubKey)
-	helper.ReplaceInFile(".sops.yaml", "REPLACEME", agePubKey)
+	fthelper.ReplaceInFile(".sops.yaml", "REPLACEME", agePubKey)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error: %s")
 	}
@@ -262,8 +263,8 @@ func UpdateRootFiles() error {
 	// Process each file in the target directory
 	for _, filename := range sourceFiles {
 		sourceFilePath := filepath.Join(helper.BaseCache, filename)
-		targetFilePath := filepath.Join("./", helper.ReplaceDotInFilename(filename))
-		helper.ReplaceContentBetweenLines(targetFilePath, sourceFilePath, "## Do not edit between this and DO NOT REMOVE", "## DO NOT REMOVE: Personal setting go under this line")
+		targetFilePath := filepath.Join("./", fthelper.ReplaceDotInFilename(filename))
+		fthelper.ReplaceContentBetweenLines(targetFilePath, sourceFilePath, "## Do not edit between this and DO NOT REMOVE", "## DO NOT REMOVE: Personal setting go under this line")
 	}
 	log.Info().Msg("rootfiles successfully updated.")
 
@@ -272,7 +273,7 @@ func UpdateRootFiles() error {
 		log.Fatal().Err(err).Msg("error: %v")
 	}
 
-	helper.ReplaceInFile(".sops.yaml", "REPLACEME", agePubKey)
+	fthelper.ReplaceInFile(".sops.yaml", "REPLACEME", agePubKey)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error: %s")
 	}
@@ -301,12 +302,12 @@ func readFilenamesInDir(dir string) ([]string, error) {
 
 func ResetBootstrapValues() error {
 	LoadTalEnv(false)
-	err := helper.CopyDirFiltered(helper.KubeCache, helper.ClusterPath+"/kubernetes", true, `^bootstrap-values\.yaml.ct$`)
+	err := fthelper.CopyDirFiltered(helper.KubeCache, helper.ClusterPath+"/kubernetes", true, `^bootstrap-values\.yaml.ct$`)
 	if err != nil {
 		log.Info().Msg("Error:")
 	}
 
-	err2 := helper.EnvSubstRecursive(helper.ClusterPath+"/kubernetes", `^bootstrap-values\.yaml.ct$`, helper.TalEnv)
+	err2 := fthelper.EnvSubstRecursive(helper.ClusterPath+"/kubernetes", `^bootstrap-values\.yaml.ct$`, helper.TalEnv)
 	if err2 != nil {
 		log.Info().Msg("Error:")
 	}
@@ -317,7 +318,7 @@ func ResetBootstrapValues() error {
 
 func GenPatches() error {
 
-	err := helper.CopyDir(helper.PatchCache, path.Join(helper.ClusterPath, "/talos/patches"), true)
+	err := fthelper.CopyDir(helper.PatchCache, path.Join(helper.ClusterPath, "/talos/patches"), true)
 	if err != nil {
 		log.Info().Msg("Error:")
 	} else {
@@ -325,7 +326,7 @@ func GenPatches() error {
 	}
 
 	ageSecKey, err := GetSecKey()
-	helper.ReplaceInFile(filepath.Join(helper.ClusterPath+"/talos/patches", "sopssecret.yaml"), "REPLACEWITHSOPS", ageSecKey)
+	fthelper.ReplaceInFile(filepath.Join(helper.ClusterPath+"/talos/patches", "sopssecret.yaml"), "REPLACEWITHSOPS", ageSecKey)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error: %s")
 	}

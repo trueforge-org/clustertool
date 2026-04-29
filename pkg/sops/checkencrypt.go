@@ -11,6 +11,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/helper"
+	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
 	"gopkg.in/yaml.v3"
 )
 
@@ -44,7 +45,7 @@ func ExecuteCheck(useStagedFiles bool) ([]EncrFileData, error) {
 
 	if useStagedFiles {
 		// Step 3: Get the staged files from Git.
-		stagedFiles, err := helper.GetStagedFiles()
+		stagedFiles, err := fthelper.GetStagedFiles()
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to get staged files")
 			return nil, err
@@ -76,7 +77,7 @@ func ExecuteCheck(useStagedFiles bool) ([]EncrFileData, error) {
 			filePaths = append(filePaths, file.Path)
 		}
 
-		if err := helper.StageFiles(filePaths); err != nil {
+		if err := fthelper.StageFiles(filePaths); err != nil {
 			log.Error().Err(err).Msg("Error staging files")
 			return nil, fmt.Errorf("error staging files: %v", err)
 		}
@@ -139,7 +140,7 @@ func CheckFilesAndReportEncryption(tryEncrypt bool, checkStaged bool) error {
 					log.Info().Msgf("File %s encrypted successfully.", file.Path)
 
 					// Step 5: Stage the file after successful encryption.
-					err := helper.StageFile(file.Path)
+					err := fthelper.StageFile(file.Path)
 					if err != nil {
 						log.Error().Err(err).Msgf("Failed to stage file %s after encryption", file.Path)
 					} else {

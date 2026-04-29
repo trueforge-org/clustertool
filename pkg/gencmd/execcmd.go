@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/helper"
 	"github.com/trueforge-org/clustertool/pkg/nodestatus"
+	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
 )
 
 func ExecCmd(cmd string) {
@@ -16,13 +17,13 @@ func ExecCmd(cmd string) {
 
 	// log.Info().Msg("test", strings.Join(argslice, " "))
 	//nolint:ineffassign
-	out, err := helper.RunCommand(argslice, false)
+	out, err := fthelper.RunCommand(argslice, false)
 	if err != nil {
 		log.Info().Msgf("err:  %v", err)
 		if strings.Contains(cmd, "bootstrap") {
 			log.Info().Msg("Bootstrap: Fail, retrying...")
 			time.Sleep(5 * time.Second)
-			out, err = helper.RunCommand(argslice, false)
+			out, err = fthelper.RunCommand(argslice, false)
 
 			if err != nil && strings.Contains(string(out), "bootstrap is not available yet") {
 				start := time.Now()
@@ -32,7 +33,7 @@ func ExecCmd(cmd string) {
 					log.Info().Msg("Bootstrap: Fail, retrying...")
 					time.Sleep(5 * time.Second)
 
-					out, err = helper.RunCommand(argslice, false)
+					out, err = fthelper.RunCommand(argslice, false)
 					if err != nil || !strings.Contains(string(out), "bootstrap is not available yet") {
 						break
 					}
@@ -64,7 +65,7 @@ func ExecCmds(taloscmds []string, healthcheck bool) error {
 			if err != nil {
 				log.Info().Msgf("node seems not to be runnign correctly and cannot be used %v", node)
 				log.Info().Msgf("node This will also make it impossible to poll total-cluster-health as well... %v", node)
-				if !helper.GetYesOrNo("Do you want to continue without this node? (yes/no) [y/n]: ") {
+				if !fthelper.GetYesOrNo("Do you want to continue without this node? (yes/no) [y/n]: ", false) {
 					log.Info().Msg("Exiting...")
 					os.Exit(1)
 				} else {
@@ -76,7 +77,7 @@ func ExecCmds(taloscmds []string, healthcheck bool) error {
 		if skipped {
 			log.Info().Msg("skipping cluster health check due to unhealthy nodes being ignored...")
 		} else {
-			if helper.GetYesOrNo("Do you want to check the health of the cluster? (yes/no) [y/n]: ") {
+			if fthelper.GetYesOrNo("Do you want to check the health of the cluster? (yes/no) [y/n]: ", false) {
 				log.Info().Msg("Checking if cluster is healthy...")
 				healthcmd := GenPlain("health", helper.TalEnv["VIP_IP"], []string{})
 				ExecCmd(healthcmd[0])
@@ -95,19 +96,19 @@ func ExecCmds(taloscmds []string, healthcheck bool) error {
 		argslice := strings.Split(string(command), " ")
 		// log.Info().Msg("test", strings.Join(argslice, " "))
 		log.Debug().Msgf("running command: %s", command)
-		out, err := helper.RunCommand(argslice, false)
+		out, err := fthelper.RunCommand(argslice, false)
 		if err != nil {
 			if strings.Contains(string(out), "certificate signed by unknown authority") {
 				argslice = append(argslice, "--insecure")
 				log.Debug().Msgf("Re-Running command using insecure flag: %s", command)
-				_, err2 := helper.RunCommand(argslice, false)
+				_, err2 := fthelper.RunCommand(argslice, false)
 				if err2 != nil {
 					log.Info().Msgf("err:  %v", err2)
 				}
 			} else {
 				log.Info().Msgf("err:  %v", err)
 				log.Info().Msgf("node has thrown an error... %v", node)
-				if !helper.GetYesOrNo("Are you sure you want to continue applying this to other nodes? (yes/no) [y/n]: ") {
+				if !fthelper.GetYesOrNo("Are you sure you want to continue applying this to other nodes? (yes/no) [y/n]: ", false) {
 					log.Info().Msg("Exiting...")
 					os.Exit(1)
 				}
@@ -122,7 +123,7 @@ func ExecCmds(taloscmds []string, healthcheck bool) error {
 			err := nodestatus.CheckHealth(node, "", false)
 			if err != nil {
 				log.Info().Msgf("node seems not to be running correctly... %v", node)
-				if !helper.GetYesOrNo("Are you sure you want to continue applying this to other nodes? (yes/no) [y/n]: ") {
+				if !fthelper.GetYesOrNo("Are you sure you want to continue applying this to other nodes? (yes/no) [y/n]: ", false) {
 					log.Info().Msg("Exiting...")
 					os.Exit(1)
 				}
