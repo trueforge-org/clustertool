@@ -13,6 +13,7 @@ import (
 	"github.com/trueforge-org/clustertool/pkg/initfiles"
 	"github.com/trueforge-org/clustertool/pkg/sops"
 	"github.com/trueforge-org/clustertool/pkg/talassist"
+	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
 )
 
 func GenConfig(args []string) error {
@@ -39,7 +40,7 @@ func GenConfig(args []string) error {
 	} else {
 		log.Info().Msgf("Kustomizations processed successfully.")
 	}
-	helper.CreateEncrPreCommitHook()
+	fthelper.CreateEncrPreCommitHook()
 	log.Info().Msg("GenConfig: Completed Successfully!")
 	return nil
 }
@@ -60,7 +61,7 @@ func genTalSecret() error {
 		secretbundle := talassist.NewSecretBundle()
 
 		buf := new(bytes.Buffer)
-		encoder := helper.YamlNewEncoder(buf)
+		encoder := fthelper.YamlNewEncoder(buf)
 		encoder.SetIndent(2)
 
 		err = encoder.Encode(secretbundle)

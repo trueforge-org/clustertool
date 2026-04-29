@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/trueforge-org/clustertool/pkg/gencmd"
-	"github.com/trueforge-org/clustertool/pkg/helper"
 	"github.com/trueforge-org/clustertool/pkg/initfiles"
 	"github.com/trueforge-org/clustertool/pkg/talassist"
+	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
 )
 
 var advBootstrapLongHelp = strings.TrimSpace(`
@@ -23,7 +23,7 @@ var bootstrap = &cobra.Command{
 }
 
 func bootstrapfunc(cmd *cobra.Command, args []string) {
-	if helper.GetYesOrNo("Do you want to also run the complete ForgeTool Bootstrap, besides just talos? (yes/no) [y/n]: ") {
+	if fthelper.GetYesOrNo("Do you want to also run the complete ForgeTool Bootstrap, besides just talos? (yes/no) [y/n]: ", false) {
 		initfiles.LoadTalEnv(false)
 		talassist.LoadTalConfig()
 		gencmd.RunBootstrap(args)

@@ -12,6 +12,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/helper"
+	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
@@ -214,7 +215,7 @@ func HelmInstall(repoURL string, chartName string, releaseName string, namespace
 	if err != nil {
 		return fmt.Errorf("error creating temphrvalues.yaml: %w", err)
 	}
-	helper.EnvSubst(tempHRValuesPath, helper.TalEnv)
+	fthelper.EnvSubst(tempHRValuesPath, helper.TalEnv)
 	valueFiles = append(valueFiles, tempHRValuesPath)
 
 	if _, err := os.Stat(valuesFile); err == nil {
@@ -367,7 +368,7 @@ func HelmUpgrade(repoURL string, chartName string, releaseName string, namespace
 	if err != nil {
 		return fmt.Errorf("error creating temphrvalues.yaml: %w", err)
 	}
-	helper.EnvSubst(tempHRValuesPath, helper.TalEnv)
+	fthelper.EnvSubst(tempHRValuesPath, helper.TalEnv)
 	valueFiles = append(valueFiles, tempHRValuesPath)
 
 	if _, err := os.Stat(valuesFile); err == nil {

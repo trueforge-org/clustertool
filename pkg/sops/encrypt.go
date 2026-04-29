@@ -6,7 +6,7 @@ import (
 	"regexp"
 
 	"github.com/rs/zerolog/log"
-	"github.com/trueforge-org/clustertool/pkg/helper"
+	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
 )
 
 // EncryptAllFiles encrypts all unencrypted files as specified in the .sops.yaml configuration.
@@ -41,7 +41,7 @@ func processFileEncryption(file EncrFileData) error {
 	}
 
 	// Check if the file is partially staged
-	fullyStaged, err := helper.IsFileFullyStaged(file.Path)
+	fullyStaged, err := fthelper.IsFileFullyStaged(file.Path)
 	if err != nil {
 		log.Error().Err(err).Msgf("Error checking staged status of file: %s", file.Path)
 		return fmt.Errorf("error checking staged status of file %s: %v", file.Path, err)
@@ -50,7 +50,7 @@ func processFileEncryption(file EncrFileData) error {
 	// If the file is not fully staged, stage it
 	if !fullyStaged {
 		log.Info().Msgf("File %s is partially staged, staging fully...\n", file.Path)
-		err := helper.StageFile(file.Path)
+		err := fthelper.StageFile(file.Path)
 		if err != nil {
 			log.Error().Err(err).Msgf("Error staging file: %s", file.Path)
 			return fmt.Errorf("error staging file %s: %v", file.Path, err)

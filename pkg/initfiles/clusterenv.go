@@ -11,13 +11,14 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/helper"
+	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
 )
 
 func LoadTalEnv(noFail bool) error {
 	// Check if clusterenv.yaml file exists
 	if _, err := os.Stat(helper.ClusterPath + "/clusterenv.yaml"); err == nil {
 		// Load environment variables from clusterenv.yaml
-		err := helper.LoadEnvFromFile(helper.ClusterPath+"/clusterenv.yaml", helper.TalEnv)
+		err := fthelper.LoadEnvFromFile(helper.ClusterPath+"/clusterenv.yaml", helper.TalEnv)
 		if err != nil {
 			log.Info().Msgf("Error loading environment from clusterenv.yaml: %v\n", err)
 			os.Exit(1)
@@ -263,7 +264,7 @@ func CheckEnvVariables() {
 	}
 
 	// Check ranges against METALLB_RANGE
-	inRange, err := helper.IPInRange(vip, helper.TalEnv["METALLB_RANGE"])
+	inRange, err := fthelper.IPInRange(vip, helper.TalEnv["METALLB_RANGE"])
 	if err != nil {
 		log.Info().Msgf("Error checking VIP against METALLB_RANGE: %v\n", err)
 		os.Exit(1)
@@ -273,7 +274,7 @@ func CheckEnvVariables() {
 		os.Exit(1)
 	}
 
-	inRange, err = helper.IPInRange(master1ip, helper.TalEnv["METALLB_RANGE"])
+	inRange, err = fthelper.IPInRange(master1ip, helper.TalEnv["METALLB_RANGE"])
 	if err != nil {
 		log.Info().Msgf("Error checking MASTER1IP against METALLB_RANGE: %v\n", err)
 		os.Exit(1)
@@ -283,7 +284,7 @@ func CheckEnvVariables() {
 		os.Exit(1)
 	}
 
-	inRange, err = helper.IPInRange(gateway, helper.TalEnv["METALLB_RANGE"])
+	inRange, err = fthelper.IPInRange(gateway, helper.TalEnv["METALLB_RANGE"])
 	if err != nil {
 		log.Info().Msgf("Error checking GATEWAY against METALLB_RANGE: %v\n", err)
 		os.Exit(1)
@@ -295,7 +296,7 @@ func CheckEnvVariables() {
 
 	// Check DASHBOARD_IP against METALLB_RANGE
 	if helper.TalEnv["DASHBOARD_IP"] != "" {
-		inRange, err = helper.IPInRange(helper.TalEnv["DASHBOARD_IP"], helper.TalEnv["METALLB_RANGE"])
+		inRange, err = fthelper.IPInRange(helper.TalEnv["DASHBOARD_IP"], helper.TalEnv["METALLB_RANGE"])
 		if err != nil {
 			log.Info().Msgf("Error checking DASHBOARD_IP against METALLB_RANGE: %v\n", err)
 			os.Exit(1)
@@ -307,13 +308,13 @@ func CheckEnvVariables() {
 	}
 
 	// Validate other CIDR/IP checks with new netmask support
-	helper.ValidateIPorCIDRNotInCIDR(vip+"/32", helper.TalEnv["PODNET"], "VIP", "PODNET")
-	helper.ValidateIPorCIDRNotInCIDR(master1ipCidr, helper.TalEnv["PODNET"], "MASTER1IP", "PODNET")
-	helper.ValidateIPorCIDRNotInCIDR(gateway+"/32", helper.TalEnv["PODNET"], "GATEWAY", "PODNET")
-	helper.ValidateRangeNotInCIDR(helper.TalEnv["METALLB_RANGE"], helper.TalEnv["PODNET"], "METALLB_RANGE", "PODNET")
+	fthelper.ValidateIPorCIDRNotInCIDR(vip+"/32", helper.TalEnv["PODNET"], "VIP", "PODNET")
+	fthelper.ValidateIPorCIDRNotInCIDR(master1ipCidr, helper.TalEnv["PODNET"], "MASTER1IP", "PODNET")
+	fthelper.ValidateIPorCIDRNotInCIDR(gateway+"/32", helper.TalEnv["PODNET"], "GATEWAY", "PODNET")
+	fthelper.ValidateRangeNotInCIDR(helper.TalEnv["METALLB_RANGE"], helper.TalEnv["PODNET"], "METALLB_RANGE", "PODNET")
 
-	helper.ValidateIPorCIDRNotInCIDR(vip+"/32", helper.TalEnv["SVCNET"], "VIP", "SVCNET")
-	helper.ValidateIPorCIDRNotInCIDR(master1ipCidr, helper.TalEnv["SVCNET"], "MASTER1IP", "SVCNET")
-	helper.ValidateIPorCIDRNotInCIDR(gateway+"/32", helper.TalEnv["SVCNET"], "GATEWAY", "SVCNET")
-	helper.ValidateRangeNotInCIDR(helper.TalEnv["METALLB_RANGE"], helper.TalEnv["SVCNET"], "METALLB_RANGE", "SVCNET")
+	fthelper.ValidateIPorCIDRNotInCIDR(vip+"/32", helper.TalEnv["SVCNET"], "VIP", "SVCNET")
+	fthelper.ValidateIPorCIDRNotInCIDR(master1ipCidr, helper.TalEnv["SVCNET"], "MASTER1IP", "SVCNET")
+	fthelper.ValidateIPorCIDRNotInCIDR(gateway+"/32", helper.TalEnv["SVCNET"], "GATEWAY", "SVCNET")
+	fthelper.ValidateRangeNotInCIDR(helper.TalEnv["METALLB_RANGE"], helper.TalEnv["SVCNET"], "METALLB_RANGE", "SVCNET")
 }
