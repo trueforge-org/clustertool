@@ -662,14 +662,6 @@ github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/tjfoc/gmsm v1.4.1 h1:aMe1GlZb+0bLjn+cKTPEvvn9oUEBlJitaZiiBwsbgho=
 github.com/tjfoc/gmsm v1.4.1/go.mod h1:j4INPkHWMrhJb38G+J6W4Tw0AbuN8Thu3PbdVYhVcTE=
-github.com/trueforge-org/forgetool v0.0.7-0.20260424102409-17753a830700 h1:vFjDLX0+R3XJ+0jAbo77Gr8UuBOn+XeSnJuKLy1tkqw=
-github.com/trueforge-org/forgetool v0.0.7-0.20260424102409-17753a830700/go.mod h1:ipHtOHTX35ox6npijIFGEXADXzcsGIRTh/v8tFKxCN0=
-github.com/trueforge-org/forgetool v0.0.7-0.20260424123047-cad0c9dab49d h1:+5iq2PHMEdPImct1IGeYq59KR9aHnD6aED+BmrQAw2E=
-github.com/trueforge-org/forgetool v0.0.7-0.20260424123047-cad0c9dab49d/go.mod h1:bUgvllwBxiMIZNR5r6K6WOeqWc8ZQAsguPrME74mfrg=
-github.com/trueforge-org/forgetool v0.0.7-0.20260424193959-a12a8007aaac h1:JiMnio7JQIW90xJXrvQCndHHx09yuqTpDnDUnfhrjc4=
-github.com/trueforge-org/forgetool v0.0.7-0.20260424193959-a12a8007aaac/go.mod h1:bUgvllwBxiMIZNR5r6K6WOeqWc8ZQAsguPrME74mfrg=
-github.com/trueforge-org/forgetool v0.0.7-0.20260425121521-11303f0695e7 h1:ltEr+GumgK5Snio6Bbw4yG6hDz1gg8UCBQtoWMt99VA=
-github.com/trueforge-org/forgetool v0.0.7-0.20260425121521-11303f0695e7/go.mod h1:bUgvllwBxiMIZNR5r6K6WOeqWc8ZQAsguPrME74mfrg=
 github.com/trueforge-org/forgetool v0.0.7-0.20260426175738-de368f4bfade h1:LBsOHmuwBNFco5KS5JSOPD+aADAsEM0gsQVjJ5hLNwo=
 github.com/trueforge-org/forgetool v0.0.7-0.20260426175738-de368f4bfade/go.mod h1:bUgvllwBxiMIZNR5r6K6WOeqWc8ZQAsguPrME74mfrg=
 github.com/urfave/cli v1.22.17 h1:SYzXoiPfQjHBbkYxbew5prZHS1TOLT3ierW8SYLqtVQ=
