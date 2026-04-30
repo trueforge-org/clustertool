@@ -15,7 +15,7 @@ var (
     RootCache       = filepath.Join(CacheDir, "root")
     PatchCache      = filepath.Join(CacheDir, "patches")
     DocsCache       = filepath.Join(CacheDir, "docs")
-    CacheDir        = filepath.Join(UserCacheDir, "forgetool")
+    CacheDir        = filepath.Join(UserCacheDir, "clustertool")
     ClusterPath     = filepath.Join("./clusters", ClusterName)
     ClusterEnvFile  = filepath.Join(ClusterPath, "/clusterenv.yaml")
     TalConfigFile   = filepath.Join(ClusterPath, "/talos", "talconfig.yaml")

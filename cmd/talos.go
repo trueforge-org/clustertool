@@ -15,7 +15,7 @@ These are all commands that can be used to maintain Talos OS
 var talosCmd = &cobra.Command{
     Use:           "talos",
     Short:         "Commands for handling Talos OS",
-    Example:       "forgetool talos apply",
+    Example:       "clustertool talos apply",
     Long:          advLongHelp,
     SilenceUsage:  true,
     SilenceErrors: true,

@@ -19,7 +19,7 @@ var advKubeconfigLongHelp = strings.TrimSpace(`
 var kubeconfig = &cobra.Command{
 	Use:     "kubeconfig",
 	Short:   "kubeconfig for Talos Cluster",
-	Example: "forgetool talos kubeconfig <NodeIP>",
+	Example: "clustertool talos kubeconfig <NodeIP>",
 	Long:    advResetLongHelp,
 	Run: func(cmd *cobra.Command, args []string) {
 		var extraArgs []string
