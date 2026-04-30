@@ -61,7 +61,7 @@ func ExecuteCheck(useStagedFiles bool) ([]EncrFileData, error) {
 		for _, file := range allFiles {
 			checkPath := file.Path
 			if _, err := os.Stat("./DEVTRIGGER"); err == nil {
-				checkPath = filepath.Join("forgetool", checkPath)
+				checkPath = filepath.Join("clustertool", checkPath)
 			}
 			for _, stagedFile := range stagedFiles {
 				if checkPath == stagedFile {

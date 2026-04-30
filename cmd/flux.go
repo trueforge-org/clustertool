@@ -15,7 +15,7 @@ These are all commands that can be used to maintain FluxCD
 var fluxCmd = &cobra.Command{
     Use:           "flux",
     Short:         "Commands for handling FluxCD",
-    Example:       "forgetool flux bootstrap",
+    Example:       "clustertool flux bootstrap",
     Long:          advLongHelp,
     SilenceUsage:  true,
     SilenceErrors: true,

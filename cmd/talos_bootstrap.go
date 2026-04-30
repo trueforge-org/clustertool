@@ -17,13 +17,13 @@ var advBootstrapLongHelp = strings.TrimSpace(`
 var bootstrap = &cobra.Command{
 	Use:     "bootstrap",
 	Short:   "bootstrap first Talos Node",
-	Example: "forgetool talos bootstrap",
+	Example: "clustertool talos bootstrap",
 	Long:    advBootstrapLongHelp,
 	Run:     bootstrapfunc,
 }
 
 func bootstrapfunc(cmd *cobra.Command, args []string) {
-	if fthelper.GetYesOrNo("Do you want to also run the complete ForgeTool Bootstrap, besides just talos? (yes/no) [y/n]: ", false) {
+	if fthelper.GetYesOrNo("Do you want to also run the complete Clustertool Bootstrap, besides just talos? (yes/no) [y/n]: ", false) {
 		initfiles.LoadTalEnv(false)
 		talassist.LoadTalConfig()
 		gencmd.RunBootstrap(args)

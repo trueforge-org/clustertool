@@ -18,7 +18,7 @@ var advResetLongHelp = strings.TrimSpace(`
 var reset = &cobra.Command{
 	Use:     "reset",
 	Short:   "Reset Talos Nodes and Kubernetes",
-	Example: "forgetool talos reset <NodeIP>",
+	Example: "clustertool talos reset <NodeIP>",
 	Long:    advResetLongHelp,
 	Run: func(cmd *cobra.Command, args []string) {
 		var extraArgs []string
