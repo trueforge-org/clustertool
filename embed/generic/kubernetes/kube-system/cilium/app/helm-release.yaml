@@ -13,6 +13,7 @@ spec:
   chart:
     spec:
       chart: cilium
+      # renovate: datasource=helm depName=oci://quay.io/cilium/charts/cilium
       version: 1.19.3
       sourceRef:
         kind: HelmRepository
