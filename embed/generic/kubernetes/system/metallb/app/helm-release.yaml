@@ -8,6 +8,7 @@ spec:
   chart:
     spec:
       chart: metallb
+       # renovate: datasource=helm depName=oci://quay.io/metallb/chart/metallb
       version: 0.15.3
       sourceRef:
         kind: HelmRepository
