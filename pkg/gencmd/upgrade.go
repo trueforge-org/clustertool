@@ -21,7 +21,8 @@ func GenUpgrade(node string, extraFlags []string) []string {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 	extraFlags = append(extraFlags, "--preserve")
-	err := generate.GenerateUpgradeCommand(talassist.TalConfig, helper.TalosGenerated, node, extraFlags, false)
+	// err := generate.GenerateUpgradeCommand(talassist.TalConfig, helper.TalosGenerated, node, extraFlags, false)  REMOVE LAST FALSE
+	err := generate.GenerateUpgradeCommand(talassist.TalConfig, helper.TalosGenerated, node, extraFlags)
 	
 	w.Close()
 	out, _ := io.ReadAll(r)
