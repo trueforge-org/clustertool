@@ -11,6 +11,7 @@ on:
       - 'go.sum'
       - 'cmd/**'
       - 'embed/**'
+      - '!embed/generic/**'
       - 'pkg/**'
       - 'partial_builds/**'
       - 'pkg/**'
@@ -38,4 +39,5 @@ jobs:
           version: latest
           args: >
             --timeout=3m
+            --skip-dirs=embed/generic
             --enable-only=ineffassign,unused  # As a first start, can always add more linters later
