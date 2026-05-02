@@ -157,7 +157,6 @@ func RunBootstrap(args []string) {
 	close(stopCh)
 
 	prioCharts := []fluxhandler.HelmChart{
-		{filepath.Join(helper.ClusterPath, "/kubernetes/system/spegel/app"), false, true},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/system/cert-manager/app"), false, false},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/system/kubernetes-reflector/app"), false, false},
 	}
