@@ -96,7 +96,7 @@ spec:
     # ingress:
     #   enabled: true
     #   annotations:
-    #     cert-manager.io/cluster-issuer: cloudflare
+    #     cert-manager.io/cluster-issuer: domain-0-le-prod
     #     cert-manager.io/private-key-rotation-policy: Always
     #   ingressClassName: internal
     #   hosts:
