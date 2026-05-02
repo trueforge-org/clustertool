@@ -212,7 +212,7 @@ func RunBootstrap(args []string) {
 		{filepath.Join(helper.ClusterPath, "/kubernetes/networking/nginx-internal/app"), false, true},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/networking/nginx-external/app"), false, true},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/core/blocky/app"), false, true},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/apps/kubernetes-dashboard/app"), false, true},
+		{filepath.Join(helper.ClusterPath, "/kubernetes/observability/headlamp/app"), false, true},
 	}
 
 	fluxhandler.InstallCharts(postCharts, HelmRepos, true)
