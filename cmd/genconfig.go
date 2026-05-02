@@ -20,7 +20,7 @@ var genConfig = &cobra.Command{
 	Use:     "genconfig",
 	Short:   "generate Cluster Configuration files",
 	Long:    genConfigLongHelp,
-	Example: "clustertool cluster genconfig",
+	Example: "clustertool genconfig",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		gencmd.GenConfig(args)
@@ -28,5 +28,5 @@ var genConfig = &cobra.Command{
 }
 
 func init() {
-	clusterCmd.AddCommand(genConfig)
+	RootCmd.AddCommand(genConfig)
 }
