@@ -168,7 +168,6 @@ func RunBootstrap(args []string) {
 		{filepath.Join(helper.ClusterPath, "/kubernetes/system/cloudnative-pg/app"), false, false},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/node-feature-discovery/app"), false, false},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/metrics-server/app"), false, false},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/descheduler/app"), false, false},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/system/volsync/app"), false, true},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/system/snapshot-controller/app"), false, true},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/system/openebs/app"), false, true},
