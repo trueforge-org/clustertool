@@ -1,0 +1,54 @@
+---
+
+## ================================================================================================================================
+## This is just an example App. You can remove it completely when decired or use it as a template for your own App.
+## It will not be automaticlly bootstrapped. However, when using flux it will be automatically deployed when pushing it to the git repository.
+## More information how to deploy an own app can be found in the documentation: https://truecharts.org/guides/fluxcd/deploychart/
+## ================================================================================================================================
+
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: librespeed
+  namespace: librespeed
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: librespeed
+      version: 18.2.2
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 20m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+
+    # ingress:
+    #   main:
+    #     enabled: true
+    #     ingressClassName: internal
+    #     hosts:
+    #       - host: librespeed.${DOMAIN_0}
+    #     integrations:
+    #       certManager:
+    #         enabled: true
+    #         certificateIssuer: domain-0-le-prod
+
+    resources:
+      requests:
+        cpu: 10m
