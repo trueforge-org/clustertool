@@ -77,4 +77,5 @@ spec:
     localRedirectPolicy: true
     operator:
       rollOutPods: true
+      replicas: 1     # When running multi node cluster, remove this line to let the operator decide how many replicas to run based on the number of nodes in the cluster.
     rollOutCiliumPods: true
