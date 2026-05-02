@@ -157,7 +157,6 @@ func RunBootstrap(args []string) {
 	close(stopCh)
 
 	prioCharts := []fluxhandler.HelmChart{
-		{filepath.Join(helper.ClusterPath, "/kubernetes/system/spegel/app"), false, true},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/system/cert-manager/app"), false, false},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/system/kubernetes-reflector/app"), false, false},
 	}
@@ -169,7 +168,6 @@ func RunBootstrap(args []string) {
 		{filepath.Join(helper.ClusterPath, "/kubernetes/system/cloudnative-pg/app"), false, false},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/node-feature-discovery/app"), false, false},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/metrics-server/app"), false, false},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/descheduler/app"), false, false},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/system/volsync/app"), false, true},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/system/snapshot-controller/app"), false, true},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/system/openebs/app"), false, true},
