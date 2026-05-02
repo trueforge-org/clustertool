@@ -15,8 +15,8 @@ Workflow:
   Create talconfig.yaml file defining your nodes information like so:
 
  Available commands
-  > clustertool cluster init
-  > clustertool cluster genconfig
+  > clustertool init
+  > clustertool genconfig
 
 `)
 
