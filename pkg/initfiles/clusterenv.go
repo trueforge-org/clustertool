@@ -229,7 +229,7 @@ func CheckEnvVariables() {
 		"VIP",
 		"MASTER1IP_IP",
 		"MASTER1IP_NETMASK",
-		"DASHBOARD_IP",
+		"HEADLAMP_IP",
 		"GATEWAY",
 		"METALLB_RANGE",
 		"PODNET",
@@ -294,15 +294,15 @@ func CheckEnvVariables() {
 		os.Exit(1)
 	}
 
-	// Check DASHBOARD_IP against METALLB_RANGE
-	if helper.TalEnv["DASHBOARD_IP"] != "" {
-		inRange, err = fthelper.IPInRange(helper.TalEnv["DASHBOARD_IP"], helper.TalEnv["METALLB_RANGE"])
+	// Check HEADLAMP_IP against METALLB_RANGE
+	if helper.TalEnv["HEADLAMP_IP"] != "" {
+		inRange, err = fthelper.IPInRange(helper.TalEnv["HEADLAMP_IP"], helper.TalEnv["METALLB_RANGE"])
 		if err != nil {
-			log.Info().Msgf("Error checking DASHBOARD_IP against METALLB_RANGE: %v\n", err)
+			log.Info().Msgf("Error checking HEADLAMP_IP against METALLB_RANGE: %v\n", err)
 			os.Exit(1)
 		}
 		if !inRange {
-			log.Info().Msg("Cannot proceed, DASHBOARD_IP must be in the METALLB_RANGE")
+			log.Info().Msg("Cannot proceed, HEADLAMP_IP must be in the METALLB_RANGE")
 			os.Exit(1)
 		}
 	}
