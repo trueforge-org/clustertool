@@ -28,8 +28,7 @@ After this is done, we apply a number of helm-charts and manifests by default su
 - Metallb-Config
 - Cilium (CNI)
 - Certificate-Approver
-- Spegel
-- Headlamp
+- Kubernetes-Dashboard
 
 ### Bootstrapping FluxCD
 
