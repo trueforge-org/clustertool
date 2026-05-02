@@ -1,9 +1,9 @@
 ---
 
 ## ================================================================================================================================
-## This is just an example App. You can remove it completely when decired or use it as a template for your own App.
-## It will not be automaticlly bootstrapped. However, when using flux it will be automatically deployed when pushing it to the git repository.
-## More information how to deploy an own app can be found in the documentation: https://truecharts.org/guides/fluxcd/deploychart/
+## This is just an example app. You can remove it completely if desired or use it as a template for your own app.
+## It will not be automatically bootstrapped. However, when using Flux, it will be automatically deployed when you push it to the Git repository.
+## More information on how to deploy your own app can be found in the documentation: https://truecharts.org/guides/fluxcd/deploychart/
 ## ================================================================================================================================
 
 apiVersion: helm.toolkit.fluxcd.io/v2
