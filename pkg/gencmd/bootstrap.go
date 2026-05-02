@@ -102,7 +102,7 @@ func RunBootstrap(args []string) {
 		// Pulled directly from upstream, due to this being very complex and important
 		{filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/cilium/app"), false, true},
 		{filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/kubelet-csr-approver/app"), false, true},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/system/kube-prometheus-stack/app"), false, false},
+		{filepath.Join(helper.ClusterPath, "/kubernetes/observability/kube-prometheus-stack/app"), false, false},
 	}
 
 	fluxhandler.InstallCharts(baseCharts, HelmRepos, true)
