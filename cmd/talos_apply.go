@@ -29,7 +29,7 @@ After this is done, we apply a number of helm-charts and manifests by default su
 - Cilium (CNI)
 - Certificate-Approver
 - Spegel
-- Kubernetes-Dashboard
+- Headlamp
 
 ### Bootstrapping FluxCD
 
