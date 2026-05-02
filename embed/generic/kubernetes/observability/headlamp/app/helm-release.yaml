@@ -91,7 +91,7 @@ spec:
 
     service:
       type: LoadBalancer
-      loadBalancerIP: ${DASHBOARD_IP}
+      loadBalancerIP: ${HEADLAMP_IP}
 
     # ingress:
     #   enabled: true
