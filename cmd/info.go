@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/trueforge-org/forgetool/pkg/info"
+	"github.com/rs/zerolog/log"
 )
 
 var description = strings.TrimSpace(`Clustertool is a tool to help you easily deploy and maintain a Talos Kubernetes Cluster.
