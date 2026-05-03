@@ -7,9 +7,10 @@ import (
 	"github.com/trueforge-org/forgetool/pkg/info"
 )
 
-var infoLongHelp = strings.TrimSpace(`
-Clustertool is a tool to help you easily deploy and maintain a Talos Kubernetes Cluster.
+var description = strings.TrimSpace(`Clustertool is a tool to help you easily deploy and maintain a Talos Kubernetes Cluster.
+`)
 
+var infoLongHelp = strings.TrimSpace(description + `
 
 Workflow:
   Create talconfig.yaml file defining your nodes information like so:
@@ -26,6 +27,7 @@ var infoCmd = &cobra.Command{
 	Long:    infoLongHelp,
 	Example: "clustertool info",
 	Run: func(cmd *cobra.Command, args []string) {
+		log.Info().Msg(description)
 		info.NewInfo().Print()
 	},
 }
