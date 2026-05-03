@@ -2,8 +2,8 @@ machine:
   kubelet:
     extraConfig:
       # Start collecting when disk is xx% full
-      imageGCHighThresholdPercent: 20
+      imageGCHighThresholdPercent: 50
       # Stop collecting when disk drops to xx%
-      imageGCLowThresholdPercent: 10
+      imageGCLowThresholdPercent: 30
       # Only collect images older than x minutes
       imageMinimumGCAge: "5m"
