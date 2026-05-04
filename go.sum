@@ -633,8 +633,6 @@ github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/tjfoc/gmsm v1.4.1 h1:aMe1GlZb+0bLjn+cKTPEvvn9oUEBlJitaZiiBwsbgho=
 github.com/tjfoc/gmsm v1.4.1/go.mod h1:j4INPkHWMrhJb38G+J6W4Tw0AbuN8Thu3PbdVYhVcTE=
-github.com/trueforge-org/forgetool v0.0.7-0.20260502124536-61a55784505d h1:YgFv9qQ3j9RLJKJnxtP0AyMIfvn1S9FcOm2MhE2CkXg=
-github.com/trueforge-org/forgetool v0.0.7-0.20260502124536-61a55784505d/go.mod h1:nphRP+ZpUd1Wd2Em0HBMzskWLeK+8RcPOeynEsjofx8=
 github.com/trueforge-org/forgetool v0.0.7-0.20260503092520-05027730c8f6 h1:QUNSSZxvu5JLzAd1sR80ljrw3vH/vAomGqPmIPGaAmg=
 github.com/trueforge-org/forgetool v0.0.7-0.20260503092520-05027730c8f6/go.mod h1:nphRP+ZpUd1Wd2Em0HBMzskWLeK+8RcPOeynEsjofx8=
 github.com/urfave/cli v1.22.17 h1:SYzXoiPfQjHBbkYxbew5prZHS1TOLT3ierW8SYLqtVQ=
