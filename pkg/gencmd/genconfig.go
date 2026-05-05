@@ -40,7 +40,7 @@ func GenConfig(args []string) error {
 	} else {
 		log.Info().Msgf("Kustomizations processed successfully.")
 	}
-	fthelper.CreateEncrPreCommitHook()
+	helper.CreateEncrPreCommitHook()
 	log.Info().Msg("GenConfig: Completed Successfully!")
 	return nil
 }

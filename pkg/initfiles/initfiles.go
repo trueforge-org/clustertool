@@ -46,7 +46,7 @@ func InitFiles() error {
 		log.Info().Msg("Kustomizations processed successfully.")
 	}
 
-	fthelper.CreateEncrPreCommitHook()
+	helper.CreateEncrPreCommitHook()
 	log.Info().Msg("Init: Completed Successfully!")
 	return nil
 }

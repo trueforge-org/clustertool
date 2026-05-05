@@ -63,7 +63,7 @@ func bootstrapFluxCD(ctx context.Context) error {
 
 // checkGitRepo verifies if the current directory is a valid Git repository.
 func checkGitRepo() error {
-	isRepo, err := fthelper.IsCurrentDirGitRepo()
+	isRepo, err := helper.IsCurrentDirGitRepo()
 	if err != nil {
 		log.Error().Err(err).Msg("Error checking Git repository")
 		return err
