@@ -6,7 +6,7 @@ import (
 	"regexp"
 
 	"github.com/rs/zerolog/log"
-	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
+	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
 )
 
 // EncryptAllFiles encrypts all unencrypted files as specified in the .sops.yaml configuration.

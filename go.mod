@@ -12,7 +12,7 @@ require (
 	github.com/rs/zerolog v1.35.1
 	github.com/siderolabs/talos/pkg/machinery v1.13.0
 	github.com/spf13/cobra v1.10.2
-	github.com/trueforge-org/forgetool v4.1.0
+	github.com/trueforge-org/forgetool/v4 v4.1.1
 	golang.org/x/crypto v0.50.0
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.20.2

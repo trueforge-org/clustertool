@@ -12,7 +12,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/helper"
-	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
+	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"

@@ -13,7 +13,7 @@ import (
 	"github.com/trueforge-org/clustertool/pkg/initfiles"
 	"github.com/trueforge-org/clustertool/pkg/sops"
 	"github.com/trueforge-org/clustertool/pkg/talassist"
-	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
+	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
 )
 
 func GenConfig(args []string) error {
