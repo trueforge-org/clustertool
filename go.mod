@@ -277,4 +277,4 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.0 // indirect
 )
 
-replace github.com/trueforge-org/forgetool => github.com/trueforge-org/forgetool v0.0.7-0.20260503092520-05027730c8f6
+replace github.com/trueforge-org/forgetool => github.com/trueforge-org/forgetool 24096113ec89
