@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
+	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
 	"gopkg.in/yaml.v3"
 
 	age "filippo.io/age"
@@ -46,7 +46,7 @@ func InitFiles() error {
 		log.Info().Msg("Kustomizations processed successfully.")
 	}
 
-	fthelper.CreateEncrPreCommitHook()
+	helper.CreateEncrPreCommitHook()
 	log.Info().Msg("Init: Completed Successfully!")
 	return nil
 }

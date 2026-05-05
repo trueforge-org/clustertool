@@ -12,7 +12,7 @@ import (
 	"github.com/trueforge-org/clustertool/cmd"
 	"github.com/trueforge-org/clustertool/embed"
 	"github.com/trueforge-org/clustertool/pkg/helper"
-	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
+	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
 	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 )
 

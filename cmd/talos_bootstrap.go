@@ -7,7 +7,7 @@ import (
 	"github.com/trueforge-org/clustertool/pkg/gencmd"
 	"github.com/trueforge-org/clustertool/pkg/initfiles"
 	"github.com/trueforge-org/clustertool/pkg/talassist"
-	fthelper "github.com/trueforge-org/forgetool/pkg/helper"
+	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
 )
 
 var advBootstrapLongHelp = strings.TrimSpace(`

@@ -12,7 +12,7 @@ require (
 	github.com/rs/zerolog v1.35.1
 	github.com/siderolabs/talos/pkg/machinery v1.13.0
 	github.com/spf13/cobra v1.10.2
-	github.com/trueforge-org/forgetool v0.0.6
+	github.com/trueforge-org/forgetool/v4 v4.1.1
 	golang.org/x/crypto v0.50.0
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.20.2
@@ -276,5 +276,3 @@ require (
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.0 // indirect
 )
-
-replace github.com/trueforge-org/forgetool => github.com/trueforge-org/forgetool v0.0.7-0.20260503092520-05027730c8f6
