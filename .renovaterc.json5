@@ -7,4 +7,9 @@
     'porting/**',
     '*.mise.toml*',
   ],
+  "devcontainer": {
+    "managerFilePatterns": [
+      "/^.embed/generic/root/DOTREPLACEdevcontainer.json$/"
+    ]
+  }
 }
