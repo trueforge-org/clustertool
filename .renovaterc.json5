@@ -9,7 +9,7 @@
   ],
   "devcontainer": {
     "managerFilePatterns": [
-      "/^.embed/generic/root/DOTREPLACEdevcontainer.json$/"
+      "/^embed/generic/root/DOTREPLACEdevcontainer/devcontainer.json$/"
     ]
   }
 }
