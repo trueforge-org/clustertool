@@ -5,7 +5,7 @@ set -euo pipefail
 
 # Define the version
 # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
-version="v1.13.0"
+version="v1.13.2"
 
 # Define the OS and architecture combinations
 combinations=(
