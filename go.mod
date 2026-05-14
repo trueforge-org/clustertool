@@ -1,16 +1,16 @@
 module github.com/trueforge-org/clustertool
 
-go 1.26.1
+go 1.26.2
 
 require (
 	filippo.io/age v1.3.1
-	github.com/budimanjojo/talhelper/v3 v3.1.9
+	github.com/budimanjojo/talhelper/v3 v3.1.10
 	github.com/getsops/sops/v3 v3.13.0
 	github.com/go-logr/zerologr v1.2.3
 	github.com/invopop/jsonschema v0.14.0
 	github.com/leaanthony/debme v1.2.1
 	github.com/rs/zerolog v1.35.1
-	github.com/siderolabs/talos/pkg/machinery v1.13.2
+	github.com/siderolabs/talos/pkg/machinery v1.14.0-alpha.0
 	github.com/spf13/cobra v1.10.2
 	github.com/trueforge-org/forgetool/v4 v4.1.1
 	golang.org/x/crypto v0.51.0
@@ -214,7 +214,7 @@ require (
 	github.com/siderolabs/crypto v0.6.5 // indirect
 	github.com/siderolabs/gen v0.8.6 // indirect
 	github.com/siderolabs/go-pointer v1.0.1 // indirect
-	github.com/siderolabs/image-factory v1.2.0 // indirect
+	github.com/siderolabs/image-factory v1.3.0 // indirect
 	github.com/siderolabs/net v0.4.0 // indirect
 	github.com/siderolabs/protoenc v0.2.4 // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
@@ -244,7 +244,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.4 // indirect
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
-	golang.org/x/mod v0.35.0 // indirect
+	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.53.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
