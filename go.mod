@@ -5,7 +5,7 @@ go 1.26.2
 require (
 	filippo.io/age v1.3.1
 	github.com/budimanjojo/talhelper/v3 v3.1.10
-	github.com/getsops/sops/v3 v3.13.0
+	github.com/getsops/sops/v3 v3.13.1
 	github.com/go-logr/zerologr v1.2.3
 	github.com/invopop/jsonschema v0.14.0
 	github.com/leaanthony/debme v1.2.1
@@ -32,7 +32,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	cloud.google.com/go/iam v1.10.0 // indirect
-	cloud.google.com/go/kms v1.30.0 // indirect
+	cloud.google.com/go/kms v1.31.0 // indirect
 	cloud.google.com/go/longrunning v0.12.0 // indirect
 	cloud.google.com/go/monitoring v1.28.0 // indirect
 	cloud.google.com/go/storage v1.62.1 // indirect
@@ -65,7 +65,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.17 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.16 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.23 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.17 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.18 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.23 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.23 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.24 // indirect
@@ -74,7 +74,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.23 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.23 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kms v1.51.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.100.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.101.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.21 // indirect
@@ -165,7 +165,7 @@ require (
 	github.com/hashicorp/vault/api v1.23.0 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
-	github.com/huaweicloud/huaweicloud-sdk-go-v3 v0.1.194 // indirect
+	github.com/huaweicloud/huaweicloud-sdk-go-v3 v0.1.195 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
@@ -245,14 +245,14 @@ require (
 	go.yaml.in/yaml/v4 v4.0.0-rc.4 // indirect
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
 	golang.org/x/mod v0.36.0 // indirect
-	golang.org/x/net v0.53.0 // indirect
+	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.44.0 // indirect
 	golang.org/x/term v0.43.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	google.golang.org/api v0.277.0 // indirect
+	google.golang.org/api v0.278.0 // indirect
 	google.golang.org/genproto v0.0.0-20260427160629-7cedc36a6bc4 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260427160629-7cedc36a6bc4 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260427160629-7cedc36a6bc4 // indirect
