@@ -154,6 +154,8 @@ github.com/budimanjojo/talhelper/v3 v3.1.10 h1:vSJ8vEui6zlHDOuFSRonHl5u8C9qtz4Wd
 github.com/budimanjojo/talhelper/v3 v3.1.10/go.mod h1:iM9CGumtoteMOSzZpRxwABzSMWTqmBLAXbwg727MKoo=
 github.com/budimanjojo/talhelper/v3 v3.1.11 h1:npeYzYWTUEPAogK+E6JoK/J2t1q911gnqkmhwcDhp9Q=
 github.com/budimanjojo/talhelper/v3 v3.1.11/go.mod h1:rTGWWOnauzbfDg6eWk+EvHJpXIMsTCVDsSNwmjtryUo=
+github.com/budimanjojo/talhelper/v3 v3.1.12 h1:GUnuCjbmD+EMJ5dAXODcX/H0w1ovZpbM1yzs1jnWZU0=
+github.com/budimanjojo/talhelper/v3 v3.1.12/go.mod h1:lYgRACnE5V10MbFoCTYTT+f6m214ANjpmCKWpykL0NE=
 github.com/buger/jsonparser v1.2.0 h1:4EFcvK1kD4jyj6YqNK6skK6w+y7FHHBR+XBCtxwu/6g=
 github.com/buger/jsonparser v1.2.0/go.mod h1:6RYKKt7H4d4+iWqouImQ9R2FZql3VbhNgx27UK13J/0=
 github.com/cenkalti/backoff v2.2.1+incompatible h1:tNowT99t7UNflLxfYYSlKYsBpXdEet03Pg2g16Swow4=
@@ -391,6 +393,8 @@ github.com/gookit/validate v1.5.7 h1:W0nqxAbgCJ4ND/oR+Tx8yyYn6l+PkFVvGHlG7LxpYsc
 github.com/gookit/validate v1.5.7/go.mod h1:VeThM1saXWVJIG/Yn627PJL9yvap0s4bsjPUIV8I0UI=
 github.com/gookit/validate v1.6.0 h1:Y5bw2Oc5T3s2aPTyxf56SfzOisirpi92isZsY8cyx+k=
 github.com/gookit/validate v1.6.0/go.mod h1:K7iywwwmDhv3py6CKIeceb/5M59NGQ9d8H3QopfED2Q=
+github.com/gookit/validate/v2 v2.0.1 h1:GZ+IGPaNu3gxuEoMBRqQ9BbSfoNJYe+Ma6sHkevWpg8=
+github.com/gookit/validate/v2 v2.0.1/go.mod h1:349hPRxrjAbJ1UsbDkb90FygbQ6OE8OxJTDxKWKuTwE=
 github.com/gorilla/handlers v1.5.2 h1:cLTUSsNkgcwhgRqvCNmdbRWG0A3N4F+M2nWKdScwyEE=
 github.com/gorilla/handlers v1.5.2/go.mod h1:dX+xVpaxdSw+q0Qek8SSsl3dfMk3jNddUkMzo0GtH0w=
 github.com/gorilla/mux v1.8.1 h1:TuBL49tXwgrFYWhqrNgrUNEY92u81SPhu7sTdzQEiWY=

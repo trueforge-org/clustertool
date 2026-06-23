@@ -4,7 +4,7 @@ go 1.26.3
 
 require (
 	filippo.io/age v1.3.1
-	github.com/budimanjojo/talhelper/v3 v3.1.11
+	github.com/budimanjojo/talhelper/v3 v3.1.12
 	github.com/getsops/sops/v3 v3.13.1
 	github.com/go-logr/zerologr v1.2.3
 	github.com/invopop/jsonschema v0.14.0
@@ -151,6 +151,7 @@ require (
 	github.com/gookit/filter v1.2.3 // indirect
 	github.com/gookit/goutil v0.7.6 // indirect
 	github.com/gookit/validate v1.6.0 // indirect
+	github.com/gookit/validate/v2 v2.0.1 // indirect
 	github.com/gosuri/uitable v0.0.4 // indirect
 	github.com/goware/prefixer v0.0.0-20160118172347-395022866408 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
