@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//nolint:unused
 var talosLongHelp = strings.TrimSpace(`
 These are all commands that can be used to maintain Talos OS
 

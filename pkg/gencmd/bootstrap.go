@@ -100,9 +100,9 @@ func RunBootstrap(args []string) {
 
 	baseCharts := []fluxhandler.HelmChart{
 		// Pulled directly from upstream, due to this being very complex and important
-		{filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/cilium/app"), false, true},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/kubelet-csr-approver/app"), false, true},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/observability/kube-prometheus-stack/app"), false, false},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/cilium/app"), Retry: false, Wait: true},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/kubelet-csr-approver/app"), Retry: false, Wait: true},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/observability/kube-prometheus-stack/app"), Retry: false, Wait: false},
 	}
 
 	fluxhandler.InstallCharts(baseCharts, HelmRepos, true)
@@ -157,21 +157,21 @@ func RunBootstrap(args []string) {
 	close(stopCh)
 
 	prioCharts := []fluxhandler.HelmChart{
-		{filepath.Join(helper.ClusterPath, "/kubernetes/system/cert-manager/app"), false, false},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/system/kubernetes-reflector/app"), false, false},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/system/cert-manager/app"), Retry: false, Wait: false},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/system/kubernetes-reflector/app"), Retry: false, Wait: false},
 	}
 	fluxhandler.InstallCharts(prioCharts, HelmRepos, false)
 
 	intermediateCharts := []fluxhandler.HelmChart{
-		{filepath.Join(helper.ClusterPath, "/kubernetes/system/metallb/app"), false, false},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/core/clusterissuer/app"), false, false},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/system/cloudnative-pg/app"), false, false},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/node-feature-discovery/app"), false, false},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/metrics-server/app"), false, false},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/system/volsync/app"), false, true},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/system/snapshot-controller/app"), false, true},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/system/openebs/app"), false, true},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/system/longhorn/app"), false, true},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/system/metallb/app"), Retry: false, Wait: false},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/core/clusterissuer/app"), Retry: false, Wait: false},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/system/cloudnative-pg/app"), Retry: false, Wait: false},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/node-feature-discovery/app"), Retry: false, Wait: false},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/kube-system/metrics-server/app"), Retry: false, Wait: false},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/system/volsync/app"), Retry: false, Wait: true},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/system/snapshot-controller/app"), Retry: false, Wait: true},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/system/openebs/app"), Retry: false, Wait: true},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/system/longhorn/app"), Retry: false, Wait: true},
 	}
 
 	fluxhandler.InstallCharts(intermediateCharts, HelmRepos, true)
@@ -190,7 +190,7 @@ func RunBootstrap(args []string) {
 	}
 
 	lateCharts := []fluxhandler.HelmChart{
-		{filepath.Join(helper.ClusterPath, "/kubernetes/core/metallb-config/app"), false, false},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/core/metallb-config/app"), Retry: false, Wait: false},
 	}
 
 	log.Info().Msgf("Bootstrap: Loading VolumeSnapshotClasses")
@@ -207,10 +207,10 @@ func RunBootstrap(args []string) {
 
 	log.Info().Msg("Bootstrap: Installing included applications")
 	postCharts := []fluxhandler.HelmChart{
-		{filepath.Join(helper.ClusterPath, "/kubernetes/networking/nginx-internal/app"), false, true},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/networking/nginx-external/app"), false, true},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/core/blocky/app"), false, true},
-		{filepath.Join(helper.ClusterPath, "/kubernetes/observability/headlamp/app"), false, true},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/networking/nginx-internal/app"), Retry: false, Wait: true},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/networking/nginx-external/app"), Retry: false, Wait: true},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/core/blocky/app"), Retry: false, Wait: true},
+		{ChartPath: filepath.Join(helper.ClusterPath, "/kubernetes/observability/headlamp/app"), Retry: false, Wait: true},
 	}
 
 	fluxhandler.InstallCharts(postCharts, HelmRepos, true)

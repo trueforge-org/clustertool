@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"strings"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/trueforge-org/clustertool/pkg/gencmd"
@@ -10,11 +8,6 @@ import (
 	"github.com/trueforge-org/clustertool/pkg/sops"
 	"github.com/trueforge-org/clustertool/pkg/talassist"
 )
-
-//nolint:unused
-var advKubeconfigLongHelp = strings.TrimSpace(`
-
-`)
 
 var kubeconfig = &cobra.Command{
 	Use:     "kubeconfig",
