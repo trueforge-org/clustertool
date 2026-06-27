@@ -16,7 +16,7 @@ var talosCmd = &cobra.Command{
     Use:           "talos",
     Short:         "Commands for handling Talos OS",
     Example:       "clustertool talos apply",
-    Long:          advLongHelp,
+    Long:          talosLongHelp,
     SilenceUsage:  true,
     SilenceErrors: true,
 }

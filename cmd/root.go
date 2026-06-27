@@ -21,6 +21,8 @@ var RootCmd = &cobra.Command{
 }
 
 func init() {
+	RootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
+
 	// Define the --cluster flag
 	RootCmd.PersistentFlags().StringVar(&helper.ClusterName, "cluster", "main", "Cluster name")
 }

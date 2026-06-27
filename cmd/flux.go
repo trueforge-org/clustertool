@@ -16,7 +16,7 @@ var fluxCmd = &cobra.Command{
     Use:           "flux",
     Short:         "Commands for handling FluxCD",
     Example:       "clustertool flux bootstrap",
-    Long:          advLongHelp,
+    Long:          fluxLongHelp,
     SilenceUsage:  true,
     SilenceErrors: true,
 }
