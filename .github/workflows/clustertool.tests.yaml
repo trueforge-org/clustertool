@@ -83,6 +83,14 @@ jobs:
           # Config generation must succeed with dummy values.
           run_cmd "Generate config" ./clustertool genconfig
 
+          # Validate expected generated artifacts.
+          run_cmd "Check clusterenv exists" test -f clusters/main/clusterenv.yaml
+          run_cmd "Check talconfig exists" test -f clusters/main/talos/talconfig.yaml
+          run_cmd "Check talosconfig exists" test -f clusters/main/talos/generated/talosconfig
+          run_cmd "Check talsecret exists" test -f clusters/main/talos/generated/talsecret.yaml
+          run_cmd "Check clustersettings secret exists" test -f clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml
+          run_cmd "Check at least one node machine config exists" bash -c 'find clusters/main/talos/generated -maxdepth 1 -type f -name "*.yaml" ! -name "talsecret.yaml" | grep -q .'
+
           popd >/dev/null
 
       - name: SOPS roundtrip (encrypt/decrypt/checkcrypt)
