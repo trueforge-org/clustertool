@@ -1,8 +1,5 @@
 name: clustertool-go-tests
 on:
-  workflow_dispatch:
-  workflow_call:
-  push:
   pull_request:
 permissions:
   contents: read
