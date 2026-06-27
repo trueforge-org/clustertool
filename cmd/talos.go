@@ -7,7 +7,7 @@ import (
 )
 
 var talosLongHelp = strings.TrimSpace(`
-These are all commands that can be used to maintain Talos OS
+These are all commands that can be used to maintain Talos OS.
 
 `)
 
