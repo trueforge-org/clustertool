@@ -43,6 +43,7 @@ release:
     - glob: "LICENSE"
   draft: false
   make_latest: false
+  prerelease: auto
   mode: append
 
 git:
