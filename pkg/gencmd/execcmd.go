@@ -13,7 +13,7 @@ import (
 
 func ExecCmd(cmd string) {
 	argslice := strings.Split(cmd, " ")
-	log.Trace().Msgf("command", argslice[:])
+	log.Trace().Msgf("command %s", argslice[:])
 
 	// log.Info().Msg("test", strings.Join(argslice, " "))
 	//nolint:ineffassign

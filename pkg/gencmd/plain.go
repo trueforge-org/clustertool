@@ -19,7 +19,7 @@ func GenPlain(command string, node string, extraArgs []string) []string {
 		log.Debug().Msg("Cmd Nodes is empty, rendering cmds for all nodes...")
 
 		for _, noderef := range talassist.TalConfig.Nodes {
-			log.Debug().Msgf("Rendering for node: %s", noderef)
+			log.Debug().Msgf("Rendering for node: %v", noderef)
 			cmd := talosPath + " " + command + " --talosconfig " + helper.TalosConfigFile + " -n " + noderef.IPAddress
 			if len(extraArgs) == 0 {
 				log.Debug().Msg("extraArgs is empty, not adding extra args to cmd")

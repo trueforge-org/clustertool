@@ -199,7 +199,7 @@ func shamCheck() {
 	log.Debug().Msg("Checking if clusterenv contains shamir_threshold to ensure encryption...")
 	file, err := os.Open(helper.ClusterEnvFile)
 	if err != nil {
-		log.Error().Err(err).Msgf("error opening file: %w", err)
+		log.Error().Err(err).Msgf("error opening file:  %s", err)
 	}
 	defer file.Close()
 
@@ -212,7 +212,7 @@ func shamCheck() {
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Error().Err(err).Msgf("error reading file: %w", err)
+		log.Error().Err(err).Msgf("error reading file: %s", err)
 	}
 
 	log.Error().Msg("clusterenv is NOT encrypted and encryption-check failed!\n DO NOT UPLOAD!")
