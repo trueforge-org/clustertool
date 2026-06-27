@@ -4,6 +4,7 @@ import (
 	"embed"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 
@@ -102,6 +103,18 @@ func GetTalosExec() string {
 
 	}
 
-	return filepath.Join(helper.CacheDir, execName)
+	embeddedPath := filepath.Join(helper.CacheDir, execName)
+	if _, err := os.Stat(embeddedPath); err == nil {
+		return embeddedPath
+	}
+
+	// Local/dev builds may not include downloaded talosctl assets. In that case,
+	// use a system talosctl if available.
+	if pathTalosctl, err := exec.LookPath("talosctl"); err == nil {
+		log.Warn().Msgf("Embedded talosctl not found at %s, falling back to %s", embeddedPath, pathTalosctl)
+		return pathTalosctl
+	}
+
+	return embeddedPath
 
 }

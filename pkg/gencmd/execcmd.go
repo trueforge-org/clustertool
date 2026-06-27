@@ -51,6 +51,9 @@ func ExecCmd(cmd string) {
 func ExecCmds(taloscmds []string, healthcheck bool) error {
 	log.Info().Msg("Regenerating config prior to commands...")
 	GenConfig([]string{})
+	if len(taloscmds) == 0 {
+		return nil
+	}
 	var todocmds []string
 	var healthcmd string
 	skipped := false
@@ -79,8 +82,11 @@ func ExecCmds(taloscmds []string, healthcheck bool) error {
 		} else {
 			if fthelper.GetYesOrNo("Do you want to check the health of the cluster? (yes/no) [y/n]: ", false) {
 				log.Info().Msg("Checking if cluster is healthy...")
-				healthcmd := GenPlain("health", helper.TalEnv["VIP_IP"], []string{})
-				ExecCmd(healthcmd[0])
+				healthcmds := GenPlain("health", helper.TalEnv["VIP_IP"], []string{})
+				if len(healthcmds) > 0 {
+					healthcmd = healthcmds[0]
+					ExecCmd(healthcmd)
+				}
 			} else {
 				skipped = true
 			}
@@ -131,7 +137,7 @@ func ExecCmds(taloscmds []string, healthcheck bool) error {
 		}
 	}
 
-	if healthcheck && !skipped && !strings.Contains(taloscmds[0], "upgrade") {
+	if healthcheck && !skipped && healthcmd != "" && !strings.Contains(taloscmds[0], "upgrade") {
 		log.Info().Msg("Checking if cluster is healthy after commands...")
 		ExecCmd(healthcmd)
 	}

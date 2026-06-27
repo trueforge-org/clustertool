@@ -1,13 +1,11 @@
 name: clustertool-go-tests
 on:
-  workflow_dispatch:
-  workflow_call:
-  push:
   pull_request:
 permissions:
   contents: read
 jobs:
 
+  # Detect whether Go sources changed, so heavy jobs can be skipped when irrelevant.
   check_changes:
     runs-on: ubuntu-latest
     outputs:
@@ -24,18 +22,144 @@ jobs:
           list-files: json
           filters: |
             changed:
-            - '**'
+            - '**/*.go'
 
+  # Main validation job: build, unit tests, init/genconfig roundtrip, and SOPS checks.
   build:
+    needs: check_changes
     runs-on:
       group: default    
     if: needs.check_changes.outputs.changes_detected == 'true'
     steps:
+      # Toolchain + source setup
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version: stable
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      # Compile and run unit tests first so failures surface early.
       - run:  |
-          go build -o /usr/local/bin/clustertool
-          go test -v ./... -race -covermode=atomic
-          clustertool-dev
+          set -euo pipefail
+
+          # Helper to print readable command boundaries in logs.
+          run_cmd() {
+            echo ""
+            echo "============================================================"
+            echo "== $1"
+            echo "============================================================"
+            shift
+            "$@"
+          }
+
+          # Build + unit-test section
+          run_cmd "Build binary" go build -o ./clustertool
+          run_cmd "Run Go tests" go test -v ./... -race -covermode=atomic
+          run_cmd "Binary info smoke check" ./clustertool info
+
+      # End-to-end non-destructive bootstrap/config generation checks in isolated temp workspace.
+      - name: Init + Genconfig + SOPS roundtrip
+        run: |
+          set -euo pipefail
+
+          # Helper to print readable command boundaries in logs.
+          run_cmd() {
+            echo ""
+            echo "------------------------------------------------------------"
+            echo "[ROUNDTRIP] $1"
+            echo "------------------------------------------------------------"
+            shift
+            "$@"
+          }
+
+          log_step() {
+            echo ""
+            echo "------------------------------------------------------------"
+            echo "[ROUNDTRIP] $1"
+            echo "------------------------------------------------------------"
+          }
+
+          # Workspace preparation
+          workdir="${RUNNER_TEMP}/clustertool-roundtrip"
+          run_cmd "Reset temp workspace" rm -rf "$workdir"
+          run_cmd "Create temp workspace" mkdir -p "$workdir"
+          run_cmd "Copy binary to temp workspace" cp ./clustertool "$workdir/"
+
+          log_step "Enter temp workspace"
+          pushd "$workdir" >/dev/null
+
+          # Initial scaffold generation
+          run_cmd "Initial init" ./clustertool init
+
+          # Inject deterministic dummy values required for strict validation.
+          log_step "Inject dummy values"
+          run_cmd "Set DOMAIN_0 dummy value" sed -i 's/^DOMAIN_0: ".*"/DOMAIN_0: "dummy.local"/' clusters/main/clusterenv.yaml
+          run_cmd "Set DOMAIN_0_EMAIL dummy value" sed -i 's/^DOMAIN_0_EMAIL: ".*"/DOMAIN_0_EMAIL: "admin@dummy.local"/' clusters/main/clusterenv.yaml
+          run_cmd "Set DOMAIN_0_CLOUDFLARE_TOKEN dummy value" sed -i 's/^DOMAIN_0_CLOUDFLARE_TOKEN: ".*"/DOMAIN_0_CLOUDFLARE_TOKEN: "dummy-token"/' clusters/main/clusterenv.yaml
+          run_cmd "Set GITHUB_REPOSITORY dummy value" sed -i 's|^GITHUB_REPOSITORY: ".*"|GITHUB_REPOSITORY: "https://github.com/trueforge-org/clustertool.git"|' clusters/main/clusterenv.yaml
+
+          # Full generation path with populated environment values.
+          run_cmd "Second init" ./clustertool init
+
+          # Explicit config generation check.
+          run_cmd "Generate config" ./clustertool genconfig
+
+          # Artifact presence checks to ensure expected outputs were produced.
+          log_step "Validate generated artifacts"
+          run_cmd "Check clusterenv exists" test -f clusters/main/clusterenv.yaml
+          run_cmd "Check talconfig exists" test -f clusters/main/talos/talconfig.yaml
+          run_cmd "Check talosconfig exists" test -f clusters/main/talos/generated/talosconfig
+          run_cmd "Check talsecret exists" test -f clusters/main/talos/generated/talsecret.yaml
+          run_cmd "Check clustersettings secret exists" test -f clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml
+          run_cmd "Check at least one node machine config exists" bash -c 'find clusters/main/talos/generated -maxdepth 1 -type f -name "*.yaml" ! -name "talsecret.yaml" | grep -q .'
+
+          log_step "Leave temp workspace"
+          popd >/dev/null
+
+      # Dedicated SOPS lifecycle checks (kept separate for clearer failure attribution).
+      - name: SOPS roundtrip (encrypt/decrypt/checkcrypt)
+        run: |
+          set -euo pipefail
+
+          # Helper to print readable command boundaries in logs.
+          run_cmd() {
+            echo ""
+            echo "------------------------------------------------------------"
+            echo "[SOPS] $1"
+            echo "------------------------------------------------------------"
+            shift
+            "$@"
+          }
+
+          log_step() {
+            echo ""
+            echo "------------------------------------------------------------"
+            echo "[SOPS] $1"
+            echo "------------------------------------------------------------"
+          }
+
+          # Re-enter isolated workspace created in previous step.
+          workdir="${RUNNER_TEMP}/clustertool-roundtrip"
+          run_cmd "Verify temp workspace exists" test -d "$workdir"
+          log_step "Enter temp workspace"
+          pushd "$workdir" >/dev/null
+
+          # SOPS workflow expects git metadata for staged-status checks.
+          log_step "Prepare temporary git metadata"
+          run_cmd "Initialize temporary git repository" git init
+          run_cmd "Set temporary git user email" git config user.email "ci@trueforge.local"
+          run_cmd "Set temporary git user name" git config user.name "CI"
+          run_cmd "Stage generated files" git add .
+
+          # Encrypt/decrypt/check roundtrip.
+          log_step "Run encrypt/decrypt/check roundtrip"
+          run_cmd "Encrypt files" ./clustertool encrypt
+          run_cmd "Check encrypted state" ./clustertool checkcrypt
+          run_cmd "Assert encrypted markers exist" bash -c 'grep -q "ENC\\[" clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml && grep -q "sops:" clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml'
+          run_cmd "Decrypt files" ./clustertool decrypt
+          run_cmd "Assert encrypted markers removed after decrypt" bash -c '! grep -q "ENC\\[" clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml && ! grep -q "sops:" clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml'
+          run_cmd "Checkcrypt fails on decrypted files (expected)" bash -c 'if ./clustertool checkcrypt; then echo "::error::checkcrypt unexpectedly succeeded on decrypted files"; exit 1; else echo "checkcrypt failed as expected on decrypted files"; fi'
+          run_cmd "Encrypt files again" ./clustertool encrypt
+          run_cmd "Re-check encrypted state" ./clustertool checkcrypt
+
+          log_step "Leave temp workspace"
+          popd >/dev/null

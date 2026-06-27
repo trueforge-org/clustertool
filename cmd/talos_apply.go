@@ -17,6 +17,8 @@ import (
 var applyLongHelp = strings.TrimSpace(`
 The "apply" command applies your Talos System configuration to each node in the cluster, existing or new It also runs automated checking of your config file and health checks between each node it has processed, to ensure you don't accidentally take down your whole cluster.
 
+This is the recommended command for both initial cluster bootstrap and day-2 Talos config maintenance.
+
 ## Bootstrapping
 If the cluster has not been bootstrapped yet, Apply will automatically detect this and ask if you want to bootstrap the cluster
 

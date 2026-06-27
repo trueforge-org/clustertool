@@ -1,26 +1,25 @@
 package cmd
 
 import (
-    "strings"
+	"strings"
 
-    "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
-//nolint:unused
 var talosLongHelp = strings.TrimSpace(`
-These are all commands that can be used to maintain Talos OS
+These are all commands that can be used to maintain Talos OS.
 
 `)
 
 var talosCmd = &cobra.Command{
-    Use:           "talos",
-    Short:         "Commands for handling Talos OS",
-    Example:       "clustertool talos apply",
-    Long:          advLongHelp,
-    SilenceUsage:  true,
-    SilenceErrors: true,
+	Use:           "talos",
+	Short:         "Commands for handling Talos OS",
+	Example:       "clustertool talos apply",
+	Long:          talosLongHelp,
+	SilenceUsage:  true,
+	SilenceErrors: true,
 }
 
 func init() {
-    RootCmd.AddCommand(talosCmd)
+	RootCmd.AddCommand(talosCmd)
 }
