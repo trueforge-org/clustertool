@@ -24,9 +24,10 @@ jobs:
           list-files: json
           filters: |
             changed:
-            - '**'
+            - '**/*.go'
 
   build:
+    needs: check_changes
     runs-on:
       group: default    
     if: needs.check_changes.outputs.changes_detected == 'true'
