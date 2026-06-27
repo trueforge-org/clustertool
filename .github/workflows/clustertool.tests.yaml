@@ -34,38 +34,78 @@ jobs:
           go-version: stable
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - run:  |
-          go build -o ./clustertool
-          go test -v ./... -race -covermode=atomic
-          ./clustertool info
+          set -euo pipefail
+
+          run_cmd() {
+            echo ""
+            echo "============================================================"
+            echo "== $1"
+            echo "============================================================"
+            shift
+            "$@"
+          }
+
+          run_cmd "Build binary" go build -o ./clustertool
+          run_cmd "Run Go tests" go test -v ./... -race -covermode=atomic
+          run_cmd "Binary info smoke check" ./clustertool info
       - name: Init + Genconfig + SOPS roundtrip
         run: |
           set -euo pipefail
 
-          tmpdir="$(mktemp -d)"
-          cp ./clustertool "$tmpdir/"
+          run_cmd() {
+            echo ""
+            echo "------------------------------------------------------------"
+            echo "[ROUNDTRIP] $1"
+            echo "------------------------------------------------------------"
+            shift
+            "$@"
+          }
 
-          pushd "$tmpdir" >/dev/null
+          workdir="${RUNNER_TEMP}/clustertool-roundtrip"
+          run_cmd "Reset temp workspace" rm -rf "$workdir"
+          run_cmd "Create temp workspace" mkdir -p "$workdir"
+          run_cmd "Copy binary to temp workspace" cp ./clustertool "$workdir/"
+
+          pushd "$workdir" >/dev/null
 
           # First init creates base files and clusterenv skeleton.
-          ./clustertool init
+          run_cmd "Initial init" ./clustertool init
 
           # Fill required values so second init passes strict validation.
-          sed -i 's/^DOMAIN_0: ".*"/DOMAIN_0: "dummy.local"/' clusters/main/clusterenv.yaml
-          sed -i 's/^DOMAIN_0_EMAIL: ".*"/DOMAIN_0_EMAIL: "admin@dummy.local"/' clusters/main/clusterenv.yaml
-          sed -i 's/^DOMAIN_0_CLOUDFLARE_TOKEN: ".*"/DOMAIN_0_CLOUDFLARE_TOKEN: "dummy-token"/' clusters/main/clusterenv.yaml
-          sed -i 's|^GITHUB_REPOSITORY: ".*"|GITHUB_REPOSITORY: "https://github.com/trueforge-org/clustertool.git"|' clusters/main/clusterenv.yaml
+          run_cmd "Set DOMAIN_0 dummy value" sed -i 's/^DOMAIN_0: ".*"/DOMAIN_0: "dummy.local"/' clusters/main/clusterenv.yaml
+          run_cmd "Set DOMAIN_0_EMAIL dummy value" sed -i 's/^DOMAIN_0_EMAIL: ".*"/DOMAIN_0_EMAIL: "admin@dummy.local"/' clusters/main/clusterenv.yaml
+          run_cmd "Set DOMAIN_0_CLOUDFLARE_TOKEN dummy value" sed -i 's/^DOMAIN_0_CLOUDFLARE_TOKEN: ".*"/DOMAIN_0_CLOUDFLARE_TOKEN: "dummy-token"/' clusters/main/clusterenv.yaml
+          run_cmd "Set GITHUB_REPOSITORY dummy value" sed -i 's|^GITHUB_REPOSITORY: ".*"|GITHUB_REPOSITORY: "https://github.com/trueforge-org/clustertool.git"|' clusters/main/clusterenv.yaml
 
           # Second init runs full generation flow with populated env.
-          ./clustertool init
+          run_cmd "Second init" ./clustertool init
 
           # Config generation must succeed with dummy values.
-          ./clustertool genconfig
+          run_cmd "Generate config" ./clustertool genconfig
 
-          # SOPS command roundtrip checks.
-          ./clustertool encrypt
-          ./clustertool checkcrypt
-          ./clustertool decrypt
-          ./clustertool encrypt
-          ./clustertool checkcrypt
+          popd >/dev/null
+
+      - name: SOPS roundtrip (encrypt/decrypt/checkcrypt)
+        run: |
+          set -euo pipefail
+
+          run_cmd() {
+            echo ""
+            echo "------------------------------------------------------------"
+            echo "[SOPS] $1"
+            echo "------------------------------------------------------------"
+            shift
+            "$@"
+          }
+
+          workdir="${RUNNER_TEMP}/clustertool-roundtrip"
+          run_cmd "Verify temp workspace exists" test -d "$workdir"
+          pushd "$workdir" >/dev/null
+
+          run_cmd "Encrypt files" ./clustertool encrypt
+          run_cmd "Check encrypted state" ./clustertool checkcrypt
+          run_cmd "Decrypt files" ./clustertool decrypt
+          run_cmd "Encrypt files again" ./clustertool encrypt
+          run_cmd "Re-check encrypted state" ./clustertool checkcrypt
 
           popd >/dev/null
