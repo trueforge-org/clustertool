@@ -37,6 +37,6 @@ jobs:
           go-version: stable
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - run:  |
-          go build -o /usr/local/bin/clustertool
+          go build -o ./clustertool
           go test -v ./... -race -covermode=atomic
-          clustertool-dev
+          ./clustertool info
