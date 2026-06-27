@@ -154,7 +154,10 @@ jobs:
           log_step "Run encrypt/decrypt/check roundtrip"
           run_cmd "Encrypt files" ./clustertool encrypt
           run_cmd "Check encrypted state" ./clustertool checkcrypt
+          run_cmd "Assert encrypted markers exist" bash -c 'grep -q "ENC\\[" clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml && grep -q "sops:" clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml'
           run_cmd "Decrypt files" ./clustertool decrypt
+          run_cmd "Assert encrypted markers removed after decrypt" bash -c '! grep -q "ENC\\[" clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml && ! grep -q "sops:" clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml'
+          run_cmd "Checkcrypt fails on decrypted files (expected)" bash -c 'if ./clustertool checkcrypt; then echo "::error::checkcrypt unexpectedly succeeded on decrypted files"; exit 1; else echo "checkcrypt failed as expected on decrypted files"; fi'
           run_cmd "Encrypt files again" ./clustertool encrypt
           run_cmd "Re-check encrypted state" ./clustertool checkcrypt
 
