@@ -72,3 +72,51 @@ func TestGenApplySingleNode(t *testing.T) {
 		t.Fatalf("expected generated config path %q in command, got %q", expectedFile, cmd)
 	}
 }
+
+func TestGenPlainSingleNodeWithoutExtraArgs(t *testing.T) {
+	withTalConfigFixture(t, &talhelperCfg.TalhelperConfig{
+		ClusterName: "main",
+		Nodes: []talhelperCfg.Node{
+			{Hostname: "cp1", IPAddress: "10.0.0.1"},
+			{Hostname: "cp2", IPAddress: "10.0.0.2"},
+		},
+	})
+
+	cmds := GenPlain("kubeconfig", "10.0.0.1", nil)
+	if len(cmds) != 1 {
+		t.Fatalf("expected 1 command, got %d", len(cmds))
+	}
+
+	cmd := cmds[0]
+	if !strings.Contains(cmd, " kubeconfig ") {
+		t.Fatalf("expected kubeconfig command, got %q", cmd)
+	}
+	if !strings.Contains(cmd, " -n 10.0.0.1") {
+		t.Fatalf("expected selected node in command, got %q", cmd)
+	}
+	if strings.HasSuffix(cmd, " ") {
+		t.Fatalf("did not expect trailing space in command, got %q", cmd)
+	}
+}
+
+func TestGenApplyAllNodes(t *testing.T) {
+	withTalConfigFixture(t, &talhelperCfg.TalhelperConfig{
+		ClusterName: "main",
+		Nodes: []talhelperCfg.Node{
+			{Hostname: "cp1", IPAddress: "10.0.0.1"},
+			{Hostname: "cp2", IPAddress: "10.0.0.2"},
+		},
+	})
+
+	cmds := GenApply("", nil)
+	if len(cmds) != 2 {
+		t.Fatalf("expected 2 commands, got %d", len(cmds))
+	}
+
+	if !strings.Contains(cmds[0], " -f "+filepath.Join(helper.TalosGenerated, "main-cp1.yaml")) {
+		t.Fatalf("expected first node config path in first command, got %q", cmds[0])
+	}
+	if !strings.Contains(cmds[1], " -f "+filepath.Join(helper.TalosGenerated, "main-cp2.yaml")) {
+		t.Fatalf("expected second node config path in second command, got %q", cmds[1])
+	}
+}

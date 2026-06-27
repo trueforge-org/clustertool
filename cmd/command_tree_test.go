@@ -55,6 +55,22 @@ func TestTalosSubcommands(t *testing.T) {
 			t.Fatalf("expected talos subcommand %q", expected)
 		}
 	}
+
+	apply := findSubcommand(talos, "apply")
+	if apply == nil {
+		t.Fatalf("expected talos apply command to be registered")
+	}
+
+	hasAlias := false
+	for _, alias := range apply.Aliases {
+		if alias == "apply-config" {
+			hasAlias = true
+			break
+		}
+	}
+	if !hasAlias {
+		t.Fatalf("expected talos apply to include alias %q", "apply-config")
+	}
 }
 
 func TestRootCommandSnapshot(t *testing.T) {
