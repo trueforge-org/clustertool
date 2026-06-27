@@ -2,15 +2,15 @@
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
     'github>trueforge-org/renovate-config',
-    'github>trueforge-org/renovate-config:autoMergeLabels'
+    'github>trueforge-org/renovate-config:autoMergeLabels.json5'
   ],
   ignorePaths: [
     'porting/**',
     '*.mise.toml*'
   ],
-  "devcontainer": {
-    "managerFilePatterns": [
-      "/^embed/generic/root/DOTREPLACEdevcontainer/devcontainer.json$/"
+  devcontainer: {
+    managerFilePatterns: [
+      '/^embed/generic/root/DOTREPLACEdevcontainer/devcontainer\\.json$/'
     ]
   }
 }
