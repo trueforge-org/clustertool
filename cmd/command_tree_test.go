@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -52,5 +54,29 @@ func TestTalosSubcommands(t *testing.T) {
 		if !hasSubcommand(talos, expected) {
 			t.Fatalf("expected talos subcommand %q", expected)
 		}
+	}
+}
+
+func TestRootCommandSnapshot(t *testing.T) {
+	var got []string
+	for _, c := range RootCmd.Commands() {
+		got = append(got, c.Name())
+	}
+	sort.Strings(got)
+
+	want := []string{
+		"checkcrypt",
+		"decrypt",
+		"encrypt",
+		"flux",
+		"genconfig",
+		"info",
+		"init",
+		"precommit",
+		"talos",
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("root command snapshot mismatch\n got: %v\nwant: %v", got, want)
 	}
 }

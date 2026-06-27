@@ -1,5 +1,4 @@
 package gencmd
-package gencmd
 
 import (
 	"strings"
