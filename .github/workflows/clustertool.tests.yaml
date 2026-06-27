@@ -37,3 +37,35 @@ jobs:
           go build -o ./clustertool
           go test -v ./... -race -covermode=atomic
           ./clustertool info
+      - name: Init + Genconfig + SOPS roundtrip
+        run: |
+          set -euo pipefail
+
+          tmpdir="$(mktemp -d)"
+          cp ./clustertool "$tmpdir/"
+
+          pushd "$tmpdir" >/dev/null
+
+          # First init creates base files and clusterenv skeleton.
+          ./clustertool init
+
+          # Fill required values so second init passes strict validation.
+          sed -i 's/^DOMAIN_0: ".*"/DOMAIN_0: "dummy.local"/' clusters/main/clusterenv.yaml
+          sed -i 's/^DOMAIN_0_EMAIL: ".*"/DOMAIN_0_EMAIL: "admin@dummy.local"/' clusters/main/clusterenv.yaml
+          sed -i 's/^DOMAIN_0_CLOUDFLARE_TOKEN: ".*"/DOMAIN_0_CLOUDFLARE_TOKEN: "dummy-token"/' clusters/main/clusterenv.yaml
+          sed -i 's|^GITHUB_REPOSITORY: ".*"|GITHUB_REPOSITORY: "https://github.com/trueforge-org/clustertool.git"|' clusters/main/clusterenv.yaml
+
+          # Second init runs full generation flow with populated env.
+          ./clustertool init
+
+          # Config generation must succeed with dummy values.
+          ./clustertool genconfig
+
+          # SOPS command roundtrip checks.
+          ./clustertool encrypt
+          ./clustertool checkcrypt
+          ./clustertool decrypt
+          ./clustertool encrypt
+          ./clustertool checkcrypt
+
+          popd >/dev/null
