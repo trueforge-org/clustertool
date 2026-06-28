@@ -29,7 +29,8 @@ jobs:
             const pr = workflowRun.pull_requests?.[0];
 
             if (!pr) {
-              core.setFailed('workflow_run does not reference a pull request.');
+              core.notice('workflow_run does not reference a pull request; skipping automerge logic.');
+              core.setOutput('gate_status', 'no_pr');
               return;
             }
 
@@ -56,7 +57,8 @@ jobs:
             });
 
             if (runs.length === 0) {
-              core.setFailed(`No pull_request workflow runs found for PR #${prNumber} (${headSha}).`);
+              core.notice(`No pull_request workflow runs found yet for PR #${prNumber} (${headSha}); waiting for next trigger.`);
+              core.setOutput('gate_status', 'waiting');
               return;
             }
 
@@ -72,7 +74,8 @@ jobs:
               for (const run of pending) {
                 core.info(`- ${run.name} (${run.status})`);
               }
-              core.setFailed('Not all pull_request workflow runs are completed yet.');
+              core.notice('Not all pull_request workflow runs are completed yet; will wait for next trigger.');
+              core.setOutput('gate_status', 'waiting');
               return;
             }
 
@@ -81,24 +84,26 @@ jobs:
               for (const run of failing) {
                 core.info(`- ${run.name} (${run.conclusion})`);
               }
-              core.setFailed('One or more pull_request workflow runs did not succeed.');
+              core.notice('One or more pull_request workflow runs did not succeed yet; automerge will remain blocked until checks are green.');
+              core.setOutput('gate_status', 'blocked');
               return;
             }
 
             core.setOutput('pr_number', String(prNumber));
             core.setOutput('pr_author', prAuthor);
+            core.setOutput('gate_status', 'ready');
             core.info('All pull_request workflow runs are completed and successful.');
 
       - name: Approve PR
         uses: hmarr/auto-approve-action@v3
-        if: steps.ci-gate.outcome == 'success' && steps.ci-gate.outputs.pr_author == 'truecharts-admin'
+        if: steps.ci-gate.outputs.gate_status == 'ready' && steps.ci-gate.outputs.pr_author == 'truecharts-admin'
         with:
           github-token: "${{ secrets.OR_PAT }}"
           review-message: "Auto approved automated PR"
           pull-request-number: ${{ steps.ci-gate.outputs.pr_number }}
 
       - name: Automerge
-        if: steps.ci-gate.outcome == 'success' && steps.ci-gate.outputs.pr_author == 'truecharts-admin'
+        if: steps.ci-gate.outputs.gate_status == 'ready' && steps.ci-gate.outputs.pr_author == 'truecharts-admin'
         uses: pascalgn/automerge-action@7961b8b5eec56cc088c140b56d864285eabd3f67 # v0.16.4
         env:
           GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
