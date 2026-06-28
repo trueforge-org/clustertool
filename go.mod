@@ -15,7 +15,7 @@ require (
 	github.com/trueforge-org/forgetool/v4 v4.1.1
 	golang.org/x/crypto v0.53.0
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v3 v3.21.2
+	helm.sh/helm/v3 v3.20.2
 	helm.sh/helm/v4 v4.2.2
 	k8s.io/api v0.36.2
 	k8s.io/apimachinery v0.36.2
