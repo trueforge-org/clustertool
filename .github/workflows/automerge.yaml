@@ -2,24 +2,100 @@ name: Automerge and Approve
 
 on:
   workflow_run:
-    workflows: ["clustertool-go-lint"]  # Name of the main CI workflow
+    workflows:
+      - "clustertool-go-lint"
+      - "clustertool-go-tests"
+      - "Kubeconform"
+      - "Pull Request: Install"
     types:
       - completed
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
 
 jobs:
   approve:
     runs-on: ubuntu-latest
     steps:
+      - name: Validate all PR workflow runs are completed and successful
+        id: ci-gate
+        uses: actions/github-script@v7
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          script: |
+            const workflowRun = context.payload.workflow_run;
+            const pr = workflowRun.pull_requests?.[0];
+
+            if (!pr) {
+              core.setFailed('workflow_run does not reference a pull request.');
+              return;
+            }
+
+            const { owner, repo } = context.repo;
+            const prNumber = pr.number;
+
+            const prData = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: prNumber,
+            });
+
+            const headSha = prData.data.head.sha;
+            core.info(`Checking PR #${prNumber} workflows for head SHA ${headSha}`);
+
+            const runs = await github.paginate(github.rest.actions.listWorkflowRunsForRepo, {
+              owner,
+              repo,
+              event: 'pull_request',
+              head_sha: headSha,
+              per_page: 100,
+            });
+
+            if (runs.length === 0) {
+              core.setFailed(`No pull_request workflow runs found for PR #${prNumber} (${headSha}).`);
+              return;
+            }
+
+            const pending = runs.filter((run) => run.status !== 'completed');
+            const failing = runs.filter(
+              (run) =>
+                run.status === 'completed' &&
+                !['success', 'skipped', 'neutral'].includes(run.conclusion || '')
+            );
+
+            if (pending.length > 0) {
+              core.info('Pending workflow runs:');
+              for (const run of pending) {
+                core.info(`- ${run.name} (${run.status})`);
+              }
+              core.setFailed('Not all pull_request workflow runs are completed yet.');
+              return;
+            }
+
+            if (failing.length > 0) {
+              core.info('Failing workflow runs:');
+              for (const run of failing) {
+                core.info(`- ${run.name} (${run.conclusion})`);
+              }
+              core.setFailed('One or more pull_request workflow runs did not succeed.');
+              return;
+            }
+
+            core.setOutput('pr_number', String(prNumber));
+            core.info('All pull_request workflow runs are completed and successful.');
+
       - name: Approve PR
         uses: hmarr/auto-approve-action@v3
-        if: github.actor == 'truecharts-admin'
+        if: github.actor == 'truecharts-admin' && steps.ci-gate.outcome == 'success'
         with:
           github-token: "${{ secrets.OR_PAT }}"
           review-message: "Auto approved automated PR"
-          pull-request-number: ${{ github.event.workflow_run.pull_requests[0].number }}
+          pull-request-number: ${{ steps.ci-gate.outputs.pr_number }}
 
       - name: Automerge
-        if: github.actor == 'truecharts-admin'
+        if: github.actor == 'truecharts-admin' && steps.ci-gate.outcome == 'success'
         uses: pascalgn/automerge-action@7961b8b5eec56cc088c140b56d864285eabd3f67 # v0.16.4
         env:
           GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
