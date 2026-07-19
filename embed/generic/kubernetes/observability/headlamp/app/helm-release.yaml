@@ -113,4 +113,4 @@ spec:
     #   tls:
     #     - secretName: headlamp-tls-0
     #       hosts:
-    #         - headlamp.${BASE_DOMAIN}
+    #         - headlamp.${DOMAIN_0}
