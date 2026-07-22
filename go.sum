@@ -154,6 +154,8 @@ github.com/budimanjojo/talhelper/v3 v3.1.12 h1:GUnuCjbmD+EMJ5dAXODcX/H0w1ovZpbM1
 github.com/budimanjojo/talhelper/v3 v3.1.12/go.mod h1:lYgRACnE5V10MbFoCTYTT+f6m214ANjpmCKWpykL0NE=
 github.com/budimanjojo/talhelper/v3 v3.1.13 h1:Xto7691hrpPdFg0+QlHnZD1TvojaouMBJYlHGkacgeg=
 github.com/budimanjojo/talhelper/v3 v3.1.13/go.mod h1:wqLG4syKTw8KmBuIpdangLRZt7HE9yU8WHmFo6R2vUA=
+github.com/budimanjojo/talhelper/v3 v3.1.14 h1:h9kmYxE5v0bpjVnJJAiJcfnfsHiKCnW6feoiIOyJxPI=
+github.com/budimanjojo/talhelper/v3 v3.1.14/go.mod h1:wqLG4syKTw8KmBuIpdangLRZt7HE9yU8WHmFo6R2vUA=
 github.com/buger/jsonparser v1.2.0 h1:4EFcvK1kD4jyj6YqNK6skK6w+y7FHHBR+XBCtxwu/6g=
 github.com/buger/jsonparser v1.2.0/go.mod h1:6RYKKt7H4d4+iWqouImQ9R2FZql3VbhNgx27UK13J/0=
 github.com/cenkalti/backoff v2.2.1+incompatible h1:tNowT99t7UNflLxfYYSlKYsBpXdEet03Pg2g16Swow4=
