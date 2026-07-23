@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	filippo.io/age v1.3.1
-	github.com/budimanjojo/talhelper/v3 v3.1.14
+	github.com/budimanjojo/talhelper/v3 v3.1.15
 	github.com/getsops/sops/v3 v3.13.2
 	github.com/go-logr/zerologr v1.2.3
 	github.com/invopop/jsonschema v0.14.0
