@@ -20,7 +20,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Setup Homebrew
-        uses: Homebrew/actions/setup-homebrew@ba807dd134f5ab05fe454cbf51e0c7f5b6b4bd47 # master
+        uses: Homebrew/actions/setup-homebrew@f5448d3709dc32011524a9e0819671e08d21661c # master
       - name: Setup Workflow Tools
         run: brew install fluxcd/tap/flux kubeconform kustomize
       - name: Create dummy deploykey secret (CI only)
