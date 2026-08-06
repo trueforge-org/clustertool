@@ -1,10 +1,10 @@
 module github.com/trueforge-org/clustertool
 
-go 1.26.4
+go 1.26.5
 
 require (
 	filippo.io/age v1.3.1
-	github.com/budimanjojo/talhelper/v3 v3.1.15
+	github.com/budimanjojo/talhelper/v3 v3.1.16
 	github.com/getsops/sops/v3 v3.13.3
 	github.com/go-logr/zerologr v1.2.3
 	github.com/invopop/jsonschema v0.14.0
@@ -116,20 +116,20 @@ require (
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-openapi/jsonpointer v0.23.1 // indirect
-	github.com/go-openapi/jsonreference v0.21.5 // indirect
-	github.com/go-openapi/swag v0.26.0 // indirect
-	github.com/go-openapi/swag/cmdutils v0.26.0 // indirect
-	github.com/go-openapi/swag/conv v0.26.0 // indirect
-	github.com/go-openapi/swag/fileutils v0.26.0 // indirect
-	github.com/go-openapi/swag/jsonname v0.26.0 // indirect
-	github.com/go-openapi/swag/jsonutils v0.26.0 // indirect
-	github.com/go-openapi/swag/loading v0.26.0 // indirect
-	github.com/go-openapi/swag/mangling v0.26.0 // indirect
-	github.com/go-openapi/swag/netutils v0.26.0 // indirect
-	github.com/go-openapi/swag/stringutils v0.26.0 // indirect
-	github.com/go-openapi/swag/typeutils v0.26.0 // indirect
-	github.com/go-openapi/swag/yamlutils v0.26.0 // indirect
+	github.com/go-openapi/jsonpointer v1.0.0 // indirect
+	github.com/go-openapi/jsonreference v1.0.0 // indirect
+	github.com/go-openapi/swag v0.27.0 // indirect
+	github.com/go-openapi/swag/cmdutils v0.27.0 // indirect
+	github.com/go-openapi/swag/conv v0.27.0 // indirect
+	github.com/go-openapi/swag/fileutils v0.27.0 // indirect
+	github.com/go-openapi/swag/jsonname v0.27.0 // indirect
+	github.com/go-openapi/swag/jsonutils v0.27.0 // indirect
+	github.com/go-openapi/swag/loading v0.27.0 // indirect
+	github.com/go-openapi/swag/mangling v0.27.0 // indirect
+	github.com/go-openapi/swag/netutils v0.27.0 // indirect
+	github.com/go-openapi/swag/stringutils v0.27.0 // indirect
+	github.com/go-openapi/swag/typeutils v0.27.0 // indirect
+	github.com/go-openapi/swag/yamlutils v0.27.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
@@ -207,9 +207,9 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.9 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/siderolabs/crypto v0.6.5 // indirect
-	github.com/siderolabs/gen v0.8.6 // indirect
+	github.com/siderolabs/gen v0.8.7 // indirect
 	github.com/siderolabs/go-pointer v1.0.1 // indirect
-	github.com/siderolabs/image-factory v1.3.3 // indirect
+	github.com/siderolabs/image-factory v1.4.0 // indirect
 	github.com/siderolabs/net v0.4.0 // indirect
 	github.com/siderolabs/protoenc v0.2.4 // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
