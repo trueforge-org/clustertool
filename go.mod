@@ -4,7 +4,7 @@ go 1.26.5
 
 require (
 	filippo.io/age v1.3.1
-	github.com/budimanjojo/talhelper/v3 v3.1.16
+	github.com/budimanjojo/talhelper/v3 v3.1.17
 	github.com/getsops/sops/v3 v3.13.3
 	github.com/go-logr/zerologr v1.2.3
 	github.com/invopop/jsonschema v0.14.0
@@ -144,8 +144,8 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.3.18 // indirect
 	github.com/googleapis/gax-go/v2 v2.23.0 // indirect
 	github.com/gookit/filter v1.2.3 // indirect
-	github.com/gookit/goutil v0.7.6 // indirect
-	github.com/gookit/validate/v2 v2.0.1 // indirect
+	github.com/gookit/goutil v0.8.0 // indirect
+	github.com/gookit/validate/v2 v2.0.2 // indirect
 	github.com/gosuri/uitable v0.0.4 // indirect
 	github.com/goware/prefixer v0.0.0-20160118172347-395022866408 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
@@ -236,7 +236,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.5 // indirect
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
-	golang.org/x/mod v0.38.0 // indirect
+	golang.org/x/mod v0.40.0 // indirect
 	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
