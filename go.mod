@@ -3,7 +3,7 @@ module github.com/trueforge-org/clustertool
 go 1.26.5
 
 require (
-	filippo.io/age v1.3.1
+	filippo.io/age v1.3.2
 	github.com/budimanjojo/talhelper/v3 v3.1.17
 	github.com/getsops/sops/v3 v3.13.3
 	github.com/go-logr/zerologr v1.2.3
