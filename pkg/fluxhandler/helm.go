@@ -164,17 +164,25 @@ func HelmInstall(repoURL string, chartName string, releaseName string, namespace
 		return fmt.Errorf("failed to ensure namespace exists: %w", err)
 	}
 
+	if err := os.MkdirAll(helper.HelmCache, 0755); err != nil {
+		return fmt.Errorf("create Helm cache: %w", err)
+	}
+	workDir, err := os.MkdirTemp(helper.HelmCache, releaseName+"-")
+	if err != nil {
+		return fmt.Errorf("create temporary Helm directory: %w", err)
+	}
+	defer os.RemoveAll(workDir)
+
 	var chartPath string
-	var err error
 
 	// Determine chart path based on chartName format
 	if strings.HasPrefix(repoURL, "http://") || strings.HasPrefix(repoURL, "https://") || strings.HasPrefix(repoURL, "oci://") {
 		// Handle HTTP or OCI URL
-		err = HelmPull(repoURL, chartName, version, "", true)
+		err = HelmPull(repoURL, chartName, version, workDir, true)
 		if err != nil {
 			return fmt.Errorf("failed to pull chart %s: %w", chartName, err)
 		}
-		chartPath = path.Join(helper.HelmCache, fmt.Sprintf("%s-%s.tgz", chartName, version))
+		chartPath = path.Join(workDir, fmt.Sprintf("%s-%s.tgz", chartName, version))
 
 	} else {
 		// Local chart path
@@ -197,7 +205,7 @@ func HelmInstall(repoURL string, chartName string, releaseName string, namespace
 	client.Timeout = 15 * time.Minute
 
 	tempValuesName := releaseName + "tempvalues.yaml"
-	tempValuesPath := path.Join(helper.HelmCache, tempValuesName)
+	tempValuesPath := path.Join(workDir, tempValuesName)
 	// Create values.yaml from chart.Values
 	err = createValuesYAML(chart.Values, tempValuesPath)
 	if err != nil {
@@ -215,7 +223,7 @@ func HelmInstall(repoURL string, chartName string, releaseName string, namespace
 		return err
 	}
 	tempHRValuesName := releaseName + "temphrvalues.yaml"
-	tempHRValuesPath := path.Join(helper.HelmCache, tempHRValuesName)
+	tempHRValuesPath := path.Join(workDir, tempHRValuesName)
 	err = createValuesYAML(helmRelease.Spec.Values, tempHRValuesPath)
 	if err != nil {
 		return fmt.Errorf("error creating temphrvalues.yaml: %w", err)
@@ -306,17 +314,25 @@ func HelmUpgrade(repoURL string, chartName string, releaseName string, namespace
 		return fmt.Errorf("failed to ensure namespace exists: %w", err)
 	}
 
+	if err := os.MkdirAll(helper.HelmCache, 0755); err != nil {
+		return fmt.Errorf("create Helm cache: %w", err)
+	}
+	workDir, err := os.MkdirTemp(helper.HelmCache, releaseName+"-")
+	if err != nil {
+		return fmt.Errorf("create temporary Helm directory: %w", err)
+	}
+	defer os.RemoveAll(workDir)
+
 	var chartPath string
-	var err error
 
 	// Determine chart path based on chartName format
 	if strings.HasPrefix(repoURL, "http://") || strings.HasPrefix(repoURL, "https://") || strings.HasPrefix(repoURL, "oci://") {
 		// Handle HTTP or OCI URL
-		err = HelmPull(repoURL, chartName, version, "", true)
+		err = HelmPull(repoURL, chartName, version, workDir, true)
 		if err != nil {
 			return fmt.Errorf("failed to pull chart %s: %w", chartName, err)
 		}
-		chartPath = path.Join(helper.HelmCache, fmt.Sprintf("%s-%s.tgz", chartName, version))
+		chartPath = path.Join(workDir, fmt.Sprintf("%s-%s.tgz", chartName, version))
 
 	} else {
 		// Local chart path
@@ -335,7 +351,7 @@ func HelmUpgrade(repoURL string, chartName string, releaseName string, namespace
 	client.Version = version
 
 	tempValuesName := releaseName + "tempvalues.yaml"
-	tempValuesPath := path.Join(helper.HelmCache, tempValuesName)
+	tempValuesPath := path.Join(workDir, tempValuesName)
 	err = createValuesYAML(chart.Values, tempValuesPath)
 	if err != nil {
 		return fmt.Errorf("error creating tempvalues.yaml: %w", err)
@@ -353,7 +369,7 @@ func HelmUpgrade(repoURL string, chartName string, releaseName string, namespace
 	}
 
 	tempHRValuesName := releaseName + "temphrvalues.yaml"
-	tempHRValuesPath := path.Join(helper.HelmCache, tempHRValuesName)
+	tempHRValuesPath := path.Join(workDir, tempHRValuesName)
 	err = createValuesYAML(helmRelease.Spec.Values, tempHRValuesPath)
 	if err != nil {
 		return fmt.Errorf("error creating temphrvalues.yaml: %w", err)
