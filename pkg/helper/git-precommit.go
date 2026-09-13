@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -117,9 +118,6 @@ func validateCurrentRepoForHook() (bool, error) {
 
 func getPreCommitHookPath(dir string) string {
 	hooksDir := filepath.Join(dir, ".git", "hooks")
-	if hookGOOS == "windows" {
-		return filepath.Join(hooksDir, "pre-commit.bat")
-	}
 	return filepath.Join(hooksDir, "pre-commit")
 }
 
@@ -150,25 +148,22 @@ fi
 func buildExecutableHookScript(scriptPath string) string {
 	switch hookGOOS {
 	case "windows":
-		scriptPath = filepath.ToSlash(scriptPath) + ".exe"
-		return fmt.Sprintf(`@echo off
-REM Pre-commit hook script
-
-REM Path to the script to run
-set scriptPath=%s
-
-REM Check if the script exists
-if exist "%%scriptPath%%" (
-    echo Running pre-commit script...
-    "%%scriptPath%%"
-    if errorlevel 1 (
-        echo Pre-commit script failed. Commit aborted.
-        exit /b 1
-    )
-) else (
-    echo Script %%scriptPath%% not found. Commit aborted.
-    exit /b 1
-)
+		// Git for Windows invokes extensionless hooks through its bundled shell.
+		scriptPath = "'" + strings.ReplaceAll(filepath.ToSlash(scriptPath)+".exe", "'", "'\"'\"'") + "'"
+		return fmt.Sprintf(`#!/bin/sh
+# Pre-commit hook script
+scriptPath=%s
+if [ ! -f "$scriptPath" ]; then
+    echo "Pre-commit executable not found: $scriptPath. Commit aborted."
+    exit 1
+fi
+echo "Running pre-commit script..."
+"$scriptPath"
+status=$?
+if [ "$status" -ne 0 ]; then
+    echo "Pre-commit script failed. Commit aborted."
+fi
+exit "$status"
 `, scriptPath)
 	default:
 		return fmt.Sprintf(`#!/bin/sh

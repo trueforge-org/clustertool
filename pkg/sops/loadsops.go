@@ -3,7 +3,6 @@ package sops
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
@@ -20,20 +19,10 @@ type SopsConfig struct {
 func LoadSopsConfig() (SopsConfig, error) {
 	log.Trace().Msg("Starting LoadSopsConfig function")
 
-	if _, err := os.Stat(".sops.yaml"); os.IsNotExist(err) {
-		log.Info().Msg(".sops.yaml file does not exist, skipping loading SOPS....")
-		return SopsConfig{}, fmt.Errorf("error reading file: %v", err)
-	} else if err != nil {
-		log.Error().Msgf("Error checking .sops.yaml file : %s", err)
-	} else {
-		log.Debug().Msg(".sops.yaml File exists.")
-	}
-
 	// Read .sops.yaml file
 	data, err := ioutil.ReadFile(".sops.yaml")
 	if err != nil {
-		log.Error().Err(err).Msg("Error reading .sops.yaml file")
-		return SopsConfig{}, fmt.Errorf("error reading file: %v", err)
+		return SopsConfig{}, fmt.Errorf("read .sops.yaml: %w", err)
 	}
 	log.Debug().Msg("Successfully read .sops.yaml file")
 
@@ -41,8 +30,7 @@ func LoadSopsConfig() (SopsConfig, error) {
 	var config SopsConfig
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
-		log.Error().Err(err).Msg("Error unmarshaling YAML data")
-		return SopsConfig{}, fmt.Errorf("error unmarshaling YAML: %v", err)
+		return SopsConfig{}, fmt.Errorf("parse .sops.yaml: %w", err)
 	}
 	log.Debug().Msg("Successfully unmarshaled YAML data into struct")
 

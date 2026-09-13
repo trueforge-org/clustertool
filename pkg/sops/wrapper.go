@@ -33,7 +33,6 @@ func EncryptWithAgeKey(body []byte, regex string, format string) ([]byte, error)
 
 	sopsConfig, err := LoadSopsConfig()
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to load Sops config")
 		return nil, err
 	}
 	log.Debug().Msg("Successfully loaded Sops config")
@@ -44,8 +43,7 @@ func EncryptWithAgeKey(body []byte, regex string, format string) ([]byte, error)
 	// Iterate over each creation rule and find matching files
 	for _, rule := range sopsConfig.CreationRules {
 		if err != nil {
-			log.Error().Err(err).Msg("Invalid path regex in .sops.yaml")
-			return nil, fmt.Errorf("invalid path regex in .sops.yaml: %v", err)
+			return nil, fmt.Errorf("invalid path regex in .sops.yaml: %w", err)
 		}
 		ageKeys = append(ageKeys, rule.Age)
 	}
@@ -54,7 +52,11 @@ func EncryptWithAgeKey(body []byte, regex string, format string) ([]byte, error)
 
 	for _, ageKey := range fthelper.UniqueNonEmptyElementsOf(ageKeys) {
 		var keyGroup sops.KeyGroup
-		keyGroup = append(keyGroup, NewMasterKey(ageKey))
+		key, err := NewMasterKey(ageKey)
+		if err != nil {
+			return nil, err
+		}
+		keyGroup = append(keyGroup, key)
 		groups = append(groups, keyGroup)
 	}
 
@@ -71,8 +73,7 @@ func EncryptWithAgeKey(body []byte, regex string, format string) ([]byte, error)
 		Format:            format,
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("Error encrypting data")
-		return nil, fmt.Errorf("error encrypting data: %v", err)
+		return nil, fmt.Errorf("error encrypting data: %w", err)
 	}
 
 	log.Debug().Msg("Data encrypted successfully")
@@ -81,15 +82,12 @@ func EncryptWithAgeKey(body []byte, regex string, format string) ([]byte, error)
 
 /// Custom keygroup
 
-func NewMasterKey(pubkey string) (result keys.MasterKey) {
-	log.Trace().Str("pubkey", pubkey).Msg("Creating new master key")
-
-	result, err := age.MasterKeyFromRecipient(pubkey)
+func NewMasterKey(pubkey string) (keys.MasterKey, error) {
+	key, err := age.MasterKeyFromRecipient(pubkey)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to create master key from recipient")
+		return nil, fmt.Errorf("parse age recipient: %w", err)
 	}
-
-	return result
+	return key, nil
 }
 
 /// IMPORTED
@@ -115,8 +113,7 @@ func (c *cypher) Decrypt(content []byte, format string) ([]byte, error) {
 	log.Trace().Msg("Decrypting content")
 	decryptedData, err := decrypt.Data(content, format)
 	if err != nil {
-		log.Error().Err(err).Msg("Error during decryption")
-		return nil, err
+		return nil, fmt.Errorf("decrypt data: %w", err)
 	}
 	log.Info().Msg("Content decrypted successfully")
 	return decryptedData, nil
@@ -147,8 +144,7 @@ func (m *cypher) Encrypt(content []byte, encrConfig EncryptionConfig) (result []
 
 	branches, err := store.LoadPlainFile(content)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to load plain file for encryption")
-		return nil, err
+		return nil, fmt.Errorf("parse plaintext for encryption: %w", err)
 	}
 	log.Debug().Msg("Plain file loaded successfully")
 
@@ -170,7 +166,6 @@ func (m *cypher) Encrypt(content []byte, encrConfig EncryptionConfig) (result []
 	)
 
 	if len(errs) > 0 {
-		log.Error().Err(err).Msg("Could not generate data key")
 		return nil, errors.New(fmt.Sprint("Could not generate data key:", errs))
 	}
 
@@ -184,8 +179,7 @@ func (m *cypher) Encrypt(content []byte, encrConfig EncryptionConfig) (result []
 
 	err = common.EncryptTree(encryptTreeOpts)
 	if err != nil {
-		log.Error().Err(err).Msg("Error during tree encryption")
-		return nil, err
+		return nil, fmt.Errorf("encrypt document tree: %w", err)
 	}
 
 	log.Debug().Msg("Tree encrypted successfully")

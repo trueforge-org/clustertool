@@ -1,0 +1,173 @@
+name: clustertool-test-build
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CGO_ENABLED: '0'
+      GOOS: linux
+      GOARCH: amd64
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Prepare embedded Linux tools
+        env:
+          TALOSCTL_TARGET: linux_amd64
+        run: |
+          set -euo pipefail
+          bash embed/download_talosctl.sh
+          go build -trimpath -o embed/linux_amd64/precommit ./partial_builds/precommit
+          mkdir -p "${RUNNER_TEMP}/talos-bin"
+          cp embed/linux_amd64/talosctl-linux-amd64 "${RUNNER_TEMP}/talos-bin/talosctl"
+          chmod +x "${RUNNER_TEMP}/talos-bin/talosctl"
+          echo "${RUNNER_TEMP}/talos-bin" >> "$GITHUB_PATH"
+
+      - name: Test with the embedded Talos version
+        env:
+          TALOSCTL_INTEGRATION: '1'
+        run: go test ./...
+
+      - name: Build and package
+        id: package
+        run: |
+          set -euo pipefail
+          source_sha=$(git rev-parse HEAD)
+          version="test-${source_sha:0:12}"
+          archive="clustertool_${version}_linux_amd64.tar.gz"
+          mkdir -p dist/package
+          go build -trimpath -ldflags "-s -w -X main.Version=${version}" -o dist/package/clustertool .
+          cp LICENSE dist/package/
+          built_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          printf 'Version: %s\nCommit: %s\nPlatform: linux/amd64\nBuilt at: %s\n' "$version" "$source_sha" "$built_at" > dist/package/BUILD.txt
+          chmod 755 dist/package/clustertool
+          tar -czf "dist/${archive}" -C dist/package clustertool LICENSE BUILD.txt
+          tar -tzf "dist/${archive}"
+          echo "archive=dist/${archive}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Linux test archive
+        id: upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          path: ${{ steps.package.outputs.archive }}
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Show download link
+        env:
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          ARCHIVE: ${{ steps.package.outputs.archive }}
+          DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          printf '### Linux amd64 test build\n\n[Download %s](%s)\n\nSHA-256: `%s`\n\nExpires after 14 days. This is a test build; no release was published.\n' "${ARCHIVE#dist/}" "$ARTIFACT_URL" "$DIGEST" >> "$GITHUB_STEP_SUMMARY"
+
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      CGO_ENABLED: '0'
+      GOOS: windows
+      GOARCH: amd64
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Download embedded Windows Talos tools
+        shell: bash
+        env:
+          TALOSCTL_TARGET: windows_amd64
+        run: bash embed/download_talosctl.sh
+
+      - name: Prepare embedded Windows tools
+        run: |
+          go build -trimpath -o embed/windows_amd64/precommit.exe ./partial_builds/precommit
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $talosBin = Join-Path $env:RUNNER_TEMP 'talos-bin'
+          New-Item -ItemType Directory -Force -Path $talosBin | Out-Null
+          Copy-Item embed/windows_amd64/talosctl-windows-amd64.exe (Join-Path $talosBin 'talosctl.exe')
+          $talosBin >> $env:GITHUB_PATH
+
+      - name: Test with the embedded Talos version
+        env:
+          TALOSCTL_INTEGRATION: '1'
+        run: go test ./...
+
+      - name: Build and package
+        id: package
+        run: |
+          $sourceSha = (git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $version = "test-$($sourceSha.Substring(0, 12))"
+          $archive = "clustertool_${version}_windows_amd64.zip"
+          New-Item -ItemType Directory -Force -Path dist/package | Out-Null
+          go build -trimpath -ldflags "-s -w -X main.Version=$version" -o dist/package/clustertool.exe .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item LICENSE dist/package/
+          $builtAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")
+          @(
+            "Version: $version"
+            "Commit: $sourceSha"
+            "Platform: windows/amd64"
+            "Built at: $builtAt"
+          ) | Set-Content -Encoding utf8 dist/package/BUILD.txt
+          Compress-Archive -Path dist/package/clustertool.exe, dist/package/LICENSE, dist/package/BUILD.txt -DestinationPath "dist/$archive"
+          $zip = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path "dist/$archive"))
+          try { $zip.Entries | Select-Object FullName, Length } finally { $zip.Dispose() }
+          "archive=dist/$archive" >> $env:GITHUB_OUTPUT
+
+      - name: Upload Windows test archive
+        id: upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          path: ${{ steps.package.outputs.archive }}
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Show download link
+        env:
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          ARCHIVE: ${{ steps.package.outputs.archive }}
+          DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          $archiveName = Split-Path $env:ARCHIVE -Leaf
+          @(
+            '### Windows amd64 test build'
+            ''
+            "[Download $archiveName]($env:ARTIFACT_URL)"
+            ''
+            ('SHA-256: `{0}`' -f $env:DIGEST)
+            ''
+            'Expires after 14 days. This is a test build; no release was published.'
+          ) >> $env:GITHUB_STEP_SUMMARY

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"net/netip"
 	"os"
 	"regexp"
 	"strings"
@@ -11,44 +12,45 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/helper"
+	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
+	"gopkg.in/yaml.v3"
 )
 
 func LoadTalEnv(noFail bool) error {
-	// Check if clusterenv.yaml file exists
-	if _, err := os.Stat(helper.ClusterPath + "/clusterenv.yaml"); err == nil {
-		// Load environment variables from clusterenv.yaml
-		err := fthelper.LoadEnvFromFile(helper.ClusterPath+"/clusterenv.yaml", helper.TalEnv)
-		if err != nil {
-			log.Info().Msgf("Error loading environment from clusterenv.yaml: %v\n", err)
-			os.Exit(1)
+	file := helper.ClusterPath + "/clusterenv.yaml"
+	if _, err := os.Stat(file); err != nil {
+		if noFail && os.IsNotExist(err) {
+			return nil
 		}
-	} else if os.IsNotExist(err) {
-		// If the file doesn't exist, check noFail to determine next steps
-		if noFail {
-			log.Debug().Msg("clusterenv.yaml file not found, but skipping due to noFail being true.")
-			return nil // Skip execution without error
-		} else {
-			log.Fatal().Msg("clusterenv.yaml file not found, exiting...")
-			os.Exit(1) // Exit with error code 1
-		}
-	} else {
-		log.Info().Msgf("Error checking clusterenv.yaml file: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("read cluster environment %s: %w", file, err)
 	}
-
-	// If file exists, continue with processing
+	data, err := os.ReadFile(file)
+	if err != nil {
+		return fmt.Errorf("read cluster environment %s: %w", file, err)
+	}
+	var document map[string]interface{}
+	if err := yaml.Unmarshal(data, &document); err != nil {
+		return fmt.Errorf("parse cluster environment %s: %w", file, err)
+	}
+	sourceEnv := make(map[string]string)
+	if err := fthelper.LoadEnvFromFile(file, sourceEnv); err != nil {
+		return fmt.Errorf("load cluster environment %s: %w", file, err)
+	}
+	if _, err := checkQuotedNumbersInFile(); err != nil {
+		return err
+	}
+	helper.TalEnv = sourceEnv
 	clusterName()
-	checkQuotedNumbersInFile()
-	PostProcessTalEnv()
-	clusterEnvtoEnv()
-	log.Info().Msgf("ClusterEnv loaded successfully\n")
+	if err := clusterEnvtoEnv(); err != nil {
+		return err
+	}
+	log.Info().Msg("ClusterEnv loaded successfully")
 	return nil
 }
 
 // Function to check if all numbers after ':' in a file are unquoted integers or floats
 func checkQuotedNumbersInFile() (bool, error) {
-
 	filePath := helper.ClusterPath + "/clusterenv.yaml"
 	// Regular expression to find patterns like ': number' where number can be an int or float
 	re := regexp.MustCompile(`:\s*(.+)`) // Matches anything after ': '
@@ -56,9 +58,7 @@ func checkQuotedNumbersInFile() (bool, error) {
 	// Open the file
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Error().Msgf("Failed to open file: %s \nError: %s", filePath, err)
-		os.Exit(1)
-		return false, err
+		return false, fmt.Errorf("read clusterenv.yaml: %w", err)
 	}
 	defer file.Close()
 
@@ -86,16 +86,12 @@ func checkQuotedNumbersInFile() (bool, error) {
 
 		// If it's a valid number, log an error
 		if isValidNumber {
-			log.Error().Msgf("Unquoted number found %s line: %s", filePath, line)
-			os.Exit(1)
-			return false, nil
+			return false, fmt.Errorf("unquoted number in %s; quote numeric environment values", filePath)
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Error().Msgf("Error scanning the file: %s", err)
-		os.Exit(1)
-		return false, err
+		return false, fmt.Errorf("read clusterenv.yaml: %w", err)
 	}
 
 	return true, nil
@@ -105,216 +101,84 @@ func clusterName() {
 	helper.TalEnv["CLUSTERNAME"] = helper.ClusterName
 }
 
-func clusterEnvtoEnv() {
-	// Split IP/NETMASK and normalize IPs
+func clusterEnvtoEnv() error {
 	for key, value := range helper.TalEnv {
-		os.Setenv(key, value)
-	}
-}
-func PostProcessTalEnv() {
-	// Split IP/NETMASK and normalize IPs
-	for key, value := range helper.TalEnv {
-		ip, netmask, err := splitIPandNetmask(value)
-		if err == nil {
-			// Update TalEnv with IP and NETMASK entries
-			helper.TalEnv[key+"_IP"] = ip
-			helper.TalEnv[key+"_NETMASK"] = netmask
-			helper.TalEnv[key+"_CIDR"] = ip + "/" + netmask
+		if err := os.Setenv(key, value); err != nil {
+			return fmt.Errorf("export environment variable %s: %w", key, err)
 		}
 	}
-
-	// Validate and normalize specific IP variables
-	ValidateAndNormalizeIPsInTalEnv()
-
-	// Validate and normalize IP/NETMASK variables
-	ValidateAndNormalizeIPNetmaskVarsInTalEnv()
+	return nil
 }
 
-func splitIPandNetmask(ipWithMask string) (string, string, error) {
-	// Check if IP/NETMASK format
-	parts := strings.Split(ipWithMask, "/")
-	if len(parts) == 2 {
-		ip := parts[0]
-		netmask := parts[1]
-		// Validate netmask format (you might want to add more rigorous validation)
-		if _, _, err := net.ParseCIDR(ipWithMask); err != nil {
-			return "", "", fmt.Errorf("invalid IP/NETMASK format: %s", ipWithMask)
-		}
-		return ip, netmask, nil
+func CheckEnvVariables() error {
+	if err := LoadTalEnv(false); err != nil {
+		return err
 	}
-
-	// Assume NETMASK 24 if only IP provided
-	ip := ipWithMask
-	netmask := "24"
-	// Validate IP format (you might want to add more rigorous validation)
-	if net.ParseIP(ip) == nil {
-		return "", "", fmt.Errorf("invalid IP format: %s", ipWithMask)
-	}
-	return ip, netmask, nil
-}
-
-func ValidateAndNormalizeIPsInTalEnv() {
-	ipVariables := []string{"Master1IP"}
-
-	for _, key := range ipVariables {
-		value, exists := helper.TalEnv[key]
-		if !exists {
-			continue // Skip if the variable doesn't exist in TalEnv
-		}
-
-		ip, err := normalizeIP(value)
-		if err != nil {
-			log.Info().Msgf("Error processing %s: %v\n", key, err)
-			continue
-		}
-
-		// Update TalEnv with normalized IP value
-		helper.TalEnv[key] = ip
-	}
-}
-
-func normalizeIP(ipWithMask string) (string, error) {
-	// Check if IP/NETMASK format
-	parts := strings.Split(ipWithMask, "/")
-	if len(parts) == 2 {
-		ip := parts[0]
-		netmask := parts[1]
-		// Validate netmask format (you might want to add more rigorous validation)
-		if _, _, err := net.ParseCIDR(ipWithMask); err != nil {
-			return "", fmt.Errorf("invalid IP/NETMASK format: %s", ipWithMask)
-		}
-		return ip + "/" + netmask, nil
-	}
-
-	// Assume NETMASK 24 if only IP provided
-	ip := ipWithMask
-	// Validate IP format (you might want to add more rigorous validation)
-	if net.ParseIP(ip) == nil {
-		return "", fmt.Errorf("invalid IP format: %s", ipWithMask)
-	}
-	return ip + "/24", nil // Default to /24 subnet mask
-}
-
-func ValidateAndNormalizeIPNetmaskVarsInTalEnv() {
-	netmaskVariables := []string{"PODNET", "SVCNET"}
-
-	for _, key := range netmaskVariables {
-		value, exists := helper.TalEnv[key]
-		if !exists {
-			continue // Skip if the variable doesn't exist in TalEnv
-		}
-
-		ipNetmask, err := normalizeIPNetmask(value)
-		if err != nil {
-			log.Info().Msgf("Error processing %s: %v\n", key, err)
-			continue
-		}
-
-		// Update TalEnv with normalized IP/NETMASK value
-		helper.TalEnv[key] = ipNetmask
-	}
-}
-
-func normalizeIPNetmask(ipNetmask string) (string, error) {
-	// Validate IP/NETMASK format
-	if _, _, err := net.ParseCIDR(ipNetmask); err != nil {
-		return "", fmt.Errorf("invalid IP/NETMASK format: %s", ipNetmask)
-	}
-	return ipNetmask, nil
-}
-
-func CheckEnvVariables() {
-	LoadTalEnv(false)
-	requiredKeys := []string{
-		"VIP",
-		"MASTER1IP_IP",
-		"MASTER1IP_NETMASK",
-		"HEADLAMP_IP",
-		"GATEWAY",
-		"METALLB_RANGE",
-		"PODNET",
-		"SVCNET",
-		"DOMAIN_0",
-		"DOMAIN_0_EMAIL",
-		"DOMAIN_0_CLOUDFLARE_TOKEN",
-	}
-	for _, key := range requiredKeys {
+	for _, key := range []string{"VIP", "HEADLAMP_IP", "GATEWAY", "METALLB_RANGE", "PODNET", "SVCNET", "DOMAIN_0", "DOMAIN_0_EMAIL", "DOMAIN_0_CLOUDFLARE_TOKEN"} {
 		if helper.TalEnv[key] == "" {
-			log.Info().Msgf("%s cannot be empty\n", key)
-			os.Exit(1)
+			return fmt.Errorf("%s cannot be empty", key)
 		}
 	}
-
-	// Validate VIP and MASTER1IP format and check subnet compatibility
-	vip := helper.TalEnv["VIP_IP"]
-	master1ip := helper.TalEnv["MASTER1IP_IP"]
-	master1ipCidr := helper.TalEnv["MASTER1IP_CIDR"]
-	gateway := helper.TalEnv["GATEWAY"]
-
-	// Check if MASTER1IP matches GATEWAY or VIP
-	if master1ip == gateway || master1ip == vip {
-		log.Info().Msg("Cannot proceed, MASTER1IP cannot match GATEWAY or VIP")
-		os.Exit(1)
-	}
-
-	// Check if VIP matches any Node IPs
-	if vip == master1ip {
-		log.Info().Msg("Cannot proceed, VIP cannot match any Node IPs")
-		os.Exit(1)
-	}
-
-	// Check ranges against METALLB_RANGE
-	inRange, err := fthelper.IPInRange(vip, helper.TalEnv["METALLB_RANGE"])
+	inv, err := talosconfig.LoadInventory()
 	if err != nil {
-		log.Info().Msgf("Error checking VIP against METALLB_RANGE: %v\n", err)
-		os.Exit(1)
+		return err
 	}
-	if inRange {
-		log.Info().Msg("Cannot proceed, VIP cannot be in the METALLB_RANGE")
-		os.Exit(1)
+	addresses := map[string]netip.Addr{}
+	for _, key := range []string{"VIP", "GATEWAY", "HEADLAMP_IP"} {
+		ip, err := netip.ParseAddr(helper.TalEnv[key])
+		if err != nil || ip.Zone() != "" {
+			return fmt.Errorf("%s must be an IP address without a subnet prefix", key)
+		}
+		addresses[key] = ip.Unmap()
 	}
-
-	inRange, err = fthelper.IPInRange(master1ip, helper.TalEnv["METALLB_RANGE"])
-	if err != nil {
-		log.Info().Msgf("Error checking MASTER1IP against METALLB_RANGE: %v\n", err)
-		os.Exit(1)
+	parts := strings.Split(helper.TalEnv["METALLB_RANGE"], "-")
+	if len(parts) != 2 {
+		return fmt.Errorf("METALLB_RANGE must be a start-end IP range")
 	}
-	if inRange {
-		log.Info().Msg("Cannot proceed, MASTER1IP cannot be in the METALLB_RANGE")
-		os.Exit(1)
+	start, e1 := netip.ParseAddr(strings.TrimSpace(parts[0]))
+	end, e2 := netip.ParseAddr(strings.TrimSpace(parts[1]))
+	start, end = start.Unmap(), end.Unmap()
+	if e1 != nil || e2 != nil || start.Zone() != "" || end.Zone() != "" || start.BitLen() != end.BitLen() || start.Compare(end) > 0 {
+		return fmt.Errorf("METALLB_RANGE must contain valid, ordered IP addresses of the same family")
 	}
-
-	inRange, err = fthelper.IPInRange(gateway, helper.TalEnv["METALLB_RANGE"])
-	if err != nil {
-		log.Info().Msgf("Error checking GATEWAY against METALLB_RANGE: %v\n", err)
-		os.Exit(1)
+	inRange := func(ip netip.Addr) bool {
+		return ip.BitLen() == start.BitLen() && ip.Compare(start) >= 0 && ip.Compare(end) <= 0
 	}
-	if inRange {
-		log.Info().Msg("Cannot proceed, GATEWAY cannot be in the METALLB_RANGE")
-		os.Exit(1)
+	for _, key := range []string{"VIP", "GATEWAY"} {
+		if inRange(addresses[key]) {
+			return fmt.Errorf("%s cannot be in METALLB_RANGE", key)
+		}
 	}
-
-	// Check HEADLAMP_IP against METALLB_RANGE
-	if helper.TalEnv["HEADLAMP_IP"] != "" {
-		inRange, err = fthelper.IPInRange(helper.TalEnv["HEADLAMP_IP"], helper.TalEnv["METALLB_RANGE"])
+	if !inRange(addresses["HEADLAMP_IP"]) {
+		return fmt.Errorf("HEADLAMP_IP must be in METALLB_RANGE")
+	}
+	for _, node := range inv.Nodes {
+		ip := netip.MustParseAddr(node.Address).Unmap()
+		if ip == addresses["VIP"] || ip == addresses["GATEWAY"] {
+			return fmt.Errorf("node %s management address overlaps VIP or gateway", node.Name)
+		}
+		if inRange(ip) {
+			return fmt.Errorf("node %s management address conflicts with METALLB_RANGE", node.Name)
+		}
+	}
+	for _, key := range []string{"PODNET", "SVCNET"} {
+		_, prefix, err := net.ParseCIDR(helper.TalEnv[key])
 		if err != nil {
-			log.Info().Msgf("Error checking HEADLAMP_IP against METALLB_RANGE: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("invalid %s: %w", key, err)
 		}
-		if !inRange {
-			log.Info().Msg("Cannot proceed, HEADLAMP_IP must be in the METALLB_RANGE")
-			os.Exit(1)
+		for _, name := range []string{"VIP", "GATEWAY"} {
+			if prefix.Contains(net.ParseIP(addresses[name].String())) {
+				return fmt.Errorf("%s cannot be in %s", name, key)
+			}
+		}
+		for _, node := range inv.Nodes {
+			if prefix.Contains(net.ParseIP(node.Address)) {
+				return fmt.Errorf("node %s management address conflicts with %s", node.Name, key)
+			}
+		}
+		if prefix.Contains(net.ParseIP(start.String())) || prefix.Contains(net.ParseIP(end.String())) || inRange(netip.MustParseAddr(prefix.IP.String()).Unmap()) {
+			return fmt.Errorf("METALLB_RANGE overlaps %s", key)
 		}
 	}
-
-	// Validate other CIDR/IP checks with new netmask support
-	fthelper.ValidateIPorCIDRNotInCIDR(vip+"/32", helper.TalEnv["PODNET"], "VIP", "PODNET")
-	fthelper.ValidateIPorCIDRNotInCIDR(master1ipCidr, helper.TalEnv["PODNET"], "MASTER1IP", "PODNET")
-	fthelper.ValidateIPorCIDRNotInCIDR(gateway+"/32", helper.TalEnv["PODNET"], "GATEWAY", "PODNET")
-	fthelper.ValidateRangeNotInCIDR(helper.TalEnv["METALLB_RANGE"], helper.TalEnv["PODNET"], "METALLB_RANGE", "PODNET")
-
-	fthelper.ValidateIPorCIDRNotInCIDR(vip+"/32", helper.TalEnv["SVCNET"], "VIP", "SVCNET")
-	fthelper.ValidateIPorCIDRNotInCIDR(master1ipCidr, helper.TalEnv["SVCNET"], "MASTER1IP", "SVCNET")
-	fthelper.ValidateIPorCIDRNotInCIDR(gateway+"/32", helper.TalEnv["SVCNET"], "GATEWAY", "SVCNET")
-	fthelper.ValidateRangeNotInCIDR(helper.TalEnv["METALLB_RANGE"], helper.TalEnv["SVCNET"], "METALLB_RANGE", "SVCNET")
+	return nil
 }

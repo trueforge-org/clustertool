@@ -14,7 +14,7 @@ var description = strings.TrimSpace(`Clustertool is a tool to help you easily de
 var infoLongHelp = strings.TrimSpace(description + `
 
 Workflow:
-  Create talconfig.yaml file defining your nodes information like so:
+  Configure clusterenv.yaml and the native Talos documents:
 
  Available commands
   > clustertool init

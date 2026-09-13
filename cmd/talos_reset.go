@@ -8,7 +8,7 @@ import (
 	"github.com/trueforge-org/clustertool/pkg/gencmd"
 	"github.com/trueforge-org/clustertool/pkg/initfiles"
 	"github.com/trueforge-org/clustertool/pkg/sops"
-	"github.com/trueforge-org/clustertool/pkg/talassist"
+	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 )
 
 var advResetLongHelp = strings.TrimSpace(`
@@ -20,7 +20,7 @@ var reset = &cobra.Command{
 	Short:   "Reset Talos Nodes and Kubernetes",
 	Example: "clustertool talos reset <NodeIP>",
 	Long:    advResetLongHelp,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		var extraArgs []string
 		node := ""
 
@@ -35,16 +35,26 @@ var reset = &cobra.Command{
 		}
 
 		if err := sops.DecryptFiles(); err != nil {
-			log.Info().Msgf("Error decrypting files: %v\n", err)
+			return err
 		}
-		initfiles.LoadTalEnv(false)
-		talassist.LoadTalConfig()
+		if err := initfiles.LoadTalEnv(false); err != nil {
+			return err
+		}
+		if err := talosconfig.ValidateNode(node); err != nil {
+			return err
+		}
+		if err := gencmd.ValidateExtraArgs(extraArgs); err != nil {
+			return err
+		}
 
 		log.Info().Msg("Running Cluster node Reset")
 
 		taloscmds := gencmd.GenPlain("reset", node, extraArgs)
-		gencmd.ExecCmds(taloscmds, true)
+		if err := gencmd.ExecCmds(taloscmds, true); err != nil {
+			return err
+		}
 
+		return nil
 	},
 }
 

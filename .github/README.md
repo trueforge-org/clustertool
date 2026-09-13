@@ -40,6 +40,8 @@ ClusterTool provides opinionated workflows used throughout the TrueForge ecosyst
 
 ## Quick Start
 
+For the native Talos configuration, follow the [ClusterTool user guide](../embed/generic/base/talos/README.md).
+
 Read the documentation [here](https://truecharts.org/guides/clustertool/).
 
 ## Status

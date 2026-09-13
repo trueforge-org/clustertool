@@ -23,6 +23,10 @@ jobs:
           filters: |
             changed:
             - '**/*.go'
+            - 'go.mod'
+            - 'go.sum'
+            - 'embed/**'
+            - '.github/workflows/clustertool.tests.yaml'
 
   # Main validation job: build, unit tests, init/genconfig roundtrip, and SOPS checks.
   build:
@@ -36,6 +40,14 @@ jobs:
         with:
           go-version: stable
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Download Talos CLI assets
+        run: |
+          bash embed/download_talosctl.sh
+          mkdir -p "${RUNNER_TEMP}/talos-bin"
+          cp embed/linux_amd64/talosctl-linux-amd64 "${RUNNER_TEMP}/talos-bin/talosctl"
+          chmod +x "${RUNNER_TEMP}/talos-bin/talosctl"
+          echo "${RUNNER_TEMP}/talos-bin" >> "$GITHUB_PATH"
 
       # Compile and run unit tests first so failures surface early.
       - run:  |
@@ -53,7 +65,7 @@ jobs:
 
           # Build + unit-test section
           run_cmd "Build binary" go build -o ./clustertool
-          run_cmd "Run Go tests" go test -v ./... -race -covermode=atomic
+          run_cmd "Run Go tests and real Talos generation" env TALOSCTL_INTEGRATION=1 go test -v ./... -race -covermode=atomic
           run_cmd "Binary info smoke check" ./clustertool info
 
       # End-to-end non-destructive bootstrap/config generation checks in isolated temp workspace.
@@ -106,9 +118,9 @@ jobs:
           # Artifact presence checks to ensure expected outputs were produced.
           log_step "Validate generated artifacts"
           run_cmd "Check clusterenv exists" test -f clusters/main/clusterenv.yaml
-          run_cmd "Check talconfig exists" test -f clusters/main/talos/talconfig.yaml
+          run_cmd "Check Talos secrets exist" test -f clusters/main/talos/secrets.sops.yaml
           run_cmd "Check talosconfig exists" test -f clusters/main/talos/generated/talosconfig
-          run_cmd "Check talsecret exists" test -f clusters/main/talos/generated/talsecret.yaml
+          run_cmd "Check control-plane config exists" test -f clusters/main/talos/generated/control-1.yaml
           run_cmd "Check clustersettings secret exists" test -f clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml
           run_cmd "Check at least one node machine config exists" bash -c 'find clusters/main/talos/generated -maxdepth 1 -type f -name "*.yaml" ! -name "talsecret.yaml" | grep -q .'
 
