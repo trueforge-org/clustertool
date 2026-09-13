@@ -36,12 +36,10 @@ func Execute() error {
 		log.Info().Msgf("Cluster name: %s\n", helper.ClusterName)
 		helper.ClusterPath = filepath.Join("./clusters", helper.ClusterName)
 		helper.ClusterEnvFile = filepath.Join(helper.ClusterPath, "/clusterenv.yaml")
-		helper.TalConfigFile = filepath.Join(helper.ClusterPath, "/talos", "talconfig.yaml")
 		helper.TalosPath = filepath.Join(helper.ClusterPath, "/talos")
 		helper.KubernetesPath = filepath.Join(helper.ClusterPath, "/kubernetes")
 		helper.TalosGenerated = filepath.Join(helper.TalosPath, "/generated")
 		helper.TalosConfigFile = filepath.Join(helper.TalosGenerated, "talosconfig")
-		helper.TalSecretFile = filepath.Join(helper.TalosGenerated, "talsecret.yaml")
 	}
 
 	// Execute the root command and all subcommands

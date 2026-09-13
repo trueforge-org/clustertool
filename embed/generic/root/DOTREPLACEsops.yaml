@@ -8,6 +8,6 @@ creation_rules:
     encrypted_regex: "((?i)(displayname|email|pass|ca|id|bootstraptoken|secretboxencryptionsecret|secrets|secrets|password|cert|secret($|[^N])|key|token|^data$|^stringData))"
   - path_regex: clusterenv.yaml
     age: REPLACEME
-  - path_regex: talsecret.yaml
+  - path_regex: ^clusters.*talos.*secrets\.sops\.ya?ml$
     age: REPLACEME
 ## DO NOT REMOVE: Personal setting go under this line

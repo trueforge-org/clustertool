@@ -1,11 +1,12 @@
 package fluxhandler
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
+
 	"sync"
 
 	"github.com/rs/zerolog/log"
@@ -76,59 +77,55 @@ func LoadHelmRelease(filename string) (*HelmRelease, error) {
 	return config, nil
 }
 
-func InstallCharts(charts []HelmChart, HelmRepos map[string]*HelmRepo, async bool) {
+func InstallCharts(charts []HelmChart, repos map[string]*HelmRepo, async bool) error {
+	install := func(chart HelmChart) error {
+		release, err := LoadHelmRelease(filepath.Join(chart.ChartPath, "helm-release.yaml"))
+		if err != nil {
+			return fmt.Errorf("load chart %s: %w", chart.ChartPath, err)
+		}
+		if release == nil {
+			return fmt.Errorf("empty Helm release: %s", chart.ChartPath)
+		}
+		repo := repos[release.Spec.Chart.Spec.SourceRef.Name]
+		if repo == nil || repo.Spec.URL == "" {
+			return fmt.Errorf("missing Helm repository for %s", chart.ChartPath)
+		}
+		name := release.Metadata.Name
+		if release.Spec.ReleaseName != "" {
+			name = release.Spec.ReleaseName
+		}
+		log.Info().Msgf("Bootstrap: Installing %s", release.Metadata.Name)
+		if err := HelmInstall(repo.Spec.URL, release.Spec.Chart.Spec.Chart, name, release.Metadata.Namespace, filepath.Join(chart.ChartPath, "values.yaml"), release.Spec.Chart.Spec.Version, chart.Retry, chart.Wait, true); err != nil {
+			return fmt.Errorf("install chart %s: %w", name, err)
+		}
+		return nil
+	}
+	if !async {
+		for _, chart := range charts {
+			if err := install(chart); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	failures := make(chan error, len(charts))
 	var wg sync.WaitGroup
 	for _, chart := range charts {
 		wg.Add(1)
-		go func(chart HelmChart) {
+		go func(c HelmChart) {
 			defer wg.Done()
-			valuesFile := filepath.Join(chart.ChartPath, "values.yaml")
-			helmreleaseFile := filepath.Join(chart.ChartPath, "helm-release.yaml")
-			helmRelease, err := LoadHelmRelease(helmreleaseFile)
-			if err != nil {
-				log.Info().Msgf("ERROR LOADING helmRelease for:  %v", chart)
-				os.Exit(1)
-			}
-			if helmRelease == nil {
-				log.Info().Msgf("ERROR Empty helmRelease for:  %v", chart)
-				os.Exit(1)
-			}
-
-			releaseName := helmRelease.Metadata.Name
-			if helmRelease.Spec.ReleaseName != "" {
-				releaseName = helmRelease.Spec.ReleaseName
-			}
-
-			if HelmRepos[helmRelease.Spec.Chart.Spec.SourceRef.Name] == nil {
-				log.Info().Msgf("ERROR Empty helmRepo for: %s", helmRelease.Spec.Chart.Spec.SourceRef.Name)
-				os.Exit(1)
-			}
-
-			if HelmRepos[helmRelease.Spec.Chart.Spec.SourceRef.Name].Spec.URL == "" {
-				log.Info().Msgf("ERROR Empty repoURL for: %s", helmRelease.Spec.Chart.Spec.SourceRef.Name)
-				os.Exit(1)
-			}
-
-			log.Info().Msgf("Bootstrap: Installing %s\n", helmRelease.Metadata.Name)
-			// We need to split install from dependency downloading, so we can parallel downloading
-			if err := HelmInstall(HelmRepos[helmRelease.Spec.Chart.Spec.SourceRef.Name].Spec.URL, helmRelease.Spec.Chart.Spec.Chart, releaseName, helmRelease.Metadata.Namespace, valuesFile, helmRelease.Spec.Chart.Spec.Version, chart.Retry, chart.Wait, true); err != nil {
-				if strings.Contains(err.Error(), "webhook") {
-				} else {
-					log.Error().Err(err).Msgf("Error: %v\n", err)
-
-					if !async {
-						os.Exit(1)
-					}
-				}
+			if err := install(c); err != nil {
+				failures <- err
 			}
 		}(chart)
-		if !async {
-			wg.Wait()
-		}
 	}
-	if async {
-		wg.Wait()
+	wg.Wait()
+	close(failures)
+	var combined error
+	for err := range failures {
+		combined = errors.Join(combined, err)
 	}
+	return combined
 }
 
 // UpgradeCharts upgrades Helm releases with provided Helm charts and repositories

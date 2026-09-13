@@ -1,46 +1,54 @@
 package gencmd
 
 import (
+	"fmt"
+	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 	"strings"
-
-	"github.com/rs/zerolog/log"
-	"github.com/trueforge-org/clustertool/embed"
-	"github.com/trueforge-org/clustertool/pkg/helper"
-	"github.com/trueforge-org/clustertool/pkg/talassist"
 )
 
-func GenPlain(command string, node string, extraArgs []string) []string {
-
-	commands := []string{}
-
-	talosPath := embed.GetTalosExec()
-	log.Debug().Msg("Generating plain CMDs...")
-	if node == "" {
-		log.Debug().Msg("Cmd Nodes is empty, rendering cmds for all nodes...")
-
-		for _, noderef := range talassist.TalConfig.Nodes {
-			log.Debug().Msgf("Rendering for node: %v", noderef)
-			cmd := talosPath + " " + command + " --talosconfig " + helper.TalosConfigFile + " -n " + noderef.IPAddress
-			if len(extraArgs) == 0 {
-				log.Debug().Msg("extraArgs is empty, not adding extra args to cmd")
-			} else {
-				log.Debug().Msgf("extraArgs not empty, adding extra args to cmd: %s", extraArgs)
-				cmd = cmd + " " + strings.Join(extraArgs, " ")
-			}
-			commands = append(commands, cmd)
+func GenPlain(operation, target string, extra []string) []Command {
+	for _, arg := range extra {
+		if operation == "kubeconfig" && (arg == "-f" || arg == "--force") {
+			continue
 		}
-	} else {
-		log.Debug().Msgf("Rendering for single node: %s", node)
-		cmd := talosPath + " " + command + " --talosconfig " + helper.TalosConfigFile + " -n " + node
-		if len(extraArgs) == 0 {
-			log.Debug().Msg("extraArgs is empty, not adding extra args to cmd")
-		} else {
-			log.Debug().Msgf("extraArgs not empty, adding extra args to cmd: %s", extraArgs)
-			cmd = cmd + " " + strings.Join(extraArgs, " ")
+		if err := ValidateExtraArgs([]string{arg}); err != nil {
+			return []Command{{Err: err}}
 		}
-
-		commands = append(commands, cmd)
 	}
-	log.Debug().Msgf("%s Commands rendered: %s", command, commands)
+	inv, err := talosconfig.LoadInventory()
+	if err != nil {
+		return []Command{{Err: err}}
+	}
+	nodes, err := inv.Select(target)
+	if err != nil {
+		return []Command{{Err: err}}
+	}
+	if operation == "kubeconfig" && (target == "" || target == "all") {
+		nodes = []talosconfig.Node{inv.Bootstrap()}
+	}
+	if operation == "health" {
+		var workers []string
+		for _, n := range inv.Nodes {
+			if n.Role == "worker" {
+				workers = append(workers, n.Address)
+			}
+		}
+		flags := []string{"--control-plane-nodes", strings.Join(inv.Endpoints(), ",")}
+		if len(workers) > 0 {
+			flags = append(flags, "--worker-nodes", strings.Join(workers, ","))
+		}
+		command := nodeCommand(operation, inv.Bootstrap(), append(flags, extra...)...)
+		command.Failover = true
+		return []Command{command}
+	}
+	var commands []Command
+	for _, node := range nodes {
+		if operation == "kubeconfig" && node.Role != "control-plane" {
+			return []Command{{Err: fmt.Errorf("kubeconfig requires a control-plane node")}}
+		}
+		command := nodeCommand(operation, node, extra...)
+		command.Failover = operation == "kubeconfig" && (target == "" || target == "all")
+		commands = append(commands, command)
+	}
 	return commands
 }

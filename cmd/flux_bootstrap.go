@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/trueforge-org/clustertool/pkg/fluxhandler"
 	"github.com/trueforge-org/clustertool/pkg/initfiles"
@@ -20,14 +19,16 @@ var fluxbootstrap = &cobra.Command{
 	Short:   "Manually bootstrap fluxcd on existing cluster",
 	Example: "clustertool flux bootstrap",
 	Long:    fluxBootstrapLongHelp,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
 
 		if err := sops.DecryptFiles(); err != nil {
-			log.Info().Msgf("Error decrypting files: %v\n", err)
+			return err
 		}
-		initfiles.LoadTalEnv(false)
-		fluxhandler.FluxBootstrap(ctx)
+		if err := initfiles.LoadTalEnv(false); err != nil {
+			return err
+		}
+		return fluxhandler.FluxBootstrap(ctx)
 	},
 }
 

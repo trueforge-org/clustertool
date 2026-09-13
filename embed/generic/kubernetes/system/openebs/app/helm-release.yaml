@@ -24,6 +24,11 @@ spec:
     remediation:
       retries: 3
   values:
+    localpv-provisioner:
+      localpv:
+        # Also supplies the default openebs-hostpath StorageClass base path.
+        basePath: /var/mnt/openebs
+
     openebs-crds:
       csi:
         volumeSnapshots:

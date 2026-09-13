@@ -3,6 +3,7 @@ package sops
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 
 	"github.com/rs/zerolog/log"
@@ -15,15 +16,13 @@ func EncryptAllFiles() error {
 
 	files, err := ExecuteCheck(false) // Get the list of files and their encryption status
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to execute check for file statuses")
-		return err
+		return fmt.Errorf("check files for encryption: %w", err)
 	}
 
 	log.Debug().Int("fileCount", len(files)).Msg("Found files to process for encryption")
 
 	for _, file := range files {
 		if err := processFileEncryption(file); err != nil {
-			log.Error().Err(err).Msgf("Error processing encryption for file: %s", file.Path)
 			return err
 		}
 	}
@@ -43,8 +42,7 @@ func processFileEncryption(file EncrFileData) error {
 	// Check if the file is partially staged
 	fullyStaged, err := fthelper.IsFileFullyStaged(file.Path)
 	if err != nil {
-		log.Error().Err(err).Msgf("Error checking staged status of file: %s", file.Path)
-		return fmt.Errorf("error checking staged status of file %s: %v", file.Path, err)
+		return fmt.Errorf("error checking staged status of file %s: %w", file.Path, err)
 	}
 
 	// If the file is not fully staged, stage it
@@ -52,8 +50,7 @@ func processFileEncryption(file EncrFileData) error {
 		log.Info().Msgf("File %s is partially staged, staging fully...\n", file.Path)
 		err := fthelper.StageFile(file.Path)
 		if err != nil {
-			log.Error().Err(err).Msgf("Error staging file: %s", file.Path)
-			return fmt.Errorf("error staging file %s: %v", file.Path, err)
+			return fmt.Errorf("error staging file %s: %w", file.Path, err)
 		}
 		log.Info().Msgf("File %s fully staged.\n", file.Path)
 	}
@@ -61,8 +58,7 @@ func processFileEncryption(file EncrFileData) error {
 	// Encrypt the file
 	err = encryptFile(file.Path)
 	if err != nil {
-		log.Error().Err(err).Msgf("Error encrypting file: %s", file.Path)
-		return fmt.Errorf("error encrypting file %s: %v", file.Path, err)
+		return fmt.Errorf("error encrypting file %s: %w", file.Path, err)
 	}
 
 	log.Debug().Msgf("File %s encrypted successfully.\n", file.Path)
@@ -77,14 +73,12 @@ func encryptFile(filePath string) error {
 	content, err := os.ReadFile(filePath)
 	log.Debug().Msgf("Encrypting '%s'... \n", filePath)
 	if err != nil {
-		log.Error().Err(err).Msg("Error reading file")
-		return fmt.Errorf("error reading file: %v", err)
+		return fmt.Errorf("error reading file: %w", err)
 	}
 
 	// Ensure the regex covers the whole content
 	sopsConfig, err := LoadSopsConfig()
 	if err != nil {
-		log.Error().Err(err).Msg("Error loading SOPS configuration")
 		return err
 	}
 
@@ -93,14 +87,12 @@ func encryptFile(filePath string) error {
 	// Encrypt the content
 	encryptedData, err := EncryptWithAgeKey(content, encrRegex, GetFormat(filePath))
 	if err != nil {
-		log.Error().Err(err).Msg("Error encrypting data")
-		return fmt.Errorf("error encrypting data: %v", err)
+		return fmt.Errorf("error encrypting data: %w", err)
 	}
 
 	// Write the encrypted data back to the file
 	if err := os.WriteFile(filePath, encryptedData, 0644); err != nil {
-		log.Error().Err(err).Msg("Error writing encrypted data to file")
-		return fmt.Errorf("error writing encrypted data to file: %v", err)
+		return fmt.Errorf("error writing encrypted data to file: %w", err)
 	}
 
 	log.Debug().Msgf("Successfully encrypted file: %s", filePath)
@@ -124,7 +116,7 @@ func mergeRegex(filePath string, config SopsConfig) string {
 		}
 
 		// Check if the given path matches the current rule's path regex
-		if r.MatchString(filePath) {
+		if r.MatchString(filepath.ToSlash(filePath)) {
 			// Merge the encrypted regex into the mergedRegex string
 			mergedRegex += rule.EncryptedRegex + "|"
 			log.Debug().Msgf("File %s matched regex, adding encrypted regex: %s", filePath, rule.EncryptedRegex)

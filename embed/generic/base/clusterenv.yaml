@@ -1,9 +1,12 @@
 ## The Following are required by clustertool and CANNOT be removed
-# Ensure VIP is different from all master IPs
+# Ensure VIP is different from all node IPs
 VIP: 192.168.20.200
-## Defines the MasterNode IP
+## Defines the first control-plane IP (without a subnet prefix)
 # Please be aware, we only support x86_64 for the first node, ARM will NOT work by default
-MASTER1IP: 192.168.20.210
+CONTROL1IP: 192.168.20.210
+# Optional additional nodes:
+# CONTROL2IP: 192.168.20.220
+# WORKER1IP: 192.168.20.221
 # Defines the gateway for all nodes
 GATEWAY: 192.168.20.1
 # Defines the ip range metallb is allowed to use
@@ -28,8 +31,8 @@ DOMAIN_0_CLOUDFLARE_TOKEN: ""
 # Has to start with ssh://
 # Please make sure to NOT contain any special characters in the URL except "-"
 GITHUB_REPOSITORY: ""
-## Uncomment and adapt to automatically setup your dockerhub credentials
-## This should prevent much of the potential ratelimits
+## To enable Docker Hub authentication, also copy talos/examples/44-registry-auth.yaml
+## into talos/patches/all/ or talos/patches/nodes/<name>/.
 # DOCKERHUB_USER: dockerhub-username
 # DOCKERHUB_PASSWORD: dockerhub-password
 ## DO NOT ALTER

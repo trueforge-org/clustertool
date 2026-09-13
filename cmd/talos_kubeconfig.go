@@ -6,7 +6,6 @@ import (
 	"github.com/trueforge-org/clustertool/pkg/gencmd"
 	"github.com/trueforge-org/clustertool/pkg/initfiles"
 	"github.com/trueforge-org/clustertool/pkg/sops"
-	"github.com/trueforge-org/clustertool/pkg/talassist"
 )
 
 var kubeconfig = &cobra.Command{
@@ -14,7 +13,7 @@ var kubeconfig = &cobra.Command{
 	Short:   "kubeconfig for Talos Cluster",
 	Example: "clustertool talos kubeconfig <NodeIP>",
 	Long:    advResetLongHelp,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		var extraArgs []string
 		node := ""
 
@@ -29,15 +28,19 @@ var kubeconfig = &cobra.Command{
 		}
 
 		if err := sops.DecryptFiles(); err != nil {
-			log.Info().Msgf("Error decrypting files: %v\n", err)
+			return err
 		}
-		initfiles.LoadTalEnv(false)
-		talassist.LoadTalConfig()
+		if err := initfiles.LoadTalEnv(false); err != nil {
+			return err
+		}
 		log.Info().Msg("Running Cluster kubeconfig")
 
 		taloscmds := gencmd.GenPlain("kubeconfig", node, extraArgs)
-		gencmd.ExecCmds(taloscmds, true)
+		if err := gencmd.ExecCmds(taloscmds, true); err != nil {
+			return err
+		}
 
+		return nil
 	},
 }
 

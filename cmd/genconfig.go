@@ -8,7 +8,7 @@ import (
 )
 
 var genConfigLongHelp = strings.TrimSpace(`
-After all your settings are entered into talconfig.yaml and clusterenv.yaml, clustertool generates a complete cluster configuration using TalHelper and various other tools.
+After all settings are entered into clusterenv.yaml and the native Talos documents, clustertool uses talosctl to generate and validate the complete cluster configuration.
 
 It's important to note that running clustertool genconfig, again after each settings change, is absolutely imperative to be able to deploy said settings to your cluster.
 
@@ -21,9 +21,8 @@ var genConfig = &cobra.Command{
 	Short:   "generate Cluster Configuration files",
 	Long:    genConfigLongHelp,
 	Example: "clustertool genconfig",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		gencmd.GenConfig(args)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return gencmd.GenConfig(args)
 	},
 }
 

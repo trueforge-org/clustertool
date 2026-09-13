@@ -3,7 +3,6 @@ package cmd
 import (
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/trueforge-org/clustertool/pkg/sops"
 )
@@ -19,10 +18,8 @@ var decrypt = &cobra.Command{
 	Short:   "Decrypt all high-risk data using sops",
 	Example: "clustertool decrypt",
 	Long:    decryptLongHelp,
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := sops.DecryptFiles(); err != nil {
-			log.Info().Msgf("Error decrypting files: %v\n", err)
-		}
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return sops.DecryptFiles()
 	},
 }
 
