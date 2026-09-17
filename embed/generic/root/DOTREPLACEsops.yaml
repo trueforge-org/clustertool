@@ -13,4 +13,6 @@ creation_rules:
     age: REPLACEME
   - path_regex: ^clusters.*talos.*secrets\.sops\.ya?ml$
     age: REPLACEME
+  - path_regex: ^clusters/[^/]+/talos/(.*/)?talsecret\.ya?ml$
+    age: REPLACEME
 ## DO NOT REMOVE: Personal setting go under this line
