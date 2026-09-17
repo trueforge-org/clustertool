@@ -7,6 +7,7 @@ import (
 	"regexp"
 
 	"github.com/rs/zerolog/log"
+	"github.com/trueforge-org/clustertool/pkg/initfiles"
 	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
 )
 
@@ -37,6 +38,13 @@ func processFileEncryption(file EncrFileData) error {
 	if file.Encrypted {
 		log.Info().Msgf("File %s is already encrypted, skipping.\n", file.Path)
 		return nil
+	}
+
+	// Validate shared settings before staging or encrypting them.
+	if filepath.Base(file.Path) == "cluster-settings.sops.yaml" {
+		if _, err := initfiles.ReadClusterSettings(file.Path); err != nil {
+			return err
+		}
 	}
 
 	// Check if the file is partially staged

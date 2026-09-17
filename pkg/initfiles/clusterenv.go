@@ -1,6 +1,7 @@
 package initfiles
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/netip"
@@ -13,32 +14,40 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// LoadTalEnv reads the shared cluster settings from the Secret's stringData.
-func LoadTalEnv(noFail bool) error {
-	file := helper.ClusterSettingsFile
+// ReadClusterSettings reads stringData without exporting or validating network settings.
+func ReadClusterSettings(file string) (map[string]string, error) {
 	data, err := os.ReadFile(file)
 	if err != nil {
-		if noFail && os.IsNotExist(err) {
-			return nil
-		}
-		return fmt.Errorf("read cluster settings %s: %w", file, err)
+		return nil, fmt.Errorf("read cluster settings %s: %w", file, err)
 	}
 	var document struct {
 		StringData map[string]interface{} `yaml:"stringData"`
 	}
 	if err := yaml.Unmarshal(data, &document); err != nil {
-		return fmt.Errorf("parse cluster settings %s: %w", file, err)
+		return nil, fmt.Errorf("parse cluster settings %s: %w", file, err)
 	}
 	if document.StringData == nil {
-		return fmt.Errorf("cluster settings %s requires stringData", file)
+		return nil, fmt.Errorf("cluster settings %s requires stringData", file)
 	}
 	sourceEnv := make(map[string]string, len(document.StringData))
 	for key, value := range document.StringData {
 		text, ok := value.(string)
 		if !ok {
-			return fmt.Errorf("cluster setting %s must be a string; quote numbers and booleans", key)
+			return nil, fmt.Errorf("cluster setting %s must be a string; quote numbers and booleans", key)
 		}
 		sourceEnv[key] = text
+	}
+	return sourceEnv, nil
+}
+
+// LoadTalEnv loads the shared settings into the environment for ClusterTool.
+func LoadTalEnv(noFail bool) error {
+	sourceEnv, err := ReadClusterSettings(helper.ClusterSettingsFile)
+	if err != nil {
+		if noFail && errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return err
 	}
 	helper.TalEnv = sourceEnv
 	clusterName()
