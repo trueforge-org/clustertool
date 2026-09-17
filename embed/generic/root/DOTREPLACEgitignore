@@ -1,13 +1,11 @@
+# Clustertool
+/clustertool
+/clustertool.exe
+# Secrets
 age.agekey
-^clustertool.exe
-^clustertool*
-^clustertool
-*clustertool.exe
-clustertool.exe
-clustertool
-sopssecret.yaml
-sopssecret*
-*sopssecret*
-sops-age.sops.yaml
-mounts/
-.decrypted~*.yaml
+*.pub
+*.key
+*.decrypted~*.yaml
+# Kubernetes
+kubeconfig
+talosconfig
