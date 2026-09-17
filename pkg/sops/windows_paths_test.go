@@ -26,7 +26,7 @@ func TestWindowsStagedSopsPath(t *testing.T) {
 		t.Fatal(err)
 	}
 	config.CreationRules[0].EncryptedRegex = "password"
-	if got := mergeRegex(p, config); got != "password" {
+	if got, _ := encryptionSettings(p, config); got != "password" {
 		t.Fatalf("Windows encryption rule mismatch: %q", got)
 	}
 	if err := os.MkdirAll(filepath.Dir(p), 0700); err != nil {

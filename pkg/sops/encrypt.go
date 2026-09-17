@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
@@ -76,16 +77,14 @@ func encryptFile(filePath string) error {
 		return fmt.Errorf("error reading file: %w", err)
 	}
 
-	// Ensure the regex covers the whole content
+	// Load the settings used for this file.
 	sopsConfig, err := LoadSopsConfig()
 	if err != nil {
 		return err
 	}
 
-	encrRegex := mergeRegex(filePath, sopsConfig)
-
 	// Encrypt the content
-	encryptedData, err := EncryptWithAgeKey(content, encrRegex, GetFormat(filePath), filePath)
+	encryptedData, err := EncryptWithAgeKey(content, filePath, sopsConfig)
 	if err != nil {
 		return fmt.Errorf("error encrypting data: %w", err)
 	}
@@ -99,35 +98,24 @@ func encryptFile(filePath string) error {
 	return nil
 }
 
-// mergeRegex merges regex from the SOPS configuration.
-func mergeRegex(filePath string, config SopsConfig) string {
-	log.Trace().Msgf("Merging regex for file: %s", filePath)
-
-	// Initialize an empty string for merged regex
-	mergedRegex := ""
-
-	// Iterate through each creation rule
+// encryptionSettings merges encrypted_regex from matching rules and uses
+// mac_only_encrypted from the first match.
+func encryptionSettings(filePath string, config SopsConfig) (string, bool) {
+	var expressions []string
+	macOnlyEncrypted := false
+	filePath = filepath.ToSlash(filePath)
 	for _, rule := range config.CreationRules {
-		// Compile the regex pattern
-		r, err := regexp.Compile(rule.PathRegex)
+		pattern, err := regexp.Compile(rule.PathRegex)
 		if err != nil {
 			log.Warn().Err(err).Msg("Error compiling regex")
 			continue
 		}
-
-		// Check if the given path matches the current rule's path regex
-		if r.MatchString(filepath.ToSlash(filePath)) {
-			// Merge the encrypted regex into the mergedRegex string
-			mergedRegex += rule.EncryptedRegex + "|"
-			log.Debug().Msgf("File %s matched regex, adding encrypted regex: %s", filePath, rule.EncryptedRegex)
+		if pattern.MatchString(filePath) {
+			if len(expressions) == 0 {
+				macOnlyEncrypted = rule.MACOnlyEncrypted
+			}
+			expressions = append(expressions, rule.EncryptedRegex)
 		}
 	}
-
-	// Remove the trailing "|" if mergedRegex is not empty
-	if mergedRegex != "" {
-		mergedRegex = mergedRegex[:len(mergedRegex)-1]
-		log.Debug().Msgf("Merged regex for file %s: %s", filePath, mergedRegex)
-	}
-
-	return mergedRegex
+	return strings.Join(expressions, "|"), macOnlyEncrypted
 }

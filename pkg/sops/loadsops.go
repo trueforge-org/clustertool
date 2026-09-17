@@ -29,7 +29,7 @@ func LoadSopsConfig() (SopsConfig, error) {
 	}
 	log.Debug().Msg("Successfully read .sops.yaml file")
 
-	// Unmarshal YAML data into struct
+	// Apply configured values over SOPS defaults for omitted store settings.
 	config := SopsConfig{Stores: *config.NewStoresConfig()}
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {

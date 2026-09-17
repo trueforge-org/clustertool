@@ -3,8 +3,6 @@ package sops
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
-	"regexp"
 
 	"github.com/getsops/sops/v3"
 	"github.com/getsops/sops/v3/aes"
@@ -26,36 +24,19 @@ var encrConfig *EncryptionConfig
 //nolint:unused
 const ageKeyFilePath = "./age.agekey"
 
-func EncryptWithAgeKey(body []byte, regex string, format string, filePath string) ([]byte, error) {
+// EncryptWithAgeKey encrypts a file using the already loaded SOPS configuration.
+func EncryptWithAgeKey(body []byte, filePath string, sopsConfig SopsConfig) ([]byte, error) {
 	log.Trace().Msg("Starting EncryptWithAgeKey function")
 
-	// Create a cypher instance
 	cypher := NewCypher()
 	log.Debug().Msg("Cypher instance created")
 
-	sopsConfig, err := LoadSopsConfig()
-	if err != nil {
-		return nil, err
-	}
-	log.Debug().Msg("Successfully loaded Sops config")
-
+	regex, macOnlyEncrypted := encryptionSettings(filePath, sopsConfig)
 	var groups []sops.KeyGroup
 	var ageKeys []string
-	macOnlyEncrypted := false
-	matchedRule := false
 
-	// Iterate over each creation rule and find matching files
+	// Preserve the existing recipient selection across creation rules.
 	for _, rule := range sopsConfig.CreationRules {
-		if !matchedRule {
-			pattern, err := regexp.Compile(rule.PathRegex)
-			if err != nil {
-				return nil, fmt.Errorf("invalid path regex in .sops.yaml: %w", err)
-			}
-			if pattern.MatchString(filepath.ToSlash(filePath)) {
-				macOnlyEncrypted = rule.MACOnlyEncrypted
-				matchedRule = true
-			}
-		}
 		ageKeys = append(ageKeys, rule.Age)
 	}
 
@@ -81,7 +62,7 @@ func EncryptWithAgeKey(body []byte, regex string, format string, filePath string
 		UnencryptedRegex:  "",
 		EncryptedRegex:    regex,
 		ShamirThreshold:   3,
-		Format:            format,
+		Format:            GetFormat(filePath),
 		Stores:            sopsConfig.Stores,
 		MACOnlyEncrypted:  macOnlyEncrypted,
 	})
@@ -93,8 +74,7 @@ func EncryptWithAgeKey(body []byte, regex string, format string, filePath string
 	return encryptedData, nil
 }
 
-/// Custom keygroup
-
+// NewMasterKey parses an age recipient.
 func NewMasterKey(pubkey string) (keys.MasterKey, error) {
 	key, err := age.MasterKeyFromRecipient(pubkey)
 	if err != nil {
@@ -102,8 +82,6 @@ func NewMasterKey(pubkey string) (keys.MasterKey, error) {
 	}
 	return key, nil
 }
-
-/// IMPORTED
 
 const (
 	formatYaml = "yaml"

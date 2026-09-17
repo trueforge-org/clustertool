@@ -71,6 +71,8 @@ func decryptData(data []byte, format string) ([]byte, error) {
 		return nil, err
 	}
 
+	// decrypt.Data verifies integrity but emits using SOPS defaults.
+	// Re-emit the verified plaintext with the configured store settings.
 	sopsConfig, err := LoadSopsConfig()
 	if err != nil {
 		return nil, err
