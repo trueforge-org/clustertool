@@ -3,6 +3,8 @@ package sops
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+	"regexp"
 
 	"github.com/getsops/sops/v3"
 	"github.com/getsops/sops/v3/aes"
@@ -24,7 +26,7 @@ var encrConfig *EncryptionConfig
 //nolint:unused
 const ageKeyFilePath = "./age.agekey"
 
-func EncryptWithAgeKey(body []byte, regex string, format string) ([]byte, error) {
+func EncryptWithAgeKey(body []byte, regex string, format string, filePath string) ([]byte, error) {
 	log.Trace().Msg("Starting EncryptWithAgeKey function")
 
 	// Create a cypher instance
@@ -39,11 +41,20 @@ func EncryptWithAgeKey(body []byte, regex string, format string) ([]byte, error)
 
 	var groups []sops.KeyGroup
 	var ageKeys []string
+	macOnlyEncrypted := false
+	matchedRule := false
 
 	// Iterate over each creation rule and find matching files
 	for _, rule := range sopsConfig.CreationRules {
-		if err != nil {
-			return nil, fmt.Errorf("invalid path regex in .sops.yaml: %w", err)
+		if !matchedRule {
+			pattern, err := regexp.Compile(rule.PathRegex)
+			if err != nil {
+				return nil, fmt.Errorf("invalid path regex in .sops.yaml: %w", err)
+			}
+			if pattern.MatchString(filepath.ToSlash(filePath)) {
+				macOnlyEncrypted = rule.MACOnlyEncrypted
+				matchedRule = true
+			}
 		}
 		ageKeys = append(ageKeys, rule.Age)
 	}
@@ -71,6 +82,8 @@ func EncryptWithAgeKey(body []byte, regex string, format string) ([]byte, error)
 		EncryptedRegex:    regex,
 		ShamirThreshold:   3,
 		Format:            format,
+		Stores:            sopsConfig.Stores,
+		MACOnlyEncrypted:  macOnlyEncrypted,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error encrypting data: %w", err)
@@ -120,6 +133,8 @@ func (c *cypher) Decrypt(content []byte, format string) ([]byte, error) {
 }
 
 type EncryptionConfig struct {
+	Stores            config.StoresConfig
+	MACOnlyEncrypted  bool
 	Format            string
 	Keys              []sops.KeyGroup
 	UnencryptedSuffix string
@@ -135,9 +150,9 @@ func (m *cypher) Encrypt(content []byte, encrConfig EncryptionConfig) (result []
 	var store common.Store
 	switch encrConfig.Format {
 	case formatYaml:
-		store = common.StoreForFormat(formats.Yaml, config.NewStoresConfig())
+		store = common.StoreForFormat(formats.Yaml, &encrConfig.Stores)
 	default:
-		store = common.StoreForFormat(formats.Json, config.NewStoresConfig())
+		store = common.StoreForFormat(formats.Json, &encrConfig.Stores)
 	}
 
 	log.Debug().Msg("Store initialized for encryption")
@@ -152,6 +167,7 @@ func (m *cypher) Encrypt(content []byte, encrConfig EncryptionConfig) (result []
 		Branches: branches,
 		Metadata: sops.Metadata{
 			KeyGroups:         encrConfig.Keys,
+			MACOnlyEncrypted:  encrConfig.MACOnlyEncrypted,
 			UnencryptedSuffix: encrConfig.UnencryptedSuffix,
 			EncryptedSuffix:   encrConfig.EncryptedSuffix,
 			UnencryptedRegex:  encrConfig.UnencryptedRegex,

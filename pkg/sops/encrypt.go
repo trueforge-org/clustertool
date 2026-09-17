@@ -85,7 +85,7 @@ func encryptFile(filePath string) error {
 	encrRegex := mergeRegex(filePath, sopsConfig)
 
 	// Encrypt the content
-	encryptedData, err := EncryptWithAgeKey(content, encrRegex, GetFormat(filePath))
+	encryptedData, err := EncryptWithAgeKey(content, encrRegex, GetFormat(filePath), filePath)
 	if err != nil {
 		return fmt.Errorf("error encrypting data: %w", err)
 	}

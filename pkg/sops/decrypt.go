@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/getsops/sops/v3/cmd/sops/common"
+	"github.com/getsops/sops/v3/cmd/sops/formats"
 	"github.com/getsops/sops/v3/decrypt"
 	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/initfiles"
@@ -69,6 +71,15 @@ func decryptData(data []byte, format string) ([]byte, error) {
 		return nil, err
 	}
 
+	sopsConfig, err := LoadSopsConfig()
+	if err != nil {
+		return nil, err
+	}
+	store := common.StoreForFormat(formats.FormatFromString(format), &sopsConfig.Stores)
+	branches, err := store.LoadPlainFile(decrypted)
+	if err != nil {
+		return nil, fmt.Errorf("parse decrypted data: %w", err)
+	}
 	log.Debug().Msg("Data decrypted successfully")
-	return decrypted, nil
+	return store.EmitPlainFile(branches)
 }

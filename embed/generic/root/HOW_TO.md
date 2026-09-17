@@ -91,6 +91,13 @@ Patches are applied in that order: shared, role, then node. Within each director
 YAML files are read in filename order. Later patches can override earlier settings.
 Encrypt secrets with `clustertool encrypt` before committing them to Git.
 
+ClusterTool honors `stores` settings from `.sops.yaml` when encrypting and
+decrypting, for example `stores.yaml.indent: 2`. Omitted settings retain SOPS
+defaults. The first matching creation rule supplies `mac_only_encrypted`
+(default: `false`). When enabled, unencrypted values are excluded from the MAC;
+encrypted values remain authenticated. Existing encrypted files must be
+decrypted and encrypted again to apply a changed MAC setting.
+
 ## Configure nodes and versions
 
 `clustertool.yaml` is required even for a single node:

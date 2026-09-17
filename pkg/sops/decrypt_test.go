@@ -24,7 +24,7 @@ func TestDecryptRejectsCorruptMAC(t *testing.T) {
 		t.Fatal(err)
 	}
 	plain := []byte("secret: persistent-identity\n")
-	encrypted, err := EncryptWithAgeKey(plain, "", "yaml")
+	encrypted, err := EncryptWithAgeKey(plain, "", "yaml", "secret.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
