@@ -1,4 +1,5 @@
 talos/generated/
+*sopssecret.secret.yaml
 *sops-age.sops.yaml
 *kubeconfig
 
