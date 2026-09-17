@@ -26,10 +26,10 @@ jobs:
       - name: Create dummy deploykey secret (CI only)
         shell: bash
         run: |
-          SECRET_PATH="embed/generic/kubernetes/flux-system/flux-instance/app/deploykey.secret.yaml"
+          SECRET_PATH="embed/generic/kubernetes/flux-system/flux-instance/app/deploy-key.sops.yaml"
 
           if [[ ! -f "$SECRET_PATH" ]]; then
-            echo "Creating dummy deploykey.secret.yaml for kubeconform"
+            echo "Creating dummy deploy-key.sops.yaml for kubeconform"
             mkdir -p "$(dirname "$SECRET_PATH")"
             touch "$SECRET_PATH"
           fi

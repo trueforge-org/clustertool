@@ -5,8 +5,6 @@ age.agekey
 *clustertool.exe
 clustertool.exe
 clustertool
-sopssecret.yaml
-sopssecret*
-*sopssecret*
+sops-age.sops.yaml
 mounts/
 .decrypted~*.yaml

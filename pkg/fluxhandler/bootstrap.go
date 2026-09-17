@@ -49,8 +49,8 @@ func bootstrapFluxCD(ctx context.Context) error {
 	fluxPath := filepath.Join(helper.ClusterPath, "kubernetes", "flux-system")
 	manifestPaths := []string{
 		filepath.Join(fluxPath, "namespace.yaml"),
-		filepath.Join(fluxPath, "flux-instance", "app", "deploykey.secret.yaml"),
-		filepath.Join(fluxPath, "flux-instance", "app", "sopssecret.secret.yaml"),
+		filepath.Join(fluxPath, "flux-instance", "app", "deploy-key.sops.yaml"),
+		filepath.Join(fluxPath, "flux-instance", "app", "sops-age.sops.yaml"),
 		filepath.Join(fluxPath, "flux", "clustersettings.secret.yaml"),
 	}
 	for _, filePath := range manifestPaths {

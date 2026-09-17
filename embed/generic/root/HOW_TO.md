@@ -190,8 +190,8 @@ The configuration is in:
 
 Under `clusters/main/kubernetes/`, `init` creates both credential files in
 `flux-system/flux-instance/app/`:
-`deploykey.secret.yaml` holds the Git deploy key and must be encrypted before
-committing. `sopssecret.secret.yaml` holds the private age key; it is ignored by Git,
+`deploy-key.sops.yaml` holds the Git deploy key and must be encrypted before
+committing. `sops-age.sops.yaml` holds the private age key; it is ignored by Git,
 excluded from Kustomizations and applied directly during Flux bootstrap.
 Cluster settings remain in `flux-system/flux/clustersettings.secret.yaml`.
 

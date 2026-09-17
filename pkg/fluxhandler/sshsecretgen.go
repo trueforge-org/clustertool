@@ -32,7 +32,7 @@ func CreateGitSecret(gitURL string) error {
 	}
 
 	// Paths for files
-	secretPath := filepath.Join(helper.ClusterPath, "kubernetes", "flux-system", "flux-instance", "app", "deploykey.secret.yaml")
+	secretPath := filepath.Join(helper.ClusterPath, "kubernetes", "flux-system", "flux-instance", "app", "deploy-key.sops.yaml")
 	publicKeyPath := filepath.Join(".", "ssh-public-key.txt")
 
 	// Check if secret YAML already exists

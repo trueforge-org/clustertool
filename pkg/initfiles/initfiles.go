@@ -434,7 +434,7 @@ func GetSecKey() (string, error) {
 }
 
 func GenSopsSecret() error {
-	secretPath := filepath.Join(helper.ClusterPath, "kubernetes", "flux-system", "flux-instance", "app", "sopssecret.secret.yaml")
+	secretPath := filepath.Join(helper.ClusterPath, "kubernetes", "flux-system", "flux-instance", "app", "sops-age.sops.yaml")
 	ageSecKey, err := GetSecKey()
 
 	// Added by Boemeltrein, for linting purposes
