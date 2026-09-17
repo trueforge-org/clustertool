@@ -22,7 +22,7 @@ var HelmRepos map[string]*fluxhandler.HelmRepo
 func RunBootstrap(args []string) error {
 	extraArgs := args
 	manifestPaths := []string{
-		filepath.Join(helper.KubernetesPath, "flux-system", "flux", "clustersettings.secret.yaml"),
+		helper.ClusterSettingsFile,
 	}
 
 	if err := sops.DecryptFiles(); err != nil {

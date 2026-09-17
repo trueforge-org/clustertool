@@ -2,10 +2,30 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
+  name: flux-entry-secrets
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./clusters/REPLACEWITHCLUSTERNAME/secrets
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: cluster
+    namespace: flux-system
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
   name: flux-entry-repos
   namespace: flux-system
 spec:
   interval: 10m
+  dependsOn:
+    - name: flux-entry-secrets
   path: ./repositories
   prune: true
   sourceRef:
@@ -18,8 +38,8 @@ spec:
       name: sops-age
   postBuild:
     substituteFrom:
-      - kind: ConfigMap
-        name: cluster-config
+      - kind: Secret
+        name: cluster-settings
   wait: true
   patches:
     - patch: |-
@@ -34,8 +54,8 @@ spec:
               name: sops-age
           postBuild:
             substituteFrom:
-              - kind: ConfigMap
-                name: cluster-config
+              - kind: Secret
+                name: cluster-settings
       target:
         group: kustomize.toolkit.fluxcd.io
         kind: Kustomization
@@ -48,6 +68,8 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
+  dependsOn:
+    - name: flux-entry-secrets
   path: ./clusters/REPLACEWITHCLUSTERNAME/kubernetes
   prune: true
   sourceRef:
@@ -63,8 +85,8 @@ spec:
       name: sops-age
   postBuild:
     substituteFrom:
-      - kind: ConfigMap
-        name: cluster-config
+      - kind: Secret
+        name: cluster-settings
   patches:
     - patch: |-
         apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -78,8 +100,8 @@ spec:
               name: sops-age
           postBuild:
             substituteFrom:
-              - kind: ConfigMap
-                name: cluster-config
+              - kind: Secret
+                name: cluster-settings
       target:
         group: kustomize.toolkit.fluxcd.io
         kind: Kustomization

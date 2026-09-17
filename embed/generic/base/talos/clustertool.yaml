@@ -16,7 +16,7 @@ nodes:
     address: ${CONTROL1IP}
 
   # Optional additional nodes:
-  # Configure their addresses in clusterenv.yaml and create matching
+  # Configure their addresses in secrets/cluster-settings.sops.yaml and create matching
   # patches/nodes/<name>/ directories before enabling them.
   #
   # - name: control-2

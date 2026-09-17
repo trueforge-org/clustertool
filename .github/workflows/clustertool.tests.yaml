@@ -104,10 +104,10 @@ jobs:
 
           # Inject deterministic dummy values required for strict validation.
           log_step "Inject dummy values"
-          run_cmd "Set DOMAIN_0 dummy value" sed -i 's/^DOMAIN_0: ".*"/DOMAIN_0: "dummy.local"/' clusters/main/clusterenv.yaml
-          run_cmd "Set DOMAIN_0_EMAIL dummy value" sed -i 's/^DOMAIN_0_EMAIL: ".*"/DOMAIN_0_EMAIL: "admin@dummy.local"/' clusters/main/clusterenv.yaml
-          run_cmd "Set DOMAIN_0_CLOUDFLARE_TOKEN dummy value" sed -i 's/^DOMAIN_0_CLOUDFLARE_TOKEN: ".*"/DOMAIN_0_CLOUDFLARE_TOKEN: "dummy-token"/' clusters/main/clusterenv.yaml
-          run_cmd "Set GITHUB_REPOSITORY dummy value" sed -i 's|^GITHUB_REPOSITORY: ".*"|GITHUB_REPOSITORY: "https://github.com/trueforge-org/clustertool.git"|' clusters/main/clusterenv.yaml
+          run_cmd "Set DOMAIN_0 dummy value" sed -i 's/^  DOMAIN_0: ".*"/  DOMAIN_0: "dummy.local"/' clusters/main/secrets/cluster-settings.sops.yaml
+          run_cmd "Set DOMAIN_0_EMAIL dummy value" sed -i 's/^  DOMAIN_0_EMAIL: ".*"/  DOMAIN_0_EMAIL: "admin@dummy.local"/' clusters/main/secrets/cluster-settings.sops.yaml
+          run_cmd "Set DOMAIN_0_CLOUDFLARE_TOKEN dummy value" sed -i 's/^  DOMAIN_0_CLOUDFLARE_TOKEN: ".*"/  DOMAIN_0_CLOUDFLARE_TOKEN: "dummy-token"/' clusters/main/secrets/cluster-settings.sops.yaml
+          run_cmd "Set GITHUB_REPOSITORY dummy value" sed -i 's|^  GITHUB_REPOSITORY: ".*"|  GITHUB_REPOSITORY: "https://github.com/trueforge-org/clustertool.git"|' clusters/main/secrets/cluster-settings.sops.yaml
 
           # Full generation path with populated environment values.
           run_cmd "Second init" ./clustertool init
@@ -117,11 +117,10 @@ jobs:
 
           # Artifact presence checks to ensure expected outputs were produced.
           log_step "Validate generated artifacts"
-          run_cmd "Check clusterenv exists" test -f clusters/main/clusterenv.yaml
+          run_cmd "Check cluster settings exist" test -f clusters/main/secrets/cluster-settings.sops.yaml
           run_cmd "Check Talos secrets exist" test -f clusters/main/talos/secrets.sops.yaml
           run_cmd "Check talosconfig exists" test -f clusters/main/talos/generated/talosconfig
           run_cmd "Check control-plane config exists" test -f clusters/main/talos/generated/control-1.yaml
-          run_cmd "Check clustersettings secret exists" test -f clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml
           run_cmd "Check at least one node machine config exists" bash -c 'find clusters/main/talos/generated -maxdepth 1 -type f -name "*.yaml" ! -name "talsecret.yaml" | grep -q .'
 
           log_step "Leave temp workspace"
@@ -166,9 +165,9 @@ jobs:
           log_step "Run encrypt/decrypt/check roundtrip"
           run_cmd "Encrypt files" ./clustertool encrypt
           run_cmd "Check encrypted state" ./clustertool checkcrypt
-          run_cmd "Assert encrypted markers exist" bash -c 'grep -q "ENC\\[" clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml && grep -q "sops:" clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml'
+          run_cmd "Assert encrypted markers exist" bash -c 'grep -q "ENC\\[" clusters/main/secrets/cluster-settings.sops.yaml && grep -q "sops:" clusters/main/secrets/cluster-settings.sops.yaml'
           run_cmd "Decrypt files" ./clustertool decrypt
-          run_cmd "Assert encrypted markers removed after decrypt" bash -c '! grep -q "ENC\\[" clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml && ! grep -q "sops:" clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml'
+          run_cmd "Assert encrypted markers removed after decrypt" bash -c '! grep -q "ENC\\[" clusters/main/secrets/cluster-settings.sops.yaml && ! grep -q "sops:" clusters/main/secrets/cluster-settings.sops.yaml'
           run_cmd "Checkcrypt fails on decrypted files (expected)" bash -c 'if ./clustertool checkcrypt; then echo "::error::checkcrypt unexpectedly succeeded on decrypted files"; exit 1; else echo "checkcrypt failed as expected on decrypted files"; fi'
           run_cmd "Encrypt files again" ./clustertool encrypt
           run_cmd "Re-check encrypted state" ./clustertool checkcrypt

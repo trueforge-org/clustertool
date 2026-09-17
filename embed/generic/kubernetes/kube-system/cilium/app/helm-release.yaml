@@ -41,7 +41,7 @@ spec:
     hubble:
       enabled: false
     cluster:
-      name: ${CLUSTERNAME}
+      name: REPLACEWITHCLUSTERNAME
       id: 1
     ipv4NativeRoutingCIDR: ${PODNET}
     securityContext:

@@ -6,21 +6,21 @@ import (
 )
 
 var (
-	HelmCache       = filepath.Join(CacheDir, "tgz_cache")
-	UserCacheDir, _ = os.UserCacheDir()
-	TalEnv          = make(map[string]string)
-	ClusterName     = "main"
-	KubeCache       = filepath.Join(CacheDir, "kubernetes")
-	BaseCache       = filepath.Join(CacheDir, "base")
-	RootCache       = filepath.Join(CacheDir, "root")
-	DocsCache       = filepath.Join(CacheDir, "docs")
-	CacheDir        = filepath.Join(UserCacheDir, "clustertool")
-	ClusterPath     = filepath.Join("./clusters", ClusterName)
-	ClusterEnvFile  = filepath.Join(ClusterPath, "/clusterenv.yaml")
-	TalosPath       = filepath.Join(ClusterPath, "/talos")
-	KubernetesPath  = filepath.Join(ClusterPath, "/kubernetes")
-	TalosGenerated  = filepath.Join(TalosPath, "/generated")
-	TalosConfigFile = filepath.Join(TalosGenerated, "talosconfig")
+	HelmCache           = filepath.Join(CacheDir, "tgz_cache")
+	UserCacheDir, _     = os.UserCacheDir()
+	TalEnv              = make(map[string]string)
+	ClusterName         = "main"
+	KubeCache           = filepath.Join(CacheDir, "kubernetes")
+	BaseCache           = filepath.Join(CacheDir, "base")
+	RootCache           = filepath.Join(CacheDir, "root")
+	DocsCache           = filepath.Join(CacheDir, "docs")
+	CacheDir            = filepath.Join(UserCacheDir, "clustertool")
+	ClusterPath         = filepath.Join("./clusters", ClusterName)
+	ClusterSettingsFile = filepath.Join(ClusterPath, "secrets", "cluster-settings.sops.yaml")
+	TalosPath           = filepath.Join(ClusterPath, "/talos")
+	KubernetesPath      = filepath.Join(ClusterPath, "/kubernetes")
+	TalosGenerated      = filepath.Join(TalosPath, "/generated")
+	TalosConfigFile     = filepath.Join(TalosGenerated, "talosconfig")
 
 	IndexCache = "./index_cache"
 	GpgDir     = ".cr-gpg" // Adjust the path based on your project structure

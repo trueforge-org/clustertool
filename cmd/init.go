@@ -13,7 +13,7 @@ var initLongHelp = strings.TrimSpace(`
 Clustertool requires a specific directory layout to ensure smooth operators and standardised environments.
 
 To ensure smooth deployment, the init function can pre-generate all required files in the right places.
-Afterwards, edit clusterenv.yaml and the native Talos documents to reflect your personal settings.
+Afterwards, edit secrets/cluster-settings.sops.yaml and the native Talos documents to reflect your personal settings.
 
 When done, please run clustertool genconfig to generate all configurations based on your personal settings.
 `)

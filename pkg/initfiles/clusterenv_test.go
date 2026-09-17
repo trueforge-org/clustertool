@@ -13,7 +13,7 @@ import (
 )
 
 func TestRepeatedLoadTalEnvKeepsEnvironmentBounded(t *testing.T) {
-	oldPath, oldEnv := helper.ClusterPath, helper.TalEnv
+	oldPath, oldFile, oldEnv := helper.ClusterPath, helper.ClusterSettingsFile, helper.TalEnv
 	originalProcessEnv := map[string]string{}
 	for _, entry := range os.Environ() {
 		key, value, _ := strings.Cut(entry, "=")
@@ -27,12 +27,13 @@ func TestRepeatedLoadTalEnvKeepsEnvironmentBounded(t *testing.T) {
 				os.Unsetenv(key)
 			}
 		}
-		helper.ClusterPath, helper.TalEnv = oldPath, oldEnv
+		helper.ClusterPath, helper.ClusterSettingsFile, helper.TalEnv = oldPath, oldFile, oldEnv
 	})
 	helper.ClusterPath = t.TempDir()
+	helper.ClusterSettingsFile = filepath.Join(helper.ClusterPath, "cluster-settings.sops.yaml")
 	helper.TalEnv = map[string]string{}
 	source := "CONTROL1IP: 192.0.2.151/24\nVIP: 192.0.2.150\nGATEWAY: 192.0.2.1\nHEADLAMP_IP: 192.0.2.152\nPODNET: 198.51.100.0/24\nSVCNET: 203.0.113.0/24\n"
-	if err := os.WriteFile(filepath.Join(helper.ClusterPath, "clusterenv.yaml"), []byte(source), 0600); err != nil {
+	if err := os.WriteFile(helper.ClusterSettingsFile, []byte("apiVersion: v1\nkind: Secret\nmetadata:\n  name: cluster-settings\n  namespace: flux-system\nstringData:\n  "+strings.ReplaceAll(strings.TrimSpace(source), "\n", "\n  ")+"\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	var first map[string]string

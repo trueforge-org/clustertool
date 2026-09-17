@@ -1,100 +1,52 @@
 package initfiles
 
 import (
-	"bufio"
 	"fmt"
 	"net"
 	"net/netip"
 	"os"
-	"regexp"
 	"strings"
-	"unicode"
 
 	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/helper"
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
-	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
 	"gopkg.in/yaml.v3"
 )
 
+// LoadTalEnv reads the shared cluster settings from the Secret's stringData.
 func LoadTalEnv(noFail bool) error {
-	file := helper.ClusterPath + "/clusterenv.yaml"
-	if _, err := os.Stat(file); err != nil {
+	file := helper.ClusterSettingsFile
+	data, err := os.ReadFile(file)
+	if err != nil {
 		if noFail && os.IsNotExist(err) {
 			return nil
 		}
-		return fmt.Errorf("read cluster environment %s: %w", file, err)
+		return fmt.Errorf("read cluster settings %s: %w", file, err)
 	}
-	data, err := os.ReadFile(file)
-	if err != nil {
-		return fmt.Errorf("read cluster environment %s: %w", file, err)
+	var document struct {
+		StringData map[string]interface{} `yaml:"stringData"`
 	}
-	var document map[string]interface{}
 	if err := yaml.Unmarshal(data, &document); err != nil {
-		return fmt.Errorf("parse cluster environment %s: %w", file, err)
+		return fmt.Errorf("parse cluster settings %s: %w", file, err)
 	}
-	sourceEnv := make(map[string]string)
-	if err := fthelper.LoadEnvFromFile(file, sourceEnv); err != nil {
-		return fmt.Errorf("load cluster environment %s: %w", file, err)
+	if document.StringData == nil {
+		return fmt.Errorf("cluster settings %s requires stringData", file)
 	}
-	if _, err := checkQuotedNumbersInFile(); err != nil {
-		return err
+	sourceEnv := make(map[string]string, len(document.StringData))
+	for key, value := range document.StringData {
+		text, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("cluster setting %s must be a string; quote numbers and booleans", key)
+		}
+		sourceEnv[key] = text
 	}
 	helper.TalEnv = sourceEnv
 	clusterName()
 	if err := clusterEnvtoEnv(); err != nil {
 		return err
 	}
-	log.Info().Msg("ClusterEnv loaded successfully")
+	log.Info().Msg("Cluster settings loaded successfully")
 	return nil
-}
-
-// Function to check if all numbers after ':' in a file are unquoted integers or floats
-func checkQuotedNumbersInFile() (bool, error) {
-	filePath := helper.ClusterPath + "/clusterenv.yaml"
-	// Regular expression to find patterns like ': number' where number can be an int or float
-	re := regexp.MustCompile(`:\s*(.+)`) // Matches anything after ': '
-
-	// Open the file
-	file, err := os.Open(filePath)
-	if err != nil {
-		return false, fmt.Errorf("read clusterenv.yaml: %w", err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// Skip lines that start with a number
-		trimmedLine := strings.TrimSpace(line)
-		if len(trimmedLine) > 0 && unicode.IsDigit(rune(trimmedLine[0])) {
-			continue
-		}
-
-		// Find matches for entries in each line
-		matches := re.FindStringSubmatch(line)
-		if len(matches) < 2 {
-			continue // Skip lines without a colon and value
-		}
-
-		// Get the value after the colon
-		value := strings.TrimSpace(matches[1])
-
-		// Check if the value is a valid number (int or float with a single dot)
-		isValidNumber := regexp.MustCompile(`^[0-9]+(\.[0-9]+)?$`).MatchString(value)
-
-		// If it's a valid number, log an error
-		if isValidNumber {
-			return false, fmt.Errorf("unquoted number in %s; quote numeric environment values", filePath)
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return false, fmt.Errorf("read clusterenv.yaml: %w", err)
-	}
-
-	return true, nil
 }
 
 func clusterName() {

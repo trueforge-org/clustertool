@@ -39,7 +39,7 @@ func LoadInventory() (*Inventory, error) {
 		return nil, fmt.Errorf("read required clustertool.yaml: %w", err)
 	}
 	// The embedded inventory is a template so init can copy one consistent
-	// layout while the actual management addresses remain in clusterenv.yaml.
+	// layout while the actual management addresses remain in secrets/cluster-settings.sops.yaml.
 	// Render only when a template variable is present; hand-written inventories
 	// remain ordinary YAML files.
 	if strings.Contains(string(data), "${") {

@@ -12,16 +12,16 @@ import (
 )
 
 func TestEnvironmentErrorsReturn(t *testing.T) {
-	old := helper.ClusterPath
-	helper.ClusterPath = t.TempDir()
-	t.Cleanup(func() { helper.ClusterPath = old })
+	old := helper.ClusterSettingsFile
+	helper.ClusterSettingsFile = filepath.Join(t.TempDir(), "cluster-settings.sops.yaml")
+	t.Cleanup(func() { helper.ClusterSettingsFile = old })
 	if err := LoadTalEnv(true); err != nil {
 		t.Fatal(err)
 	}
 	if err := LoadTalEnv(false); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("missing environment: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(helper.ClusterPath, "clusterenv.yaml"), []byte("key: [\n"), 0600); err != nil {
+	if err := os.WriteFile(helper.ClusterSettingsFile, []byte("key: [\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	if err := LoadTalEnv(true); err == nil {
@@ -29,11 +29,32 @@ func TestEnvironmentErrorsReturn(t *testing.T) {
 	}
 }
 
+func TestClusterSettingsRejectInvalidStringData(t *testing.T) {
+	old := helper.ClusterSettingsFile
+	helper.ClusterSettingsFile = filepath.Join(t.TempDir(), "cluster-settings.sops.yaml")
+	t.Cleanup(func() { helper.ClusterSettingsFile = old })
+	for _, source := range []string{
+		"data:\n  PASSWORD: c2VjcmV0\n",
+		"stringData:\n  PORT: 443\n",
+		"stringData:\n  ENABLED: true\n",
+	} {
+		if err := os.WriteFile(helper.ClusterSettingsFile, []byte(source), 0600); err != nil {
+			t.Fatal(err)
+		}
+		if err := LoadTalEnv(false); err == nil {
+			t.Fatalf("invalid cluster settings accepted: %s", source)
+		}
+	}
+}
+
 func TestNetworkValidationRetainsAllNodeChecks(t *testing.T) {
-	oldPath, oldTalos, oldEnv := helper.ClusterPath, helper.TalosPath, helper.TalEnv
+	oldPath, oldFile, oldTalos, oldEnv := helper.ClusterPath, helper.ClusterSettingsFile, helper.TalosPath, helper.TalEnv
 	helper.ClusterPath = t.TempDir()
+	helper.ClusterSettingsFile = filepath.Join(helper.ClusterPath, "cluster-settings.sops.yaml")
 	helper.TalosPath = filepath.Join(helper.ClusterPath, "talos")
-	t.Cleanup(func() { helper.ClusterPath, helper.TalosPath, helper.TalEnv = oldPath, oldTalos, oldEnv })
+	t.Cleanup(func() {
+		helper.ClusterPath, helper.ClusterSettingsFile, helper.TalosPath, helper.TalEnv = oldPath, oldFile, oldTalos, oldEnv
+	})
 	for _, name := range []string{"cp", "worker"} {
 		if err := os.MkdirAll(filepath.Join(helper.TalosPath, "patches", "nodes", name), 0700); err != nil {
 			t.Fatal(err)
@@ -71,11 +92,11 @@ func TestNetworkValidationRetainsAllNodeChecks(t *testing.T) {
 				values[k] = v
 			}
 			values[tc.key] = tc.value
-			data, err := yaml.Marshal(values)
+			data, err := yaml.Marshal(map[string]interface{}{"stringData": values})
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := os.WriteFile(filepath.Join(helper.ClusterPath, "clusterenv.yaml"), data, 0600); err != nil {
+			if err := os.WriteFile(helper.ClusterSettingsFile, data, 0600); err != nil {
 				t.Fatal(err)
 			}
 			err = CheckEnvVariables()

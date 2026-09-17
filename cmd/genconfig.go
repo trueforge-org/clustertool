@@ -8,12 +8,9 @@ import (
 )
 
 var genConfigLongHelp = strings.TrimSpace(`
-After all settings are entered into clusterenv.yaml and the native Talos documents, clustertool uses talosctl to generate and validate the complete cluster configuration.
+Reads secrets/cluster-settings.sops.yaml and the native Talos documents to generate and validate the cluster configuration with talosctl.
 
-It's important to note that running clustertool genconfig, again after each settings change, is absolutely imperative to be able to deploy said settings to your cluster.
-
-This does not only generate the Talos "Machine Config" files, but also ensures an updated configmap containing your "clusterenv.yaml" settings, is added to the /manifests/ directory, for consumption by Flux when added.
-It also ensures the same configmap is always added by updating the patches.
+Run genconfig after changing settings. Flux uses the same cluster-settings Secret directly.
 `)
 
 var genConfig = &cobra.Command{

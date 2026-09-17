@@ -61,7 +61,7 @@ plan that storage change separately before replacing the old mounts.
 
 ## Initialize and edit
 
-Run `clustertool init`, fill in `clusters/main/clusterenv.yaml`, then run
+Run `clustertool init`, fill in `clusters/main/secrets/cluster-settings.sops.yaml`, then run
 `clustertool init` again to complete setup. Existing Talos secrets are retained.
 
 ```text
@@ -120,7 +120,7 @@ nodes:
 control plane used for initial bootstrap, not a permanent leader. A node's `name`
 matches its patch directory; its actual hostname is set in `HostnameConfig`.
 
-Set bare IP addresses in `clusterenv.yaml`, for example `CONTROL1IP: 192.168.20.210`.
+Set bare IP addresses in `secrets/cluster-settings.sops.yaml`, for example `CONTROL1IP: 192.168.20.210`.
 Specify the subnet prefix in the node's network patch, for example
 `address: ${CONTROL1IP}/24`. Choose the correct interface and gateway.
 ClusterTool substitutes variables as entered; it does not create `_IP`, `_CIDR`
@@ -161,7 +161,7 @@ The file is removed after successful setup. Keep the original cluster secrets.
 
 ## Flux Operator
 
-Set `GITHUB_REPOSITORY` in `clusters/main/clusterenv.yaml` before completing
+Set `GITHUB_REPOSITORY` in `clusters/main/secrets/cluster-settings.sops.yaml` before completing
 `init`. Add the generated `ssh-public-key.txt` to that repository's deploy keys;
 read-only access is sufficient. Run `clustertool genconfig` and
 `clustertool encrypt`, then commit and push the configuration before accepting
@@ -191,9 +191,14 @@ The configuration is in:
 Under `clusters/main/kubernetes/`, `init` creates both credential files in
 `flux-system/flux-instance/app/`:
 `deploy-key.sops.yaml` holds the Git deploy key and must be encrypted before
-committing. `sops-age.sops.yaml` holds the private age key; it is ignored by Git,
-excluded from Kustomizations and applied directly during Flux bootstrap.
-Cluster settings remain in `flux-system/flux/clustersettings.secret.yaml`.
+committing. `sops-age.sops.yaml` holds the private age key and must also be encrypted
+before committing. It is excluded from Kustomizations and applied directly during
+Flux bootstrap. Keep the original `age.agekey` separately to decrypt a fresh clone.
+ClusterTool reads bootstrap and Talos variables from `stringData` in
+`clusters/main/secrets/cluster-settings.sops.yaml`. Quote numeric and boolean
+values so they remain strings. Bootstrap applies this Secret directly; Flux
+manages the same file through `flux-entry-secrets` and uses the
+`cluster-settings` Secret for substitutions. There is no generated settings copy.
 
 After chart installation, Flux continues synchronizing in the background. Check
 its status with:

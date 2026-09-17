@@ -35,7 +35,7 @@ func Execute() error {
 	if helper.ClusterName != "" {
 		log.Info().Msgf("Cluster name: %s\n", helper.ClusterName)
 		helper.ClusterPath = filepath.Join("./clusters", helper.ClusterName)
-		helper.ClusterEnvFile = filepath.Join(helper.ClusterPath, "/clusterenv.yaml")
+		helper.ClusterSettingsFile = filepath.Join(helper.ClusterPath, "secrets", "cluster-settings.sops.yaml")
 		helper.TalosPath = filepath.Join(helper.ClusterPath, "/talos")
 		helper.KubernetesPath = filepath.Join(helper.ClusterPath, "/kubernetes")
 		helper.TalosGenerated = filepath.Join(helper.TalosPath, "/generated")

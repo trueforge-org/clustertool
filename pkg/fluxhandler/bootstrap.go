@@ -51,7 +51,7 @@ func bootstrapFluxCD(ctx context.Context) error {
 		filepath.Join(fluxPath, "namespace.yaml"),
 		filepath.Join(fluxPath, "flux-instance", "app", "deploy-key.sops.yaml"),
 		filepath.Join(fluxPath, "flux-instance", "app", "sops-age.sops.yaml"),
-		filepath.Join(fluxPath, "flux", "clustersettings.secret.yaml"),
+		helper.ClusterSettingsFile,
 	}
 	for _, filePath := range manifestPaths {
 		log.Info().Msgf("Bootstrap: Loading Manifest: %s", filePath)

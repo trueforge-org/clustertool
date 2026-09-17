@@ -189,10 +189,10 @@ func CheckFilesAndReportEncryption(tryEncrypt bool, checkStaged bool) error {
 	return nil
 }
 
-// shamCheck checks if clusterenv contains the phrase "shamir_threshold" indicating it is indeed encrypted
+// shamCheck checks if cluster-settings.sops.yaml contains the phrase "shamir_threshold" indicating it is indeed encrypted
 func shamCheck() {
-	log.Debug().Msg("Checking if clusterenv contains shamir_threshold to ensure encryption...")
-	file, err := os.Open(helper.ClusterEnvFile)
+	log.Debug().Msg("Checking if cluster-settings.sops.yaml contains shamir_threshold to ensure encryption...")
+	file, err := os.Open(helper.ClusterSettingsFile)
 	if err != nil {
 		log.Error().Err(err).Msgf("error opening file:  %s", err)
 	}
@@ -201,7 +201,7 @@ func shamCheck() {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		if strings.Contains(scanner.Text(), "shamir_threshold") {
-			log.Debug().Msg("clusterenv contains shamir_threshold, continuing...")
+			log.Debug().Msg("cluster-settings.sops.yaml contains shamir_threshold, continuing...")
 			return
 		}
 	}
@@ -210,7 +210,7 @@ func shamCheck() {
 		log.Error().Err(err).Msgf("error reading file: %s", err)
 	}
 
-	log.Error().Msg("clusterenv is NOT encrypted and encryption-check failed!\n DO NOT UPLOAD!")
+	log.Error().Msg("cluster-settings.sops.yaml is NOT encrypted and encryption-check failed!\n DO NOT UPLOAD!")
 	os.Exit(1)
 }
 

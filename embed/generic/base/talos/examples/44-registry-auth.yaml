@@ -1,6 +1,6 @@
 # Example only: not loaded automatically.
 # Copy to patches/all/ or patches/nodes/<name>/ to enable registry authentication.
-# Set DOCKERHUB_USER and DOCKERHUB_PASSWORD in clusterenv.yaml.
+# Set DOCKERHUB_USER and DOCKERHUB_PASSWORD in secrets/cluster-settings.sops.yaml.
 apiVersion: v1alpha1
 kind: RegistryAuthConfig
 name: docker.io
