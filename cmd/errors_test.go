@@ -57,7 +57,11 @@ func TestCommandsStopOnDecryptError(t *testing.T) {
 	if err := os.WriteFile(".sops.yaml", []byte("creation_rules:\n  - path_regex: secrets.yaml\n    age: "+key.Recipient().String()+"\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	encrypted, err := sops.EncryptWithAgeKey([]byte("secret: sample\n"), "", "yaml")
+	config, err := sops.LoadSopsConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	encrypted, err := sops.EncryptWithAgeKey([]byte("secret: sample\n"), "secrets.yaml", config)
 	if err != nil {
 		t.Fatal(err)
 	}
