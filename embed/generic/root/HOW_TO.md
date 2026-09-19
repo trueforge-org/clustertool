@@ -196,7 +196,9 @@ before committing. It is excluded from Kustomizations and applied directly durin
 Flux bootstrap. Keep the original `age.agekey` separately to decrypt a fresh clone.
 ClusterTool reads bootstrap and Talos variables from `stringData` in
 `clusters/main/secrets/cluster-settings.sops.yaml`. Quote numeric and boolean
-values so they remain strings. Bootstrap applies this Secret directly; Flux
+values so they remain strings. `clustertool encrypt` checks that all `stringData`
+values in `cluster-settings.sops.yaml` are strings before encrypting the file.
+Bootstrap applies this Secret directly; Flux
 manages the same file through `flux-entry-secrets` and uses the
 `cluster-settings` Secret for substitutions. There is no generated settings copy.
 
