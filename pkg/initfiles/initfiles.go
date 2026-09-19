@@ -25,7 +25,7 @@ import (
 var errInitialSetup = errors.New("initial environment setup required")
 
 func InitFiles() error {
-	for _, step := range []func() error{removeRunAgainFile, ageGen, genRootFiles, genBaseFiles, UpdateRootFiles, UpdateBaseFiles} {
+	for _, step := range []func() error{removeRunAgainFile, ageGen, genRootFiles, genBaseFiles, CheckEnvVariables} {
 		if err := step(); err != nil {
 			if errors.Is(err, errInitialSetup) {
 				return nil
@@ -192,10 +192,6 @@ func CheckRunAgainFileExists() bool {
 	return !os.IsNotExist(err)
 }
 
-func UpdateBaseFiles() error {
-	return CheckEnvVariables()
-}
-
 func genRootFiles() error {
 	if err := fthelper.CopyDir(helper.RootCache, "./", false); err != nil {
 		return fmt.Errorf("copy root files: %w", err)
@@ -209,25 +205,6 @@ func genRootFiles() error {
 	}
 	log.Info().Msg("Root files copied successfully.")
 	return nil
-}
-
-func UpdateRootFiles() error {
-	agePubKey, err := GetPubKey()
-	if err != nil {
-		return fmt.Errorf("read age public key: %w", err)
-	}
-
-	err = fthelper.ReplaceInFile(".sops.yaml", "REPLACEME", agePubKey)
-	if err != nil {
-		return fmt.Errorf("configure .sops.yaml: %w", err)
-	}
-
-	if err := CheckEnvVariables(); err != nil {
-		return err
-	}
-
-	return nil
-
 }
 
 func ResetBootstrapValues() error {
