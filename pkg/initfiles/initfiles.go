@@ -159,7 +159,6 @@ func genBaseFiles() error {
 		return errInitialSetup
 	}
 
-	log.Info().Msg("basefiles successfully altered.")
 	return nil
 }
 
