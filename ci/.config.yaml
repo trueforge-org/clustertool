@@ -7,11 +7,9 @@
 canaryHelmRelease: embed/generic/kubernetes/apps/librespeed/app/helm-release.yaml
 
 dummyEnv:
-  BASE_DOMAIN: base.dummy.local
-  DOMAIN: dummy.local
+  DOMAIN_0: dummy.local
   PODNET: 10.42.0.0/16
   METALLB_RANGE: 192.168.20.211-192.168.20.219
-  GATUS_BUDDY_HEARTBEAT_TOKEN: abc123def
 
 skipList:
   - embed/generic/kubernetes/core/clusterissuer/app
