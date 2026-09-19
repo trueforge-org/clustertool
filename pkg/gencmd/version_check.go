@@ -16,12 +16,15 @@ func confirmTalosVersion(confirm func(string, bool) bool) error {
 	if err != nil {
 		return err
 	}
-	out, err := runCommand([]string{embed.GetTalosExec(), "version", "--client", "--short"}, true)
+	out, stderr, err := runCommand([]string{embed.GetTalosExec(), "version", "--client", "--short"}, true)
 	if err != nil {
-		return fmt.Errorf("read talosctl version: %w: %s", err, strings.TrimSpace(string(out)))
+		return fmt.Errorf("read talosctl version: %w: %s", err, strings.TrimSpace(stderr))
+	}
+	if strings.TrimSpace(stderr) != "" {
+		log.Warn().Msg(strings.TrimSpace(stderr))
 	}
 	clientVersion := ""
-	for _, line := range strings.Split(string(out), "\n") {
+	for _, line := range strings.Split(out, "\n") {
 		fields := strings.Fields(line)
 		if len(fields) == 2 && fields[0] == "Talos" {
 			clientVersion = fields[1]

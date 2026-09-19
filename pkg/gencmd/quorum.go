@@ -2,6 +2,7 @@ package gencmd
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/nodestatus"
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 	"strings"
@@ -46,11 +47,14 @@ func controlPlaneGuard(address string) (bool, error) {
 	if selected[0].Role != "control-plane" {
 		return true, nil
 	}
-	out, err := runCommand(nodeCommand("etcd", selected[0], "members", "-e", address).Args, true)
+	out, stderr, err := runCommand(nodeCommand("etcd", selected[0], "members", "-e", address).Args, true)
 	if err != nil {
-		return false, fmt.Errorf("read etcd membership: %w", err)
+		return false, fmt.Errorf("read etcd membership on %s: %w: %s", address, err, strings.TrimSpace(stderr))
 	}
-	hosts, err := etcdMembers(string(out))
+	if strings.TrimSpace(stderr) != "" {
+		log.Warn().Str("node", address).Msg(strings.TrimSpace(stderr))
+	}
+	hosts, err := etcdMembers(out)
 	if err != nil {
 		return false, err
 	}

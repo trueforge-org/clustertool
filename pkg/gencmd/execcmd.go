@@ -2,6 +2,7 @@ package gencmd
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/helper"
 	"github.com/trueforge-org/clustertool/pkg/nodestatus"
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
@@ -9,7 +10,7 @@ import (
 	"time"
 )
 
-var runCommand = helper.RunBoundedCommand
+var runCommand = helper.RunCommandWithTimeout
 var checkStatus = nodestatus.CheckStatus
 var waitReady = func(node string) error { _, err := nodestatus.WaitForHealth(node, nil); return err }
 var guardControlPlane = controlPlaneGuard
@@ -23,11 +24,14 @@ var readBootID = func(node string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	out, err := runCommand(nodeCommand("read", nodes[0], "/proc/sys/kernel/random/boot_id", "-e", node).Args, true)
+	out, stderr, err := runCommand(nodeCommand("read", nodes[0], "/proc/sys/kernel/random/boot_id", "-e", node).Args, true)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("node %s boot ID: %w: %s", node, err, strings.TrimSpace(stderr))
 	}
-	id := strings.TrimSpace(string(out))
+	if strings.TrimSpace(stderr) != "" {
+		log.Warn().Str("node", node).Msg(strings.TrimSpace(stderr))
+	}
+	id := strings.TrimSpace(out)
 	if id == "" {
 		return "", fmt.Errorf("empty boot ID on %s", node)
 	}
@@ -51,11 +55,11 @@ func executeCommand(cmd Command) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	out, err := runCommand(cmd.Args, false)
+	out, stderr, err := runCommand(cmd.Args, false)
 	if err != nil {
-		return out, fmt.Errorf("node %s, %s: %w: %s", cmd.Node, cmd.Args[1], err, strings.TrimSpace(string(out)))
+		return []byte(out), fmt.Errorf("node %s, %s: %w: %s", cmd.Node, cmd.Args[1], err, strings.TrimSpace(stderr))
 	}
-	return out, nil
+	return []byte(out), nil
 }
 
 func resolveControlPlane(cmd Command) (Command, error) {

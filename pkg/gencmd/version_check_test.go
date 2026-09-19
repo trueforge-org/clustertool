@@ -28,11 +28,11 @@ func TestConfirmTalosVersion(t *testing.T) {
 			withSingleNodeFixture(t)
 			mockExecution(t)
 			calls := 0
-			runCommand = func(args []string, silent bool) ([]byte, error) {
+			runCommand = func(args []string, silent bool) (string, string, error) {
 				if !silent || !reflect.DeepEqual(args[1:], []string{"version", "--client", "--short"}) {
 					t.Fatal(args, silent)
 				}
-				return []byte("Client:\r\nTalos " + tc.client + "\r\n"), nil
+				return "Client:\r\nTalos " + tc.client + "\r\n", "", nil
 			}
 			err := confirmTalosVersion(func(prompt string, defaultYes bool) bool {
 				calls++
@@ -59,7 +59,7 @@ func TestDeclinedVersionKeepsGeneratedFiles(t *testing.T) {
 	if err := os.WriteFile(marker, []byte("existing configuration"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	runCommand = func([]string, bool) ([]byte, error) { return []byte("Client:\nTalos v1.15.0\n"), nil }
+	runCommand = func([]string, bool) (string, string, error) { return "Client:\nTalos v1.15.0\n", "", nil }
 	if err := confirmTalosVersion(func(string, bool) bool { return false }); err == nil {
 		t.Fatal("decline accepted")
 	}
@@ -68,7 +68,7 @@ func TestDeclinedVersionKeepsGeneratedFiles(t *testing.T) {
 		t.Fatal(string(data), err)
 	}
 	cause := errors.New("cannot execute")
-	runCommand = func([]string, bool) ([]byte, error) { return nil, cause }
+	runCommand = func([]string, bool) (string, string, error) { return "", "", cause }
 	err = confirmTalosVersion(func(string, bool) bool { t.Fatal("prompt after version failure"); return true })
 	if !errors.Is(err, cause) || !strings.Contains(err.Error(), "read talosctl version") {
 		t.Fatal(err)

@@ -2,7 +2,9 @@ package gencmd
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
+	"strings"
 )
 
 // ExistingControlPlane proves authenticated etcd access before choosing a join
@@ -13,8 +15,11 @@ func ExistingControlPlane(inv *talosconfig.Inventory) (string, error) {
 			continue
 		}
 		cmd := nodeCommand("etcd", n, "members", "-e", n.Address)
-		if out, err := runCommand(cmd.Args, true); err == nil {
-			if _, err := parseEtcdMembers(string(out), true); err == nil {
+		if out, stderr, err := runCommand(cmd.Args, true); err == nil {
+			if strings.TrimSpace(stderr) != "" {
+				log.Warn().Str("node", n.Name).Msg(strings.TrimSpace(stderr))
+			}
+			if _, err := parseEtcdMembers(out, true); err == nil {
 				return n.Address, nil
 			}
 		}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Masterminds/semver/v3"
+	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 	"strings"
 )
@@ -48,16 +49,19 @@ func PreflightUpgrade(commands []Command, kube Command) error {
 		if err != nil {
 			return err
 		}
-		out, err := runCommand(nodeCommand("version", node, "--json", "-e", node.Address).Args, true)
+		out, stderr, err := runCommand(nodeCommand("version", node, "--json", "-e", node.Address).Args, true)
 		if err != nil {
-			return fmt.Errorf("read live Talos version on %s: %w", node.Name, err)
+			return fmt.Errorf("read live Talos version on %s: %w: %s", node.Name, err, strings.TrimSpace(stderr))
+		}
+		if strings.TrimSpace(stderr) != "" {
+			log.Warn().Str("node", node.Name).Msg(strings.TrimSpace(stderr))
 		}
 		var response struct {
 			Version struct {
 				Tag string `json:"tag"`
 			} `json:"version"`
 		}
-		if err = json.Unmarshal(out, &response); err != nil {
+		if err = json.Unmarshal([]byte(out), &response); err != nil {
 			return fmt.Errorf("read Talos version on %s: %w", node.Name, err)
 		}
 		live, err := semver.NewVersion(response.Version.Tag)
@@ -77,8 +81,8 @@ func PreflightUpgrade(commands []Command, kube Command) error {
 			return err
 		}
 		args := append(append([]string{}, kube.Args...), "--dry-run")
-		if _, err := runCommand(args, false); err != nil {
-			return fmt.Errorf("Kubernetes upgrade preflight failed; resolve compatibility before changing nodes (upgrade Talos first with --talos-only when required): %w", err)
+		if _, stderr, err := runCommand(args, false); err != nil {
+			return fmt.Errorf("Kubernetes upgrade preflight failed; resolve compatibility before changing nodes (upgrade Talos first with --talos-only when required): %w: %s", err, strings.TrimSpace(stderr))
 		}
 	}
 	return nil

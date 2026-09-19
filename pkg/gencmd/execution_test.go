@@ -36,7 +36,7 @@ func TestApplyWaitsForChangedBootID(t *testing.T) {
 		}
 		return "new", nil
 	}
-	runCommand = func([]string, bool) ([]byte, error) { return []byte("Applied configuration with a reboot"), nil }
+	runCommand = func([]string, bool) (string, string, error) { return "Applied configuration with a reboot", "", nil }
 	if err := ExecCmds([]Command{{Args: []string{"talosctl", "apply-config"}, Node: "cp"}}, true); err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +50,10 @@ func TestExecutionPreservesArgumentsAndMaintenanceEndpoint(t *testing.T) {
 	checkStatus = func(string) (string, error) { return "maintenance", nil }
 	original := []string{"/tools with spaces/talosctl", "apply-config", "-n", "192.0.2.21", "-f", "/cluster with spaces/worker.yaml"}
 	var actual []string
-	runCommand = func(args []string, _ bool) ([]byte, error) { actual = append([]string{}, args...); return nil, nil }
+	runCommand = func(args []string, _ bool) (string, string, error) {
+		actual = append([]string{}, args...)
+		return "", "", nil
+	}
 	if err := ExecCmds([]Command{{Args: original, Node: "192.0.2.21"}}, true); err != nil {
 		t.Fatal(err)
 	}
@@ -68,12 +71,12 @@ func TestExecutionStopsBeforeNextNodeOnFailure(t *testing.T) {
 		t.Run(failure, func(t *testing.T) {
 			mockExecution(t)
 			var executed []string
-			runCommand = func(args []string, _ bool) ([]byte, error) {
+			runCommand = func(args []string, _ bool) (string, string, error) {
 				executed = append(executed, args[2])
 				if failure == "command" {
-					return []byte("failure"), errors.New("exit 1")
+					return "failure", "", errors.New("exit 1")
 				}
-				return nil, nil
+				return "", "", nil
 			}
 			calls := 0
 			waitReady = func(string) error {
@@ -95,7 +98,7 @@ func TestTwoMemberApplyCannotReboot(t *testing.T) {
 	mockExecution(t)
 	guardControlPlane = func(string) (bool, error) { return false, nil }
 	var executed []string
-	runCommand = func(args []string, _ bool) ([]byte, error) { executed = args; return nil, nil }
+	runCommand = func(args []string, _ bool) (string, string, error) { executed = args; return "", "", nil }
 	if err := ExecCmds([]Command{{Args: []string{"talosctl", "apply-config"}, Node: "cp"}}, true); err != nil {
 		t.Fatal(err)
 	}
@@ -111,8 +114,8 @@ func TestTwoMemberApplyCannotReboot(t *testing.T) {
 func TestBootstrapRequiresClusterEvidence(t *testing.T) {
 	mockExecution(t)
 	inv := &talosconfig.Inventory{BootstrapNode: "cp", Nodes: []talosconfig.Node{{Name: "cp", Role: "control-plane", Address: "192.0.2.11"}, {Name: "worker", Role: "worker", Address: "192.0.2.21"}}}
-	runCommand = func([]string, bool) ([]byte, error) {
-		return []byte("NODE ID HOSTNAME PEER URLS CLIENT URLS LEARNER\n192.0.2.11 1 cp https://192.0.2.11:2380 https://192.0.2.11:2379 false\n"), nil
+	runCommand = func([]string, bool) (string, string, error) {
+		return "NODE ID HOSTNAME PEER URLS CLIENT URLS LEARNER\n192.0.2.11 1 cp https://192.0.2.11:2380 https://192.0.2.11:2379 false\n", "WARNING: version mismatch", nil
 	}
 	checkStatus = func(string) (string, error) {
 		t.Fatal("existing cluster must not depend on worker maintenance")
@@ -121,7 +124,7 @@ func TestBootstrapRequiresClusterEvidence(t *testing.T) {
 	if needed, err := NeedsBootstrap(inv); err != nil || needed {
 		t.Fatal(needed, err)
 	}
-	runCommand = func([]string, bool) ([]byte, error) { return nil, errors.New("unreachable") }
+	runCommand = func([]string, bool) (string, string, error) { return "", "", errors.New("unreachable") }
 	checkStatus = func(string) (string, error) { return "maintenance", nil }
 	if needed, err := NeedsBootstrap(inv); err != nil || !needed {
 		t.Fatal(needed, err)
@@ -156,11 +159,11 @@ func TestUpgradeRefusesLiveDowngradeBeforeMutation(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(helper.TalosGenerated, "control-1.yaml"), []byte("apiVersion: v1alpha1\nkind: UnattendedInstallConfig\ninstaller:\n  image: factory.talos.dev/metal-installer/test:v1.14.0\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	runCommand = func(args []string, _ bool) ([]byte, error) {
+	runCommand = func(args []string, _ bool) (string, string, error) {
 		if args[1] != "version" {
 			t.Fatalf("mutation during preflight: %v", args)
 		}
-		return []byte(`{"version":{"tag":"v1.14.1"}}`), nil
+		return `{"version":{"tag":"v1.14.1"}}`, "WARNING: server version differs from client", nil
 	}
 	err := PreflightUpgrade([]Command{{Node: "10.0.0.1"}}, Command{})
 	if err == nil || !strings.Contains(err.Error(), "downgrades") {
@@ -173,5 +176,17 @@ func TestForwardedFlagsCannotOverridePlan(t *testing.T) {
 		if err := ValidateExtraArgs([]string{arg}); err == nil {
 			t.Fatal(arg)
 		}
+	}
+}
+
+func TestBootIDIgnoresVersionWarning(t *testing.T) {
+	read := readBootID
+	mockExecution(t)
+	withSingleNodeFixture(t)
+	runCommand = func([]string, bool) (string, string, error) {
+		return "boot-id\n", "WARNING: version mismatch", nil
+	}
+	if got, err := read("10.0.0.1"); err != nil || got != "boot-id" {
+		t.Fatal(got, err)
 	}
 }
