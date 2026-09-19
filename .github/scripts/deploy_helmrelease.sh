@@ -137,7 +137,7 @@ install_dependency_crds() {
 }
 
 install_cnpg_operator() {
-  local helmrelease_path="clusters/main/kubernetes/system/cloudnative-pg/app/helm-release.yaml"
+  local helmrelease_path="embed/generic/kubernetes/system/cloudnative-pg/app/helm-release.yaml"
 
   resolve_dependency_chart "$helmrelease_path"
 
