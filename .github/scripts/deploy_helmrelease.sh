@@ -56,7 +56,7 @@ resolve_helm_chart() {
       return 1
     fi
 
-    source_file="repositories/oci/${source_name}.yaml"
+    source_file="embed/generic/root/repositories/oci/${source_name}.yaml"
 
     if [[ ! -f "$source_file" ]]; then
       echo "❌ OCIRepository not found: $source_file"
@@ -71,7 +71,7 @@ resolve_helm_chart() {
     chart_name="$(yq -r '.spec.chart.spec.chart // ""' "$helmrelease_path")"
     source_name="$(yq -r '.spec.chart.spec.sourceRef.name // ""' "$helmrelease_path")"
     RESOLVED_CHART_VERSION="$(yq -r '.spec.chart.spec.version // ""' "$helmrelease_path")"
-    source_file="repositories/helm/${source_name}.yaml"
+    source_file="embed/generic/root/repositories/helm/${source_name}.yaml"
 
     if [[ -z "$chart_name" || -z "$source_name" || ! -f "$source_file" ]]; then
       echo "❌ Unable to resolve chart from: $helmrelease_path"
