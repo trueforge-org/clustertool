@@ -1,19 +1,21 @@
-# Path of helm-release file to skip during CI testing
-skipList:
-  - clusters/main/kubernetes/kube-system/cilium/app
-  - clusters/main/kubernetes/system/longhorn/app
-  - clusters/main/kubernetes/observability/exporter-fritz/app
-  - clusters/main/kubernetes/apps/renovate/app
-  - clusters/main/kubernetes/system/spegel/app
-  - clusters/main/kubernetes/auth/authelia/app
-  - clusters/main/kubernetes/core/clusterissuer/app
-  - clusters/main/kubernetes/apps/actions-runners/app
-  - clusters/main/kubernetes/apps/actions-runner-controller/app
-  - clusters/main/kubernetes/apps/actions-runners-truecharts/app
+---
+# CI test configuration.
+# dummyEnv: Placeholder environment variables for Helm templating.
+# canaryHelmRelease: HelmRelease tested when CI tooling changes.
+# skipList: HelmRelease paths excluded from CI deployment tests.
+
+canaryHelmRelease: embed/generic/kubernetes/apps/librespeed/app/helm-release.yaml
+
 dummyEnv:
-  DOMAIN_0: base.dummy0.local
-  DOMAIN_1: base.dummy1.local
+  BASE_DOMAIN: base.dummy.local
   DOMAIN: dummy.local
   PODNET: 10.42.0.0/16
   METALLB_RANGE: 192.168.20.211-192.168.20.219
-  NGINX_EXTERNAL_IP: 192.168.20.215
+  GATUS_BUDDY_HEARTBEAT_TOKEN: abc123def
+
+skipList:
+  - embed/generic/kubernetes/core/clusterissuer/app
+  - embed/generic/kubernetes/flux-system/flux-instance/app
+  - embed/generic/kubernetes/kube-system/cilium/app
+  - embed/generic/kubernetes/system/longhorn/app
+  - embed/generic/kubernetes/system/system-upgrade/tuppr/app

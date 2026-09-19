@@ -36,6 +36,133 @@ print_sub_section() {
 }
 
 # --------------------------------------------------
+# Dependency Functions
+# --------------------------------------------------
+resolve_helm_chart() {
+  local helmrelease_path="$1"
+  local chart_ref_kind chart_name source_name source_file source_url
+
+  if [[ ! -f "$helmrelease_path" ]]; then
+    echo "❌ HelmRelease not found: $helmrelease_path"
+    return 1
+  fi
+
+  if [[ "$(yq -r '.spec.chartRef.name // ""' "$helmrelease_path")" != "" ]]; then
+    chart_ref_kind="$(yq -r '.spec.chartRef.kind // ""' "$helmrelease_path")"
+    source_name="$(yq -r '.spec.chartRef.name' "$helmrelease_path")"
+
+    if [[ "$chart_ref_kind" != "OCIRepository" ]]; then
+      echo "❌ Unsupported chartRef kind '${chart_ref_kind}': $helmrelease_path"
+      return 1
+    fi
+
+    source_file="repositories/oci/${source_name}.yaml"
+
+    if [[ ! -f "$source_file" ]]; then
+      echo "❌ OCIRepository not found: $source_file"
+      return 1
+    fi
+
+    RESOLVED_CHART_NAME="$source_name"
+    RESOLVED_CHART_REF="$(yq -r '.spec.url // ""' "$source_file")"
+    RESOLVED_CHART_VERSION="$(yq -r '.spec.ref.tag // ""' "$source_file")"
+    RESOLVED_REPO_URL="$RESOLVED_CHART_REF"
+  else
+    chart_name="$(yq -r '.spec.chart.spec.chart // ""' "$helmrelease_path")"
+    source_name="$(yq -r '.spec.chart.spec.sourceRef.name // ""' "$helmrelease_path")"
+    RESOLVED_CHART_VERSION="$(yq -r '.spec.chart.spec.version // ""' "$helmrelease_path")"
+    source_file="repositories/helm/${source_name}.yaml"
+
+    if [[ -z "$chart_name" || -z "$source_name" || ! -f "$source_file" ]]; then
+      echo "❌ Unable to resolve chart from: $helmrelease_path"
+      return 1
+    fi
+
+    source_url="$(yq -r '.spec.url' "$source_file")"
+    RESOLVED_CHART_NAME="$chart_name"
+    RESOLVED_REPO_URL="$source_url"
+    if [[ "$source_url" == oci://* ]]; then
+      RESOLVED_CHART_REF="${source_url}/${chart_name}"
+    else
+      helm repo add "$source_name" "$source_url" --force-update >/dev/null
+      RESOLVED_CHART_REF="${source_name}/${chart_name}"
+    fi
+  fi
+
+  if [[ -z "$RESOLVED_CHART_REF" || -z "$RESOLVED_CHART_VERSION" ]]; then
+    echo "❌ Chart reference or version is empty: $helmrelease_path"
+    return 1
+  fi
+}
+
+resolve_dependency_chart() {
+  resolve_helm_chart "$1"
+  DEPENDENCY_CHART_REF="$RESOLVED_CHART_REF"
+  DEPENDENCY_CHART_VERSION="$RESOLVED_CHART_VERSION"
+}
+
+install_dependency_crds() {
+  local dependency_name="$1"
+  local dependency_icon="$2"
+  local helmrelease_path="$3"
+  local dependency_values rendered_crds crd_count
+
+  resolve_dependency_chart "$helmrelease_path"
+  dependency_values="$(mktemp)"
+  rendered_crds="$(mktemp)"
+  yq '.spec.values // {}' "$helmrelease_path" > "$dependency_values"
+
+  echo "::group::${dependency_icon} Installing ${dependency_name} CRDs (${DEPENDENCY_CHART_VERSION})..."
+  helm template "ci-${dependency_name}" "$DEPENDENCY_CHART_REF" \
+    --version "$DEPENDENCY_CHART_VERSION" \
+    --include-crds \
+    --no-hooks \
+    --values "$dependency_values" \
+  | yq ea -r 'select(.kind == "CustomResourceDefinition")' \
+  > "$rendered_crds"
+
+  crd_count="$(grep -c '^kind: CustomResourceDefinition$' "$rendered_crds" || true)"
+  if [[ "$crd_count" -eq 0 ]]; then
+    echo "❌ No CRDs rendered for ${dependency_name}"
+    return 1
+  fi
+
+  kubectl apply --server-side --force-conflicts --filename "$rendered_crds"
+  kubectl wait \
+    --for=condition=Established \
+    --timeout=120s \
+    --filename "$rendered_crds"
+  echo "${dependency_icon} Installed ${crd_count} ${dependency_name} CRD(s)"
+  echo "::endgroup::"
+}
+
+install_cnpg_operator() {
+  local helmrelease_path="clusters/main/kubernetes/system/cloudnative-pg/app/helm-release.yaml"
+
+  resolve_dependency_chart "$helmrelease_path"
+
+  echo "::group::🗄️ Installing CloudNativePG operator (${DEPENDENCY_CHART_VERSION})..."
+  helm install cloudnative-pg "$DEPENDENCY_CHART_REF" \
+    --version "$DEPENDENCY_CHART_VERSION" \
+    --namespace cloudnative-pg \
+    --create-namespace \
+    --set crds.create=true \
+    --set monitoring.podMonitorEnabled=false \
+    --set monitoring.grafanaDashboard.create=false \
+    --wait \
+    --timeout 5m
+  echo "🗄️ Done installing CloudNativePG operator"
+  echo "::endgroup::"
+}
+
+rendered_uses_api_group() {
+  local api_group="$1"
+  API_GROUP="$api_group" yq ea -e \
+    'select((.apiVersion // "") | test("^" + strenv(API_GROUP) + "/"))' \
+    "$RENDERED" >/dev/null 2>&1
+}
+
+# --------------------------------------------------
 # Check Helmrelease Path
 # --------------------------------------------------
 
@@ -45,41 +172,19 @@ if [[ -z "$HELMRELEASE_PATH" ]]; then
 fi
 
 # --------------------------------------------------
-# Check stopAll
-# --------------------------------------------------
-# STOP_ALL=$(yq '.spec.values.global.stopAll // "false"' "$HELMRELEASE_PATH")
-# 
-# if [[ "$STOP_ALL" == "true" ]]; then
-#   echo -e "${YELLOW}⏭  ${BOLD}DEPLOYMENT SKIPPED  ⏭${NC}"
-#   echo -e "${YELLOW}Reason:  global.stopAll=true${NC}"
-#   exit 0
-# fi
-
-# --------------------------------------------------
 # Extract HelmRelease metadata
 # --------------------------------------------------
 RELEASE_NAME="$(yq '.metadata.name' "$HELMRELEASE_PATH")"
 NAMESPACE="$(yq '.metadata.namespace' "$HELMRELEASE_PATH")"
-CHART_NAME="$(yq '.spec.chart.spec.chart' "$HELMRELEASE_PATH")"
-CHART_VERSION="$(yq '.spec.chart.spec.version' "$HELMRELEASE_PATH")"
-REPO_NAME="$(yq '.spec.chart.spec.sourceRef.name' "$HELMRELEASE_PATH")"
-REPO_FILE="embed/generic/root/repositories/helm/${REPO_NAME}.yaml"
-REPO_URL="$(yq '.spec.url' "$REPO_FILE")"
+resolve_helm_chart "$HELMRELEASE_PATH"
+CHART_NAME="$RESOLVED_CHART_NAME"
+CHART_VERSION="$RESOLVED_CHART_VERSION"
+CHART_REF="$RESOLVED_CHART_REF"
+REPO_URL="$RESOLVED_REPO_URL"
 APP_DIR="$(dirname "$HELMRELEASE_PATH")"
 CI_VALUES_FILE="ci/$CHART_NAME.yaml"
 
-# --------------------------------------------------
-# Setup chart repository reference
-# --------------------------------------------------
-if [[ "$REPO_URL" == oci://* ]]; then
-  CHART_REF="$REPO_URL/$CHART_NAME"
-else
-  helm repo add ci-repo "$REPO_URL" >/dev/null 2>&1 || true
-  helm repo update >/dev/null 2>&1
-  CHART_REF="ci-repo/$CHART_NAME"
-fi
-
-print_header "HelmRelease Deployment Test by Alfi0812" "⌛"
+print_header "HelmRelease Deployment Test by Boemeltrein" "🚂"
 
 print_section "⚙️ Processing: $HELMRELEASE_PATH"
 
@@ -162,27 +267,19 @@ if yq -e '
   changed=true
 fi
 
-# Remove unsupported persistence entries (nfs + existingClaim)
+# Remove NFS persistence entries
 if yq -e '
   (.persistence? // {})
   | to_entries[]
-  | select(
-      .value.type? == "nfs"
-      or (.value.existingClaim? != null)
-    )
+  | select(.value.type? == "nfs")
 ' "$VALUES_FILE" >/dev/null 2>&1; then
 
   yq -i '
-    .persistence |= with_entries(
-      select(
-        .value.type? != "nfs"
-        and (.value.existingClaim? == null)
-      )
-    ) |
+    .persistence |= with_entries(select(.value.type? != "nfs")) |
     del(.persistence | select(. == {}))
   ' "$VALUES_FILE"
 
-  echo "      ⚠️ Unsupported persistence removed for CI"
+  echo "      ⚠️ NFS persistence removed for CI"
   changed=true
 fi
 
@@ -239,107 +336,90 @@ RENDERED="$(mktemp)"
 helm template "$RELEASE_NAME" "$CHART_REF" \
   --version "$CHART_VERSION" \
   --namespace "$NAMESPACE" \
-  --values "$VALUES_FILE" \
+  "${HELM_VALUES_ARGS[@]}" \
   > "$RENDERED" 2>/dev/null
 
 # --------------------------------------------------
 # Detect dependencies
 # --------------------------------------------------
 install_cnpg=false
-install_volsync=false
-install_ingress=false
 install_certmanager=false
 install_prometheus=false
 install_metallb=false
+install_gateway=false
+install_grafana=false
+install_nfd=false
 
-grep -q "postgresql.cnpg.io" "$RENDERED" && install_cnpg=true
-# grep -q "volsync.backube" "$RENDERED" && install_volsync=true
-grep -q "kind: Ingress" "$RENDERED" && install_ingress=true
-grep -q "cert-manager.io" "$RENDERED" && [[ "$CHART_NAME" != "cert-manager" ]] && install_certmanager=true 
-grep -q "monitoring.coreos.com" "$RENDERED" && install_prometheus=true
-grep -q "metallb.io" "$RENDERED" && install_metallb=true
+rendered_uses_api_group "postgresql.cnpg.io" && install_cnpg=true
+rendered_uses_api_group "cert-manager.io" && install_certmanager=true
+rendered_uses_api_group "monitoring.coreos.com" && install_prometheus=true
+rendered_uses_api_group "metallb.io" && install_metallb=true
+rendered_uses_api_group "gateway.networking.k8s.io" && install_gateway=true
+rendered_uses_api_group "grafana.integreatly.org" && install_grafana=true
+rendered_uses_api_group "nfd.k8s-sigs.io" && install_nfd=true
 
 echo "🔎 Dependencies:"
 echo "     CNPG:        $install_cnpg"
-# echo "     VolSync:     $install_volsync"
-echo "     Ingress:     $install_ingress"
 echo "     CertManager: $install_certmanager"
 echo "     Prometheus:  $install_prometheus"
 echo "     MetalLB:     $install_metallb"
+echo "     Gateway API: $install_gateway"
+echo "     Grafana:     $install_grafana"
+echo "     NFD:         $install_nfd"
 
 # --------------------------------------------------
 # Install dependencies
 # --------------------------------------------------
 
 if $install_cnpg; then
-  echo "::group::🗄️ Installing CloudNativePG..."
-  helm install cloudnative-pg oci://ghcr.io/cloudnative-pg/charts/cloudnative-pg --namespace cloudnative-pg --create-namespace --wait
-  if [[ "$?" != "0" ]]; then
-      echo "❌ Failed to install CloudNativePG"
-      exit 1
-  fi
-  echo "🗄️ Done installing CloudNativePG"
-  echo "::endgroup::"
-fi
-
-if $install_volsync; then
-  echo "::group::💾 Installing VolSync CRDs..."
-  kubectl apply -f https://raw.githubusercontent.com/backube/volsync/main/config/crd/bases/volsync.backube_replicationsources.yaml
-  kubectl apply -f https://raw.githubusercontent.com/backube/volsync/main/config/crd/bases/volsync.backube_replicationdestinations.yaml
-  if [[ "$?" != "0" ]]; then
-      echo "❌ Failed to install Volsync CRDs"
-      exit 1
-  fi
-  echo "💾 Done installing Volsync CRDs"  
-  echo "::endgroup::"
-fi
-
-if $install_ingress; then
-  echo "::group::🌐 Installing ingress-nginx..."
-  helm install ingress-nginx oci://ghcr.io/home-operations/charts-mirror/ingress-nginx --namespace ingress-nginx --create-namespace \
-      --set controller.ingressClassResource.default=true --set controller.publishService.enabled=false --set controller.service.type="ClusterIP" --set controller.config.allow-snippet-annotations=true --set controller.config.annotations-risk-level="Critical" --wait
-  if [[ "$?" != "0" ]]; then
-      echo "❌ Failed to install ingress-nginx"
-      exit 1
-  fi
-  echo "🌐 Done installing ingress-nginx"
-  echo "::endgroup::"
+  install_cnpg_operator
 fi
 
 if $install_certmanager; then
-  echo "::group::🔐 Installing cert-manager..."
-  kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
-  kubectl wait deployment --all -n cert-manager --for=condition=Available --timeout=180s
-  if [[ "$?" != "0" ]]; then
-      echo "❌ Failed to install certmanager"
-      exit 1
-  fi
-  echo "🔐 Done installing certmanager"
-  echo "::endgroup::"
+  install_dependency_crds \
+    "cert-manager" \
+    "🔐" \
+    "clusters/main/kubernetes/system/cert-manager/app/helm-release.yaml"
 fi
 
 if $install_prometheus; then
-  echo "::group::📊 Installing Prometheus Operator CRDs..."
-  kubectl apply -f https://github.com/prometheus-operator/prometheus-operator/releases/download/v0.89.0/stripped-down-crds.yaml
-  if [[ "$?" != "0" ]]; then
-      echo "❌ Failed to install Prometheus Operator CRDs"
-      exit 1
-  fi
-  echo "📊 Done installing Prometheus Operator CRDs"
-  echo "::endgroup::"
+  install_dependency_crds \
+    "kube-prometheus-stack" \
+    "📊" \
+    "clusters/main/kubernetes/observability/kube-prometheus-stack/app/helm-release.yaml"
 fi
 
 if $install_metallb; then
-  echo "::group::📡 Installing MetalLB..."
-  helm install metallb oci://quay.io/metallb/chart/metallb --namespace metallb --create-namespace --wait
+  kubectl create namespace metallb \
+    --dry-run=client \
+    --output=yaml \
+  | kubectl apply --filename -
 
-  if [[ "$?" != "0" ]]; then
-      echo "❌ Failed to install MetalLB"
-      exit 1
-  fi
+  install_dependency_crds \
+    "metallb" \
+    "📡" \
+    "clusters/main/kubernetes/system/metallb/app/helm-release.yaml"
+fi
 
-  echo "📡 Done installing MetalLB"
-  echo "::endgroup::"
+if $install_gateway; then
+  install_dependency_crds \
+    "envoy-gateway" \
+    "🌉" \
+    "clusters/main/kubernetes/networking/envoy-gateway/app/helm-release.yaml"
+fi
+
+if $install_grafana; then
+  install_dependency_crds \
+    "grafana-operator" \
+    "📈" \
+    "clusters/main/kubernetes/observability/grafana-operator/app/helm-release.yaml"
+fi
+
+if $install_nfd; then
+  install_dependency_crds \
+    "node-feature-discovery" \
+    "🖥️" \
+    "clusters/main/kubernetes/kube-system/node-feature-discovery/app/helm-release.yaml"
 fi
 
 # --------------------------------------------------
@@ -353,7 +433,6 @@ helm upgrade --install "$RELEASE_NAME" "$CHART_REF" \
   --namespace "$NAMESPACE" \
   --create-namespace \
   "${HELM_VALUES_ARGS[@]}" \
-  --skip-crds \
   --wait \
   --timeout 5m
 HELM_RC=$?
@@ -363,14 +442,14 @@ set -e
 # Debug info
 # --------------------------------------------------
 print_section "🐛 Debug info"
-print_section "📦 Pods:"
+print_sub_section "📦 Pods:"
 kubectl get pods -n "$NAMESPACE" -o wide || true
 
-print_section "📅 Events:"
+print_sub_section "📅 Events:"
 kubectl get events -n "$NAMESPACE" --sort-by=.metadata.creationTimestamp || true
 
 for pod in $(kubectl get pods -n "$NAMESPACE" -o name 2>/dev/null); do
-  print_section "📜 Logs for $pod:"
+  print_sub_section "📜 Logs for $pod:"
   kubectl logs -n "$NAMESPACE" "$pod" --all-containers --tail=200 || true
 done
 
