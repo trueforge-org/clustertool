@@ -379,14 +379,14 @@ if $install_certmanager; then
   install_dependency_crds \
     "cert-manager" \
     "🔐" \
-    "clusters/main/kubernetes/system/cert-manager/app/helm-release.yaml"
+    "embed/generic/kubernetes/system/cert-manager/app/helm-release.yaml"
 fi
 
 if $install_prometheus; then
   install_dependency_crds \
     "kube-prometheus-stack" \
     "📊" \
-    "clusters/main/kubernetes/observability/kube-prometheus-stack/app/helm-release.yaml"
+    "embed/generic/kubernetes/observability/kube-prometheus-stack/app/helm-release.yaml"
 fi
 
 if $install_metallb; then
@@ -398,28 +398,28 @@ if $install_metallb; then
   install_dependency_crds \
     "metallb" \
     "📡" \
-    "clusters/main/kubernetes/system/metallb/app/helm-release.yaml"
+    "embed/generic/kubernetes/system/metallb/app/helm-release.yaml"
 fi
 
 if $install_gateway; then
   install_dependency_crds \
     "envoy-gateway" \
     "🌉" \
-    "clusters/main/kubernetes/networking/envoy-gateway/app/helm-release.yaml"
+    "embed/generic/kubernetes/networking/envoy-gateway/app/helm-release.yaml"
 fi
 
 if $install_grafana; then
   install_dependency_crds \
     "grafana-operator" \
     "📈" \
-    "clusters/main/kubernetes/observability/grafana-operator/app/helm-release.yaml"
+    "embed/generic/kubernetes/observability/grafana-operator/app/helm-release.yaml"
 fi
 
 if $install_nfd; then
   install_dependency_crds \
     "node-feature-discovery" \
     "🖥️" \
-    "clusters/main/kubernetes/kube-system/node-feature-discovery/app/helm-release.yaml"
+    "embed/generic/kubernetes/kube-system/node-feature-discovery/app/helm-release.yaml"
 fi
 
 # --------------------------------------------------
