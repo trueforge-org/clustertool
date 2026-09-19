@@ -24,14 +24,14 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  dependsOn:
-    - name: flux-entry-secrets
   path: ./repositories
   prune: true
   sourceRef:
     kind: GitRepository
     name: cluster
     namespace: flux-system
+  dependsOn:
+    - name: flux-entry-secrets
   decryption:
     provider: sops
     secretRef:
@@ -68,17 +68,14 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  dependsOn:
-    - name: flux-entry-secrets
   path: ./clusters/REPLACEWITHCLUSTERNAME/kubernetes
   prune: true
   sourceRef:
     kind: GitRepository
     name: cluster
-    namespace: flux-system
-  # dependsOn:
-  #   - name: flux-entry-repos
-  #     namespace: flux-system    
+  dependsOn:
+    - name: flux-entry-secrets
+    - name: flux-entry-repos  
   decryption:
     provider: sops
     secretRef:
