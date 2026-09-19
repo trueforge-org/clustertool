@@ -1,4 +1,3 @@
-## Do not edit between this and DO NOT REMOVE
 stores:
   yaml:
     indent: 2
@@ -17,5 +16,4 @@ creation_rules:
     age: REPLACEME
   - path_regex: (^|/)talsecret\.ya?ml$
     age: REPLACEME    
-## DO NOT REMOVE: Personal setting go under this line
 

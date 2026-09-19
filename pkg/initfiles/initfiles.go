@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -194,29 +193,7 @@ func CheckRunAgainFileExists() bool {
 }
 
 func UpdateBaseFiles() error {
-	log.Info().Msgf("Updating base files for cluster: %s", helper.ClusterPath)
-	// Read filenames in source directory
-	sourceFiles, err := readFilenamesInDir(helper.BaseCache)
-	if err != nil {
-		return fmt.Errorf("read template directory: %w", err)
-	}
-
-	// Process each file in the target directory
-	for _, filename := range sourceFiles {
-		sourceFilePath := filepath.Join(helper.BaseCache, filename)
-		targetFilePath := filepath.Join(helper.ClusterPath+"", fthelper.ReplaceDotInFilename(filename))
-		if err := fthelper.ReplaceContentBetweenLines(targetFilePath, sourceFilePath, "## Do not edit between this and DO NOT REMOVE", "## DO NOT REMOVE: Personal setting go under this line"); err != nil {
-			return fmt.Errorf("update %s: %w", targetFilePath, err)
-		}
-	}
-	log.Info().Msg("basefiles successfully updated.")
-
-	if err := CheckEnvVariables(); err != nil {
-		return err
-	}
-
-	return nil
-
+	return CheckEnvVariables()
 }
 
 func genRootFiles() error {
@@ -235,22 +212,6 @@ func genRootFiles() error {
 }
 
 func UpdateRootFiles() error {
-	// Read filenames in source directory
-	sourceFiles, err := readFilenamesInDir(helper.RootCache)
-	if err != nil {
-		return fmt.Errorf("read template directory: %w", err)
-	}
-
-	// Process each file in the target directory
-	for _, filename := range sourceFiles {
-		sourceFilePath := filepath.Join(helper.RootCache, filename)
-		targetFilePath := filepath.Join("./", fthelper.ReplaceDotInFilename(filename))
-		if err := fthelper.ReplaceContentBetweenLines(targetFilePath, sourceFilePath, "## Do not edit between this and DO NOT REMOVE", "## DO NOT REMOVE: Personal setting go under this line"); err != nil {
-			return fmt.Errorf("update %s: %w", targetFilePath, err)
-		}
-	}
-	log.Info().Msg("rootfiles successfully updated.")
-
 	agePubKey, err := GetPubKey()
 	if err != nil {
 		return fmt.Errorf("read age public key: %w", err)
@@ -267,22 +228,6 @@ func UpdateRootFiles() error {
 
 	return nil
 
-}
-
-// Function to read all filenames in a directory
-func readFilenamesInDir(dir string) ([]string, error) {
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	var filenames []string
-	for _, file := range files {
-		if !file.IsDir() {
-			filenames = append(filenames, file.Name())
-		}
-	}
-	return filenames, nil
 }
 
 func ResetBootstrapValues() error {
