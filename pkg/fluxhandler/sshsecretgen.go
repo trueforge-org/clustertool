@@ -60,7 +60,7 @@ func CreateGitSecret(gitURL string) error {
 		if err != nil {
 			return fmt.Errorf("failed to write public key to file: %w", err)
 		}
-		log.Info().Msgf("Public key saved to: %s\n", publicKeyPath)
+		log.Info().Msgf("Git public key saved to: %s", publicKeyPath)
 
 		// Generate known_hosts entry
 		knownHosts := getKnownHostsEntry(gitURL)
@@ -95,8 +95,11 @@ func CreateGitSecret(gitURL string) error {
 		if err != nil {
 			return fmt.Errorf("failed to write secret YAML to file: %w", err)
 		}
-		log.Info().Msgf("Kubernetes secret YAML saved to: %s\n", secretPath)
+		log.Info().Msgf("Git deploy-key Secret saved to: %s", secretPath)
 	} else {
+		if err == nil {
+			log.Info().Msgf("Git deploy-key Secret already exists: %s", secretPath)
+		}
 		// Secret YAML already exists, check if public key file exists
 		if _, err := os.Stat(publicKeyPath); os.IsNotExist(err) {
 			// Public key file does not exist, generate from existing secret
@@ -115,12 +118,12 @@ func CreateGitSecret(gitURL string) error {
 				if err != nil {
 					return fmt.Errorf("failed to write public key to file: %w", err)
 				}
-				log.Info().Msgf("Public key saved to: %s\n", publicKeyPath)
+				log.Info().Msgf("Git public key saved to: %s", publicKeyPath)
 			} else {
 				return fmt.Errorf("identity.pub not found in existing secret YAML")
 			}
 		} else {
-			log.Info().Msgf("Public key file already exists: %s\n", publicKeyPath)
+			log.Info().Msgf("Git public key already exists: %s", publicKeyPath)
 		}
 	}
 

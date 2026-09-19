@@ -33,7 +33,7 @@ func Execute() error {
 
 	// You can now access the helper.ClusterName variable
 	if helper.ClusterName != "" {
-		log.Info().Msgf("Cluster name: %s\n", helper.ClusterName)
+		log.Info().Msgf("Cluster name: %s", helper.ClusterName)
 		helper.ClusterPath = filepath.Join("./clusters", helper.ClusterName)
 		helper.ClusterSettingsFile = filepath.Join(helper.ClusterPath, "secrets", "cluster-settings.sops.yaml")
 		helper.TalosPath = filepath.Join(helper.ClusterPath, "/talos")

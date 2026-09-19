@@ -351,6 +351,6 @@ func GenSopsSecret() error {
 	if err != nil {
 		return fmt.Errorf("failed to write secret YAML to file: %w", err)
 	}
-	log.Info().Msgf("SOPS secret YAML saved to: %s\n", secretPath)
+	log.Info().Msgf("SOPS age-key Secret saved to: %s", secretPath)
 	return nil
 }
