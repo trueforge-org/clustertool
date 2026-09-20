@@ -25,7 +25,7 @@ archives:
         formats: [zip]
     files:
       - LICENSE
-      - src: "{{ .Dist }}/build-info/{{ .Os }}_{{ .Arch }}/BUILD.txt"
+      - src: "dist/build-info/{{ .Os }}_{{ .Arch }}/BUILD.txt"
         dst: .
         strip_parent: true
 checksum:
@@ -71,7 +71,7 @@ before:
     - bash ./embed/download_talosctl.sh
     - chmod +x ./partial_builds/partial_build.sh
     - bash ./partial_builds/partial_build.sh
-    - bash ./.github/scripts/build-info.sh "{{ .Version }}" "{{ .FullCommit }}" "{{ .Dist }}/build-info"
+    - bash ./.github/scripts/build-info.sh "{{ .Version }}" "{{ .FullCommit }}" "dist/build-info"
 
 # sboms:
 #   - artifacts: archive
