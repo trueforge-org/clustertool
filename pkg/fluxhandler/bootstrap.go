@@ -29,7 +29,9 @@ func FluxBootstrap(ctx context.Context) error {
 	if err := bootstrapFluxCD(ctx); err != nil {
 		return fmt.Errorf("bootstrap Flux: %w", err)
 	}
-	log.Info().Msg("Flux charts installed successfully")
+	log.Info().Msg("Flux configuration installed. Reconciliation continues in the background.")
+	log.Info().Msg("Ensure the public key from ssh-public-key.txt is added to your GitHub account under Settings > SSH and GPG keys.")
+	log.Info().Msg("Check progress with: kubectl get fluxinstance,gitrepository,kustomization -n flux-system")
 	return nil
 }
 
@@ -63,7 +65,7 @@ func bootstrapFluxCD(ctx context.Context) error {
 	log.Info().Msg("Bootstrap: Installing Flux charts")
 	fluxCharts := []HelmChart{
 		{ChartPath: filepath.Join(fluxPath, "flux-operator", "app"), Retry: false, Wait: true},
-		{ChartPath: filepath.Join(fluxPath, "flux-instance", "app"), Retry: false, Wait: true},
+		{ChartPath: filepath.Join(fluxPath, "flux-instance", "app"), Retry: false, Wait: false},
 	}
 	return InstallCharts(fluxCharts, repos, false)
 }
