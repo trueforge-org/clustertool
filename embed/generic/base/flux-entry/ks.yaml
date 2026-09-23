@@ -76,7 +76,7 @@ spec:
     namespace: flux-system
   dependsOn:
     - name: flux-entry-secrets
-    - name: flux-entry-repos  
+    - name: flux-entry-repos
   decryption:
     provider: sops
     secretRef:
