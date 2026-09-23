@@ -73,6 +73,7 @@ spec:
   sourceRef:
     kind: GitRepository
     name: cluster
+    namespace: flux-system
   dependsOn:
     - name: flux-entry-secrets
     - name: flux-entry-repos  
