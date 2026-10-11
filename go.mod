@@ -240,5 +240,8 @@ require (
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.2 // indirect
-	sigs.k8s.io/structured-merge-diff/v7 v7.0.0 // indirect
 )
+
+// kustomize v0.21.3 pulls a kube-openapi built on structured-merge-diff/v7, which is
+// incompatible with k8s.io/apimachinery v0.37.x (v6). Drop once k8s v0.38 is adopted.
+replace k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20260721132016-d427ff9ee9ad
