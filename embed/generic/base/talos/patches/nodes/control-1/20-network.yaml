@@ -1,6 +1,12 @@
 apiVersion: v1alpha1
+kind: LinkAliasConfig
+name: mgmt
+selector:
+    match: true  # as there is a single link only, we can match it this way
+---
+apiVersion: v1alpha1
 kind: LinkConfig
-name: eth0
+name: mgmt
 up: true
 addresses:
   - address: ${CONTROL1IP}/24
@@ -10,4 +16,4 @@ routes:
 apiVersion: v1alpha1
 kind: Layer2VIPConfig
 name: ${VIP}
-link: eth0
+link: mgmt
