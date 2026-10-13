@@ -2,7 +2,7 @@ apiVersion: v1alpha1
 kind: LinkAliasConfig
 name: mgmt
 selector:
-    match: true  # as there is a single link only, we can match it this way
+    match: true  # When more than one network interface is available, adjust the configuration accordingly.
 ---
 apiVersion: v1alpha1
 kind: LinkConfig
