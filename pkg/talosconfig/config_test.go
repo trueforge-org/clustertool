@@ -168,7 +168,7 @@ func TestNativeGenerationIntegration(t *testing.T) {
 	if !bytes.Contains(tc, []byte("192.168.20.210")) {
 		t.Fatal("management endpoint not configured")
 	}
-	if !strings.Contains(at(docs["UnattendedInstallConfig/"], "installer", "image").(string), "/4c4acaf75b4a51d6ec95b38dc8b49fb0af5f699e7fbd12fbf246821c649b5312:") {
+	if !strings.Contains(at(docs["UnattendedInstallConfig/"], "installer", "image").(string), "/88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b:") {
 		t.Fatal("wrong schematic")
 	}
 	if err := EnsureSecrets(); err != nil {
