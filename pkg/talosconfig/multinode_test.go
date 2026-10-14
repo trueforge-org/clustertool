@@ -31,7 +31,7 @@ func multiFixture(t *testing.T) {
 	for index, name := range []string{"control-1", "control-2", "worker-1"} {
 		// Synthetic schematic hashes are used only for offline generation, never for image pulls.
 		id := strings.Repeat(fmt.Sprint(index+1), 64)
-		image := strings.Replace(string(install), "4c4acaf75b4a51d6ec95b38dc8b49fb0af5f699e7fbd12fbf246821c649b5312", id, 1)
+		image := strings.Replace(string(install), "88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b", id, 1)
 		start := strings.Index(image, "    match:")
 		end := strings.Index(image[start:], "\n") + start
 		image = image[:start] + fmt.Sprintf("    match: disk.dev_path == '/dev/sd%c'", 'a'+index) + image[end:]
