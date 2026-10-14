@@ -127,16 +127,28 @@ nodes:
 control plane used for initial bootstrap, not a permanent leader. A node's `name`
 matches its patch directory; its actual hostname is set in `HostnameConfig`.
 
-Set bare IP addresses in `secrets/cluster-settings.sops.yaml`, for example `CONTROL1IP: 192.168.20.210`.
-Specify the subnet prefix in the node's network patch, for example
-`address: ${CONTROL1IP}/24`. Choose the correct interface and gateway.
-ClusterTool substitutes variables as entered; it does not create `_IP`, `_CIDR`
-or `_NETMASK` variants. The VIP must differ from the node addresses.
+Set bare IP addresses in `secrets/cluster-settings.sops.yaml`, for example
+`CONTROL1IP: 192.168.20.210`. Specify the subnet prefix in the node's
+network patch, for example `address: ${CONTROL1IP}/24`.
+
+Network configuration uses a logical `mgmt` interface alias defined through
+`LinkAliasConfig`, rather than relying on a fixed interface name such as `eth0`.
+The default selector uses `match: true`, which is intended for single-NIC
+setups. On systems with multiple network interfaces, configure a more specific
+selector to ensure the correct management interface is selected.
+
+`LinkConfig` references the `mgmt` alias for network addresses and routes.
+The shared `patches/control-plane/40-vip.yaml` assigns the Layer 2 VIP
+to the same alias on control-plane nodes. Worker nodes do not receive
+the VIP configuration.
+
+ClusterTool substitutes variables as entered; it does not create `_IP`,
+`_CIDR` or `_NETMASK` variants. The VIP must differ from the node addresses.
 
 To add a node, add its entry and address variable, then create
-`patches/nodes/<name>/` using the starter node files. Adjust its hostname, IP,
-interface, disk selector and installer image. Keep the VIP configuration on
-control planes; remove `Layer2VIPConfig` from worker node patches.
+`patches/nodes/<name>/` using the starter node files. Adjust its hostname,
+IP, network alias selector, disk selector and installer image.
+
 Use three control planes if you need control-plane availability during a reboot.
 
 `kubernetesVersion` sets the generated Kubernetes component images unless a custom
