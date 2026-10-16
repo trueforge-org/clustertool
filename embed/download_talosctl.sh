@@ -5,7 +5,7 @@ set -euo pipefail
 
 # Define the version
 # renovate: datasource=github-releases depName=siderolabs/talos
-version="v1.14.3"
+version="v1.14.4"
 
 # Define the OS and architecture combinations
 combinations=(
