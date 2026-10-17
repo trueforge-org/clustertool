@@ -55,26 +55,8 @@ func RunBootstrap(args []string) error {
 		return err
 	}
 
-	if _, err := ExistingControlPlane(inv); err != nil {
-		stage, err := checkStatus(bootstrapNode)
-		if err != nil {
-			return err
-		}
-		if stage == "maintenance" {
-			if err := applyNode(bootstrapNode); err != nil {
-				return err
-			}
-		} else if stage != "booting" && stage != "running" {
-			return fmt.Errorf("bootstrap node is in unexpected stage %s", stage)
-		}
-		if _, err := nodestatus.WaitForHealth(bootstrapNode, []string{"booting", "running"}); err != nil {
-			return err
-		}
-		log.Info().Msgf("Bootstrap: waiting for installation/bootstrap availability on %s; inspect the disk selector and installation logs if it remains unavailable", bootstrapNode)
-		// Check again after installation: a prior interrupted RPC may have succeeded.
-		if err := bootstrapIfNeeded(inv); err != nil {
-			return err
-		}
+	if err := bootstrapTalosNodes(inv, applyNode); err != nil {
+		return err
 	}
 
 	log.Info().Msgf("Bootstrap: waiting for control plane %v to come online...", bootstrapNode)
@@ -140,25 +122,13 @@ func RunBootstrap(args []string) error {
 	if err := fluxhandler.InstallCharts(baseCharts, HelmRepos, true); err != nil {
 		return err
 	}
-	// Bootstrap is performed once. All remaining inventory nodes join the
-	// established cluster with their own generated configuration afterwards.
+	// Full node readiness is checked only after the CNI is installed.
 	{
 		for _, node := range inv.Nodes {
 			if node.Address == bootstrapNode {
 				continue
 			}
-			log.Info().Msgf("Bootstrap: applying configuration to joining node %s (%s)", node.Name, node.Address)
-			stage, err := checkStatus(node.Address)
-			if err != nil {
-				return fmt.Errorf("inspect joining node %s: %w", node.Name, err)
-			}
-			if stage == "maintenance" {
-				if err := applyNode(node.Address); err != nil {
-					return fmt.Errorf("apply joining node %s: %w", node.Name, err)
-				}
-			} else if stage != "running" && stage != "booting" {
-				return fmt.Errorf("joining node %s is in unexpected stage %s", node.Name, stage)
-			}
+			log.Info().Msgf("Bootstrap: waiting for joining node %s (%s)", node.Name, node.Address)
 			if _, err := nodestatus.WaitForHealth(node.Address, nil); err != nil {
 				return fmt.Errorf("wait for joining node %s: %w", node.Name, err)
 			}

@@ -21,16 +21,29 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-var errInitialSetup = errors.New("initial environment setup required")
-
 func InitFiles() error {
-	for _, step := range []func() error{ageGen, genRootFiles, genBaseFiles, CheckEnvVariables} {
-		if err := step(); err != nil {
-			if errors.Is(err, errInitialSetup) {
-				return nil
+	_, err := os.Stat(helper.ClusterSettingsFile)
+	firstInit := os.IsNotExist(err)
+	if err != nil && !firstInit {
+		return fmt.Errorf("check cluster settings %s: %w", helper.ClusterSettingsFile, err)
+	}
+	if firstInit || !CheckRunAgainFileExists() {
+		for _, step := range []func() error{ageGen, genRootFiles, genBaseFiles} {
+			if err := step(); err != nil {
+				return err
 			}
+		}
+	}
+	if firstInit {
+		if err := createRunAgainFile(); err != nil {
 			return err
 		}
+		log.Warn().Msg("Fill in secrets/cluster-settings.sops.yaml, then run init again.")
+		return nil
+	}
+	log.Debug().Msg("Cluster settings found, continuing initialization")
+	if err := CheckEnvVariables(); err != nil {
+		return err
 	}
 	if err := talosconfig.EnsureSecrets(); err != nil {
 		return err
@@ -138,29 +151,11 @@ func FormatGitURL(input string) string {
 }
 
 func genBaseFiles() error {
-	clusterSettingsPresent := false
-
-	if _, err := os.Stat(helper.ClusterSettingsFile); err == nil {
-		clusterSettingsPresent = true
-		log.Debug().Msg("Detected existing cluster, continuing")
-	} else if os.IsNotExist(err) {
-		if err := createRunAgainFile(); err != nil {
-			return err
-		}
-		log.Warn().Msg("Fill in secrets/cluster-settings.sops.yaml, then run init again.")
-	} else {
-		return fmt.Errorf("check cluster settings %s: %w", helper.ClusterSettingsFile, err)
-	}
-
 	err := fthelper.CopyDir(helper.BaseCache, helper.ClusterPath+"", false)
 	if err != nil {
 		return err
 	} else {
 		log.Info().Msg("Base files copied successfully.")
-	}
-
-	if !clusterSettingsPresent {
-		return errInitialSetup
 	}
 
 	return nil

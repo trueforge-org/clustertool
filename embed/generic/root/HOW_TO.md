@@ -170,9 +170,10 @@ clustertool talos apply control-2
 then applies all nodes sequentially, control planes before workers. A node name
 or IP selects one node. Do not run generation and apply concurrently.
 
-For a new cluster, apply asks before bootstrapping. Initial setup installs the
-bootstrap node, Cilium and the CSR approver, then joins the remaining nodes and
-continues with the other charts and Flux.
+For a new cluster, apply asks before bootstrapping. Initial setup applies the
+configuration to all nodes, bootstraps one control plane, then installs Cilium
+and the CSR approver. It waits for the remaining nodes to become ready before
+continuing with the other charts and Flux.
 
 If setup is interrupted, run apply again. When a matching
 `.bootstrap-in-progress.json` exists, ClusterTool asks whether to resume.
