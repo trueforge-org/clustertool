@@ -20,7 +20,7 @@ func withSingleNodeFixture(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(helper.TalosPath, "patches", "nodes", "control-1"), 0700); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(helper.TalosPath, "clustertool.yaml"), []byte("apiVersion: clustertool/v1\nkind: ClusterConfig\ntalosVersion: v1.14.0\nkubernetesVersion: v1.37.0\nbootstrapNode: control-1\nnodes:\n  - name: control-1\n    role: control-plane\n    address: ${CONTROL1IP}\n"), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(helper.TalosPath, "clustertool.yaml"), []byte("apiVersion: clustertool/v1\nkind: ClusterConfig\ntalosVersion: v1.14.0\nkubernetesVersion: v1.37.0\nnodes:\n  - name: control-1\n    role: control-plane\n    address: ${CONTROL1IP}\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
 }

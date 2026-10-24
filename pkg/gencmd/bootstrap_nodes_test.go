@@ -11,7 +11,7 @@ import (
 )
 
 func bootstrapNodesFixture() *talosconfig.Inventory {
-	return &talosconfig.Inventory{BootstrapNode: "cp1", Nodes: []talosconfig.Node{
+	return &talosconfig.Inventory{Nodes: []talosconfig.Node{
 		{Name: "cp1", Role: "control-plane", Address: "192.0.2.11"},
 		{Name: "cp2", Role: "control-plane", Address: "192.0.2.12"},
 		{Name: "worker", Role: "worker", Address: "192.0.2.21"},

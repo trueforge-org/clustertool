@@ -22,7 +22,7 @@ This is the recommended command for both initial cluster bootstrap and day-2 Tal
 ## Bootstrapping
 If the cluster has not been bootstrapped yet, Apply will automatically detect this and ask if you want to bootstrap the cluster
 
-Bootstrapping applies the generated native Talos configuration to all configured nodes and then bootstraps the cluster through the configured bootstrap node.
+Bootstrapping applies the generated native Talos configuration to all configured nodes and then bootstraps the cluster through the alphabetically first control-plane node by name.
 
 After this is done, we apply a number of helm-charts and manifests by default such as:
 

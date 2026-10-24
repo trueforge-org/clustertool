@@ -21,7 +21,6 @@ type Inventory struct {
 	KubernetesVersion string `yaml:"kubernetesVersion"`
 	APIVersion        string `yaml:"apiVersion"`
 	Kind              string `yaml:"kind"`
-	BootstrapNode     string `yaml:"bootstrapNode"`
 	Nodes             []Node `yaml:"nodes"`
 }
 
@@ -73,7 +72,7 @@ func LoadInventory() (*Inventory, error) {
 		}
 	}
 	names, addresses := map[string]bool{}, map[string]bool{}
-	bootstrap := false
+	controlPlane := false
 	for index, n := range inv.Nodes {
 		if !nodeName.MatchString(n.Name) || n.Name == "all" || names[n.Name] {
 			return nil, fmt.Errorf("invalid or duplicate node name %q", n.Name)
@@ -87,8 +86,8 @@ func LoadInventory() (*Inventory, error) {
 		}
 		names[n.Name], addresses[ip.String()] = true, true
 		inv.Nodes[index].Address = ip.String()
-		if n.Name == inv.BootstrapNode && n.Role == "control-plane" {
-			bootstrap = true
+		if n.Role == "control-plane" {
+			controlPlane = true
 		}
 		dir := filepath.Join(helper.TalosPath, "patches", "nodes", n.Name)
 		info, err := os.Lstat(dir)
@@ -96,8 +95,8 @@ func LoadInventory() (*Inventory, error) {
 			return nil, fmt.Errorf("node %s: missing or unsafe patch directory %s", n.Name, dir)
 		}
 	}
-	if !bootstrap {
-		return nil, fmt.Errorf("bootstrapNode must identify a control-plane node")
+	if !controlPlane {
+		return nil, fmt.Errorf("clustertool.yaml requires at least one control-plane node")
 	}
 	sort.SliceStable(inv.Nodes, func(i, j int) bool {
 		if inv.Nodes[i].Role != inv.Nodes[j].Role {
@@ -125,11 +124,11 @@ func (i *Inventory) Select(target string) ([]Node, error) {
 
 func (i *Inventory) Bootstrap() Node {
 	for _, n := range i.Nodes {
-		if n.Name == i.BootstrapNode {
+		if n.Role == "control-plane" {
 			return n
 		}
 	}
-	panic("validated inventory has no bootstrap node")
+	panic("validated inventory has no control-plane node")
 }
 
 func (i *Inventory) Endpoints() []string {

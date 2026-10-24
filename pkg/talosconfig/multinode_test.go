@@ -27,7 +27,7 @@ func multiFixture(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	write("clustertool.yaml", "apiVersion: clustertool/v1\nkind: ClusterConfig\ntalosVersion: v1.14.0\nkubernetesVersion: v1.37.0\nbootstrapNode: control-1\nnodes:\n  - {name: control-1, role: control-plane, address: 192.0.2.11}\n  - {name: control-2, role: control-plane, address: 192.0.2.12}\n  - {name: worker-1, role: worker, address: 192.0.2.21}\n")
+	write("clustertool.yaml", "apiVersion: clustertool/v1\nkind: ClusterConfig\ntalosVersion: v1.14.0\nkubernetesVersion: v1.37.0\nnodes:\n  - {name: worker-1, role: worker, address: 192.0.2.21}\n  - {name: control-2, role: control-plane, address: 192.0.2.12}\n  - {name: control-1, role: control-plane, address: 192.0.2.11}\n")
 	for index, name := range []string{"control-1", "control-2", "worker-1"} {
 		// Synthetic schematic hashes are used only for offline generation, never for image pulls.
 		id := strings.Repeat(fmt.Sprint(index+1), 64)
@@ -51,6 +51,9 @@ func TestInventorySelection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if node := inv.Bootstrap(); node.Name != "control-1" || node.Address != "192.0.2.11" {
+		t.Fatalf("expected alphabetically first control-plane node, got %v", node)
+	}
 	for _, target := range []string{"", "all"} {
 		nodes, err := inv.Select(target)
 		if err != nil || len(nodes) != 3 {
@@ -67,7 +70,7 @@ func TestInventorySelection(t *testing.T) {
 		t.Fatal("unknown node accepted")
 	}
 	data, _ := os.ReadFile(filepath.Join(helper.TalosPath, "clustertool.yaml"))
-	for _, bad := range []string{strings.Replace(string(data), "192.0.2.12", "192.0.2.11", 1), strings.Replace(string(data), "bootstrapNode: control-1", "bootstrapNode: worker-1", 1), strings.Replace(string(data), "name: worker-1", "name: ../worker", 1)} {
+	for _, bad := range []string{strings.Replace(string(data), "192.0.2.12", "192.0.2.11", 1), strings.ReplaceAll(string(data), "role: control-plane", "role: worker"), strings.Replace(string(data), "name: worker-1", "name: ../worker", 1), "bootstrapNode: control-1\n" + string(data)} {
 		os.WriteFile(filepath.Join(helper.TalosPath, "clustertool.yaml"), []byte(bad), 0600)
 		if _, err := LoadInventory(); err == nil {
 			t.Fatal("invalid inventory accepted")

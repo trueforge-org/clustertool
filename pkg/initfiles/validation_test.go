@@ -60,7 +60,7 @@ func TestNetworkValidationRetainsAllNodeChecks(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	config := "apiVersion: clustertool/v1\nkind: ClusterConfig\ntalosVersion: v1.14.0\nkubernetesVersion: v1.37.0\nbootstrapNode: cp\nnodes:\n  - name: cp\n    role: control-plane\n    address: 192.0.2.11\n  - name: worker\n    role: worker\n    address: ${WORKER_IP}\n"
+	config := "apiVersion: clustertool/v1\nkind: ClusterConfig\ntalosVersion: v1.14.0\nkubernetesVersion: v1.37.0\nnodes:\n  - name: cp\n    role: control-plane\n    address: 192.0.2.11\n  - name: worker\n    role: worker\n    address: ${WORKER_IP}\n"
 	if err := os.WriteFile(filepath.Join(helper.TalosPath, "clustertool.yaml"), []byte(config), 0600); err != nil {
 		t.Fatal(err)
 	}
