@@ -50,8 +50,11 @@ func schematicGetTarget(t *testing.T, args []string) (string, string) {
 			output = args[i+1]
 		case "--insecure":
 			insecure = true
-		case "volumestatus", "imagefactoryschematic":
+		case "volumestatus", "systemdisk", "imagefactoryschematic":
 			resource = arg
+			if arg == "systemdisk" && (i+1 >= len(args) || args[i+1] != "system-disk") {
+				t.Fatalf("expected the SystemDisk singleton: %v", args)
+			}
 		}
 	}
 	if node == "" || endpoint != node || !insecure || output != "json" || resource == "" {
@@ -60,7 +63,7 @@ func schematicGetTarget(t *testing.T, args []string) (string, string) {
 	return node, resource
 }
 
-func TestConfirmInstallSchematicSkipsSafeNodes(t *testing.T) {
+func TestConfirmTalosInstallationSkipsSafeNodes(t *testing.T) {
 	wanted := strings.Repeat("a", 64)
 	other := strings.Repeat("b", 64)
 	nodes := []talosconfig.Node{{Name: "control-1", Role: "control-plane", Address: "192.0.2.11"}}
@@ -69,7 +72,6 @@ func TestConfirmInstallSchematicSkipsSafeNodes(t *testing.T) {
 		wantGets                    int
 	}{
 		{"fresh-ISO-with-other-schematic", "maintenance", "missing", other, 1},
-		{"installed-matching-schematic", "maintenance", "ready", wanted, 2},
 		{"running-node", "running", "ready", other, 0},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -79,12 +81,15 @@ func TestConfirmInstallSchematicSkipsSafeNodes(t *testing.T) {
 			runCommand = func(args []string, _ bool) (string, string, error) {
 				gets++
 				_, resource := schematicGetTarget(t, args)
+				if resource == "systemdisk" {
+					return `{"spec":{"diskID":"sda","devPath":"/dev/sda"}}`, "", nil
+				}
 				if resource == "volumestatus" {
 					return `{"metadata":{"phase":"running"},"spec":{"phase":"` + tc.phase + `"}}`, "", nil
 				}
 				return `{"spec":{"schematicId":"` + tc.current + `"}}`, "", nil
 			}
-			if err := ConfirmInstallSchematic(nodes, func(string, bool) bool {
+			if err := ConfirmTalosInstallation(nodes, func(string, bool) bool {
 				t.Fatal("safe node required confirmation")
 				return false
 			}); err != nil {
@@ -97,7 +102,7 @@ func TestConfirmInstallSchematicSkipsSafeNodes(t *testing.T) {
 	}
 }
 
-func TestConfirmInstallSchematicInspectsAllNodesBeforeOnePrompt(t *testing.T) {
+func TestConfirmTalosInstallationInspectsAllNodesBeforeOnePrompt(t *testing.T) {
 	wanted, current := strings.Repeat("a", 64), strings.Repeat("b", 64)
 	nodes := []talosconfig.Node{
 		{Name: "control-1", Role: "control-plane", Address: "192.0.2.11"},
@@ -121,14 +126,17 @@ func TestConfirmInstallSchematicInspectsAllNodesBeforeOnePrompt(t *testing.T) {
 				if node == nodes[1].Address {
 					t.Fatal("queried a running node through maintenance API")
 				}
+				if resource == "systemdisk" {
+					return `{"spec":{"diskID":"sda","devPath":"/dev/sda"}}`, "", nil
+				}
 				if resource == "volumestatus" {
 					return `{"spec":{"phase":"ready"}}`, "", nil
 				}
 				return `{"spec":{"schematicId":"` + current + `"}}`, "", nil
 			}
-			err := ConfirmInstallSchematic(nodes, func(_ string, defaultAnswer bool) bool {
+			err := ConfirmTalosInstallation(nodes, func(_ string, defaultAnswer bool) bool {
 				prompts++
-				if inspected != len(nodes) || gets != 4 {
+				if inspected != len(nodes) || gets != 6 {
 					t.Fatalf("prompted before inspecting all nodes: statuses=%d, gets=%d", inspected, gets)
 				}
 				if defaultAnswer {
@@ -146,7 +154,7 @@ func TestConfirmInstallSchematicInspectsAllNodesBeforeOnePrompt(t *testing.T) {
 	}
 }
 
-func TestConfirmInstallSchematicWarnsWhenInspectionIsInconclusive(t *testing.T) {
+func TestConfirmTalosInstallationWarnsWhenInspectionIsInconclusive(t *testing.T) {
 	wanted := strings.Repeat("a", 64)
 	nodes := []talosconfig.Node{{Name: "worker-1", Role: "worker", Address: "192.0.2.21"}}
 	for _, tc := range []struct {
@@ -171,6 +179,9 @@ func TestConfirmInstallSchematicWarnsWhenInspectionIsInconclusive(t *testing.T) 
 				if resource == tc.failedResource {
 					return "", "API unavailable", errors.New("exit status 1")
 				}
+				if resource == "systemdisk" {
+					return `{"spec":{"diskID":"sda","devPath":"/dev/sda"}}`, "", nil
+				}
 				if resource == "volumestatus" {
 					if tc.meta != "" {
 						return tc.meta, "", nil
@@ -183,12 +194,75 @@ func TestConfirmInstallSchematicWarnsWhenInspectionIsInconclusive(t *testing.T) 
 				return `{"spec":{"schematicId":"` + wanted + `"}}`, "", nil
 			}
 			prompts := 0
-			err := ConfirmInstallSchematic(nodes, func(string, bool) bool { prompts++; return true })
+			err := ConfirmTalosInstallation(nodes, func(string, bool) bool { prompts++; return true })
 			if err != nil || prompts != 1 {
 				t.Fatalf("inconclusive inspection did not allow an explicit choice: prompts=%d, error=%v", prompts, err)
 			}
 			if !strings.Contains(warnings.String(), `"level":"warn"`) {
 				t.Fatalf("missing warning: %s", warnings)
+			}
+			if tc.meta != "" || tc.failedResource == "volumestatus" {
+				if strings.Contains(warnings.String(), "Unattended installation will be skipped") {
+					t.Fatalf("inconclusive META inspection was reported as installed: %s", warnings)
+				}
+				if !strings.Contains(warnings.String(), "Installation state: unknown") ||
+					!strings.Contains(warnings.String(), "/dev/sda") {
+					t.Fatalf("missing unknown state or detected disk: %s", warnings)
+				}
+			}
+		})
+	}
+}
+
+func TestConfirmTalosInstallationWarnsWithMatchingSchematic(t *testing.T) {
+	wanted := strings.Repeat("a", 64)
+	nodes := []talosconfig.Node{{Name: "control-1", Role: "control-plane", Address: "192.0.2.11"}}
+	for _, tc := range []struct {
+		name, disk string
+		diskError  bool
+		proceed    bool
+	}{
+		{name: "decline-existing-USB-installation", disk: "/dev/sdb"},
+		{name: "accept-existing-installation", disk: "/dev/sda", proceed: true},
+		{name: "disk-query-failed", diskError: true},
+		{name: "disk-path-missing"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			warnings := schematicCheckFixture(t, nodes, "factory.talos.dev/metal-installer/"+wanted+":v1.14.2")
+			gets, prompts := 0, 0
+			runCommand = func(args []string, _ bool) (string, string, error) {
+				gets++
+				_, resource := schematicGetTarget(t, args)
+				switch resource {
+				case "volumestatus":
+					return `{"spec":{"phase":"ready"}}`, "", nil
+				case "systemdisk":
+					if tc.diskError {
+						return "", "API unavailable", errors.New("exit status 1")
+					}
+					return `{"spec":{"devPath":"` + tc.disk + `"}}`, "", nil
+				default:
+					return `{"spec":{"schematicId":"` + wanted + `"}}`, "", nil
+				}
+			}
+			err := ConfirmTalosInstallation(nodes, func(_ string, defaultAnswer bool) bool {
+				prompts++
+				if defaultAnswer || gets != 3 {
+					t.Fatalf("confirmation must default to no after inspection: gets=%d, default=%v", gets, defaultAnswer)
+				}
+				return tc.proceed
+			})
+			if (err == nil) != tc.proceed || prompts != 1 {
+				t.Fatalf("proceed=%v: prompts=%d, error=%v", tc.proceed, prompts, err)
+			}
+			disk := tc.disk
+			if disk == "" {
+				disk = "unknown"
+			}
+			if !strings.Contains(warnings.String(), "Talos is already installed on "+disk) ||
+				!strings.Contains(warnings.String(), "Unattended installation will be skipped") ||
+				!strings.Contains(warnings.String(), wanted) {
+				t.Fatalf("matching schematic hid the existing installation or disk: %s", warnings)
 			}
 		})
 	}

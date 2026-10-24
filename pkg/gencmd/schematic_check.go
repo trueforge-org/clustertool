@@ -10,9 +10,9 @@ import (
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 )
 
-// ConfirmInstallSchematic checks maintenance nodes before any configuration is applied.
+// ConfirmTalosInstallation checks maintenance nodes before any configuration is applied.
 // The detected schematic describes the current boot image, not a separate disk inspection.
-func ConfirmInstallSchematic(nodes []talosconfig.Node, confirm func(string, bool) bool) error {
+func ConfirmTalosInstallation(nodes []talosconfig.Node, confirm func(string, bool) bool) error {
 	warnings := false
 	for _, node := range nodes {
 		stage, err := checkStatus(node.Address)
@@ -57,6 +57,23 @@ func ConfirmInstallSchematic(nodes []talosconfig.Node, confirm func(string, bool
 			installation = "installed"
 		}
 
+		var systemDisk struct {
+			Spec struct {
+				Path string `json:"devPath"`
+			} `json:"spec"`
+		}
+		out, stderr, err = runCommand(nodeCommand("get", node, "systemdisk", "system-disk", "-e", node.Address, "--insecure", "-o", "json").Args, true)
+		if err == nil {
+			err = json.Unmarshal([]byte(out), &systemDisk)
+		}
+		if err != nil {
+			log.Warn().Str("node", node.Name).Err(err).Msgf("Cannot read the detected Talos installation disk: %s", strings.TrimSpace(stderr))
+		}
+		disk := "unknown"
+		if err == nil && strings.TrimSpace(systemDisk.Spec.Path) != "" {
+			disk = strings.TrimSpace(systemDisk.Spec.Path)
+		}
+
 		var schematic struct {
 			Spec struct {
 				ID string `json:"schematicId"`
@@ -73,13 +90,16 @@ func ConfirmInstallSchematic(nodes []talosconfig.Node, confirm func(string, bool
 		if err == nil && strings.TrimSpace(schematic.Spec.ID) != "" {
 			detected = strings.TrimSpace(schematic.Spec.ID)
 		}
-		if installation == "installed" && desired != "unknown" && detected == desired {
-			continue
-		}
 
 		warnings = true
-		log.Warn().Msgf("Node %s (%s): verify the Talos image before applying configuration.", node.Name, node.Address)
-		log.Warn().Msgf("Installation state: %s", installation)
+		if installation == "installed" {
+			log.Warn().Msgf("Talos is already installed on %s for %s (%s).", disk, node.Name, node.Address)
+			log.Warn().Msg("Unattended installation will be skipped.")
+		} else {
+			log.Warn().Msgf("Cannot verify the Talos installation state for %s (%s).", node.Name, node.Address)
+			log.Warn().Msg("Installation state: unknown")
+			log.Warn().Msgf("Detected Talos installation disk: %s", disk)
+		}
 		log.Warn().Msgf("Detected schematic: %s", detected)
 		log.Warn().Msgf("Desired schematic:  %s", desired)
 		if desired == "unknown" {
@@ -88,9 +108,11 @@ func ConfirmInstallSchematic(nodes []talosconfig.Node, confirm func(string, bool
 	}
 
 	if warnings {
-		log.Warn().Msg("Applying configuration does not replace an existing Talos installation. The current kernel arguments and system extensions may remain in use.")
+		log.Warn().Msg("Applying configuration does not replace an existing Talos image or reinstall it on the configured target disk.")
+		log.Warn().Msg("Tip: If you intend to reinstall, verify the node and disk before removing the existing Talos installation. See \"talosctl wipe disk --help\" for disk-wiping options.")
+		log.Warn().Msg("Wiping destroys data. Disks in use may require a different reset/wipe procedure.")
 		if !confirm("Continue applying configuration despite these warnings? [y/n]: ", false) {
-			return fmt.Errorf("apply cancelled: Talos schematic was not verified")
+			return fmt.Errorf("apply cancelled: Talos installation warnings were not accepted")
 		}
 	}
 	return nil

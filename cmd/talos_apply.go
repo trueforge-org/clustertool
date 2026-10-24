@@ -95,7 +95,7 @@ var apply = &cobra.Command{
 			if node != "" {
 				return fmt.Errorf("initial cluster setup is incomplete; run talos apply all to resume")
 			}
-			if err := gencmd.ConfirmInstallSchematic(inv.Nodes, fthelper.GetYesOrNo); err != nil {
+			if err := gencmd.ConfirmTalosInstallation(inv.Nodes, fthelper.GetYesOrNo); err != nil {
 				return err
 			}
 			return resumeBootstrap(inv.Bootstrap().Address, extraArgs, fthelper.GetYesOrNo, gencmd.RunBootstrap)
@@ -111,7 +111,7 @@ var apply = &cobra.Command{
 			if !fthelper.GetYesOrNo("All configured control planes report maintenance. Bootstrap this new cluster? [y/n]: ", false) {
 				return fmt.Errorf("bootstrap cancelled")
 			}
-			if err := gencmd.ConfirmInstallSchematic(inv.Nodes, fthelper.GetYesOrNo); err != nil {
+			if err := gencmd.ConfirmTalosInstallation(inv.Nodes, fthelper.GetYesOrNo); err != nil {
 				return err
 			}
 			return gencmd.RunBootstrap(extraArgs)
@@ -120,7 +120,7 @@ var apply = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		if err := gencmd.ConfirmInstallSchematic(nodes, fthelper.GetYesOrNo); err != nil {
+		if err := gencmd.ConfirmTalosInstallation(nodes, fthelper.GetYesOrNo); err != nil {
 			return err
 		}
 		return RunApply(true, node, extraArgs)
