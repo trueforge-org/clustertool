@@ -11,6 +11,8 @@ spec:
     name: flux-instance
     namespace: flux-system
   values:
+    commonAnnotations:
+      fluxcd.controlplane.io/reconcileArtifactEvery: 1h
     instance:
       cluster:
         networkPolicy: false
