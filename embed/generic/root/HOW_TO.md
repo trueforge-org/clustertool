@@ -35,6 +35,8 @@ spec:
       defaultDataPath: /var/mnt/longhorn
 ```
 
+For multi-node clusters, increase the Longhorn replica counts as indicated by the comments in its HelmRelease.
+
 OpenEBS — `clusters/main/kubernetes/system/openebs/app/helm-release.yaml`:
 
 ```yaml

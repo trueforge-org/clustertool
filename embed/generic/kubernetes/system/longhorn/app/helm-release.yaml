@@ -30,4 +30,31 @@ spec:
       # Set to false to pick another CSI as default
       defaultClass: true
       # Increase to 3 for a multi-node cluster
-      defaultClassReplicaCount: 1
+      defaultClassReplicaCount: "1"
+    csi:
+      # Increase to 3 for a multi-node cluster
+      attacherReplicaCount: "1"
+      # Increase to 3 for a multi-node cluster
+      provisionerReplicaCount: "1"
+      # Increase to 3 for a multi-node cluster
+      resizerReplicaCount: "1"
+      # Increase to 3 for a multi-node cluster
+      snapshotterReplicaCount: "1"
+    longhornUI:
+      # Increase to 2 for a multi-node cluster
+      replicas: "1"
+    longhornGlobalManager:
+      # Increase to 3 for a multi-node cluster
+      replicas: "1"
+
+    # ingress:
+    #   enabled: true
+    #   ingressClassName: internal
+    #   host: longhorn.${DOMAIN_0}    
+    #   annotations:
+    #     cert-manager.io/cluster-issuer: domain-0-le-prod
+    #     cert-manager.io/private-key-rotation-policy: Always
+    #   path: /
+    #   pathType: ImplementationSpecific
+    #   tls: true
+    #   tlsSecret: longhorn-tls
