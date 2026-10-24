@@ -95,6 +95,8 @@ func UpdateFluxConfig() error {
 		filepath.Join(helper.ClusterPath, "kubernetes", "flux-system", "flux-operator", "ks.yaml"),
 		filepath.Join(helper.ClusterPath, "kubernetes", "flux-system", "flux-instance", "ks.yaml"),
 		filepath.Join(helper.ClusterPath, "kubernetes", "flux-system", "flux-instance", "app", "helm-release.yaml"),
+		filepath.Join(helper.ClusterPath, "kubernetes", "system", "longhorn", "ks.yaml"),
+		filepath.Join(helper.ClusterPath, "kubernetes", "system", "system-upgrade", "tuppr", "ks.yaml"),
 	}
 	for _, file := range files {
 		data, err := os.ReadFile(file)
