@@ -124,9 +124,7 @@ nodes:
 
 `apiVersion` identifies the ClusterTool file format. ClusterTool automatically
 uses the alphabetically first control-plane node by `name` for bootstrap, not as
-a permanent leader. Remove `bootstrapNode` from existing beta configurations.
-A node's `name` matches its patch directory; its actual hostname is set in
-`HostnameConfig`.
+a permanent leader. A node's `name` matches its patch directory; its actual hostname is set in `HostnameConfig`.
 
 Set bare IP addresses in `secrets/cluster-settings.sops.yaml`, for example
 `CONTROL1IP: 192.168.20.210`. Specify the subnet prefix in the node's
