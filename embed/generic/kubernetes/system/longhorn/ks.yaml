@@ -6,6 +6,8 @@ metadata:
   namespace: flux-system
 spec:
   interval: 1h
+  retryInterval: 10m
+  timeout: 10m
   path: clusters/REPLACEWITHCLUSTERNAME/kubernetes/system/longhorn/app
   prune: true
   sourceRef:
@@ -22,6 +24,8 @@ spec:
   dependsOn:
     - name: longhorn
   interval: 1h
+  retryInterval: 10m
+  timeout: 10m
   path: clusters/REPLACEWITHCLUSTERNAME/kubernetes/system/longhorn/jobs
   prune: true
   sourceRef:

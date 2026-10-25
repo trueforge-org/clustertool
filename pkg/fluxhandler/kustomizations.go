@@ -28,7 +28,9 @@ metadata:
   name: %s
   namespace: flux-system
 spec:
-  interval: 10m
+  interval: 1h
+  retryInterval: 10m
+  timeout: 10m
   path: %s/app
   prune: true
   sourceRef:

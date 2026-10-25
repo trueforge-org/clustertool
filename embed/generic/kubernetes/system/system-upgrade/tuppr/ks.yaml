@@ -6,6 +6,8 @@ metadata:
   namespace: flux-system
 spec:
   interval: 1h
+  retryInterval: 10m
+  timeout: 10m
   path: clusters/REPLACEWITHCLUSTERNAME/kubernetes/system/system-upgrade/tuppr/app
   prune: true
   sourceRef:
@@ -22,6 +24,8 @@ spec:
   dependsOn:
     - name: tuppr
   interval: 1h
+  retryInterval: 10m
+  timeout: 10m
   path: clusters/REPLACEWITHCLUSTERNAME/kubernetes/system/system-upgrade/tuppr/plans
   prune: true
   sourceRef:
