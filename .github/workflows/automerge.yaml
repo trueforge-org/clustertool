@@ -95,7 +95,7 @@ jobs:
             core.info('All pull_request workflow runs are completed and successful.');
 
       - name: Approve PR
-        uses: hmarr/auto-approve-action@v3
+        uses: hmarr/auto-approve-action@f0939ea97e9205ef24d872e76833fa908a770363 # v4.0.0
         if: steps.ci-gate.outputs.gate_status == 'ready' && steps.ci-gate.outputs.pr_author == 'truecharts-admin'
         with:
           github-token: "${{ secrets.OR_PAT }}"
