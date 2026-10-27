@@ -12,7 +12,6 @@ import (
     "github.com/rs/zerolog/log"
     "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
     "k8s.io/client-go/tools/clientcmd"
-    "k8s.io/client-go/util/homedir"
     "sigs.k8s.io/controller-runtime/pkg/client"
     "sigs.k8s.io/kustomize/api/krusty"
     "sigs.k8s.io/kustomize/kyaml/filesys"
@@ -25,7 +24,7 @@ func getKubeClient() (client.Client, error) {
     log.Trace().Msg("Initializing Kubernetes client")
 
     // Load kubeconfig from the default location
-    kubeconfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
+    kubeconfig := clientcmd.NewDefaultClientConfigLoadingRules().GetDefaultFilename()
     config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
     if err != nil {
         log.Error().Err(err).Msg("Failed to load kubeconfig")
