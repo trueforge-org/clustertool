@@ -41,34 +41,25 @@ func processFileEncryption(file EncrFileData) error {
 		return nil
 	}
 
-	// Validate shared settings before staging or encrypting them.
+	// Validate shared settings before encrypting them.
 	if filepath.Base(file.Path) == "cluster-settings.sops.yaml" {
 		if _, err := initfiles.ReadClusterSettings(file.Path); err != nil {
 			return err
 		}
 	}
 
-	// Check if the file is partially staged
-	fullyStaged, err := fthelper.IsFileFullyStaged(file.Path)
-	if err != nil {
-		return fmt.Errorf("error checking staged status of file %s: %w", file.Path, err)
-	}
-
-	// If the file is not fully staged, stage it
-	if !fullyStaged {
-		log.Info().Msgf("File %s is partially staged, staging fully...\n", file.Path)
-		err := fthelper.StageFile(file.Path)
-		if err != nil {
-			return fmt.Errorf("error staging file %s: %w", file.Path, err)
-		}
-		log.Info().Msgf("File %s fully staged.\n", file.Path)
-	}
-
 	// Encrypt the file
-	err = encryptFile(file.Path)
+	err := encryptFile(file.Path)
 	if err != nil {
 		return fmt.Errorf("error encrypting file %s: %w", file.Path, err)
 	}
+
+	// Stage the encrypted file only after encryption succeeds.
+	log.Info().Msgf("Staging encrypted file %s...\n", file.Path)
+	if err := fthelper.StageFile(file.Path); err != nil {
+		return fmt.Errorf("error staging encrypted file %s: %w", file.Path, err)
+	}
+	log.Info().Msgf("File %s fully staged.\n", file.Path)
 
 	log.Debug().Msgf("File %s encrypted successfully.\n", file.Path)
 	return nil
