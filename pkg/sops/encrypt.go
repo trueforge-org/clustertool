@@ -37,7 +37,7 @@ func EncryptAllFiles() error {
 func processFileEncryption(file EncrFileData) error {
 	// Skip files that are already encrypted
 	if file.Encrypted {
-		log.Info().Msgf("File %s is already encrypted, skipping.\n", file.Path)
+		log.Info().Msgf("File %s is already encrypted, skipping.", file.Path)
 		return nil
 	}
 
@@ -55,13 +55,13 @@ func processFileEncryption(file EncrFileData) error {
 	}
 
 	// Stage the encrypted file only after encryption succeeds.
-	log.Info().Msgf("Staging encrypted file %s...\n", file.Path)
+	log.Debug().Msgf("Staging encrypted file %s...", file.Path)
 	if err := fthelper.StageFile(file.Path); err != nil {
 		return fmt.Errorf("error staging encrypted file %s: %w", file.Path, err)
 	}
-	log.Info().Msgf("File %s fully staged.\n", file.Path)
+	log.Debug().Msgf("File %s fully staged.", file.Path)
 
-	log.Debug().Msgf("File %s encrypted successfully.\n", file.Path)
+	log.Info().Msgf("File %s encrypted and staged successfully.", file.Path)
 	return nil
 }
 
@@ -71,7 +71,7 @@ func encryptFile(filePath string) error {
 
 	// Read the content of the file
 	content, err := os.ReadFile(filePath)
-	log.Debug().Msgf("Encrypting '%s'... \n", filePath)
+	log.Debug().Msgf("Encrypting '%s'...", filePath)
 	if err != nil {
 		return fmt.Errorf("error reading file: %w", err)
 	}
