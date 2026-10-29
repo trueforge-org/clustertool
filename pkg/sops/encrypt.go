@@ -9,7 +9,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/initfiles"
-	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
 )
 
 // EncryptAllFiles encrypts all unencrypted files as specified in the .sops.yaml configuration.
@@ -54,14 +53,6 @@ func processFileEncryption(file EncrFileData) error {
 		return fmt.Errorf("error encrypting file %s: %w", file.Path, err)
 	}
 
-	// Stage the encrypted file only after encryption succeeds.
-	log.Debug().Msgf("Staging encrypted file %s...", file.Path)
-	if err := fthelper.StageFile(file.Path); err != nil {
-		return fmt.Errorf("error staging encrypted file %s: %w", file.Path, err)
-	}
-	log.Debug().Msgf("File %s fully staged.", file.Path)
-
-	log.Info().Msgf("File %s encrypted and staged successfully.", file.Path)
 	return nil
 }
 

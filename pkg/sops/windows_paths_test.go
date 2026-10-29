@@ -10,13 +10,7 @@ import (
 )
 
 func TestWindowsStagedSopsPath(t *testing.T) {
-	if _, err := exec.LookPath("git"); err != nil {
-		t.Skip("Git is required")
-	}
-	t.Chdir(t.TempDir())
-	if out, err := exec.Command("git", "init").CombinedOutput(); err != nil {
-		t.Fatalf("%v %s", err, out)
-	}
+	initStagedFilesRepo(t)
 	if err := os.WriteFile(".sops.yaml", []byte("creation_rules:\n  - path_regex: '^clusters/main/secret.yaml$'\n    age: unused\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
