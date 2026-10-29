@@ -142,6 +142,7 @@ func CheckFilesAndReportEncryption(tryEncrypt bool, checkStaged bool) error {
 					err := fthelper.StageFile(file.Path)
 					if err != nil {
 						log.Error().Err(err).Msgf("Failed to stage file %s after encryption", file.Path)
+						return fmt.Errorf("error staging encrypted file %s: %w", file.Path, err)
 					} else {
 						log.Info().Msgf("File %s staged successfully after encryption.", file.Path)
 					}
