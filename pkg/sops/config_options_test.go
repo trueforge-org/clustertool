@@ -85,3 +85,63 @@ func TestConfiguredStoresAndMAC(t *testing.T) {
 		})
 	}
 }
+
+func TestEncryptValidatesEncryptedRegex(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		field   string
+		invalid bool
+	}{
+		{"invalid", "    encrypted_regex: '['\n", true},
+		{"omitted", "", false},
+		{"empty", "    encrypted_regex: ''\n", false},
+		{"valid", "    encrypted_regex: '^password$'\n", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			initStagedFilesRepo(t)
+			key, err := age.GenerateX25519Identity()
+			if err != nil {
+				t.Fatal(err)
+			}
+			config := fmt.Sprintf("creation_rules:\n  - path_regex: '^secrets/'\n%s    age: %s\n", tc.field, key.Recipient())
+			if err := os.WriteFile(".sops.yaml", []byte(config), 0600); err != nil {
+				t.Fatal(err)
+			}
+			path := "secrets/test.sops.yaml"
+			writeStagedFilesFixture(t, path)
+			runStagedFilesGit(t, "add", "--", path)
+			indexBefore := runStagedFilesGit(t, "ls-files", "--stage", "-z")
+			plain := []byte("password: dummy-new-value\n")
+			if err := os.WriteFile(path, plain, 0600); err != nil {
+				t.Fatal(err)
+			}
+
+			err = EncryptAllFiles()
+			if tc.invalid {
+				if err == nil || !strings.Contains(err.Error(), "invalid encrypted regex in .sops.yaml") {
+					t.Fatalf("expected encrypted regex validation error, got %v", err)
+				}
+				if _, err := ExecuteCheck(true); err == nil || !strings.Contains(err.Error(), "invalid encrypted regex in .sops.yaml") {
+					t.Fatalf("staged check did not reject invalid encrypted regex: %v", err)
+				}
+			} else if err != nil {
+				t.Fatal(err)
+			}
+
+			data, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if tc.invalid {
+				if !bytes.Equal(data, plain) {
+					t.Fatal("invalid encrypted regex modified the plaintext file")
+				}
+			} else if !bytes.Contains(data, []byte("ENC[AES256_GCM,")) || bytes.Contains(data, []byte("dummy-new-value")) {
+				t.Fatal("valid encryption configuration left the secret unencrypted")
+			}
+			if indexAfter := runStagedFilesGit(t, "ls-files", "--stage", "-z"); !bytes.Equal(indexBefore, indexAfter) {
+				t.Fatal("encryption or invalid configuration changed the Git index")
+			}
+		})
+	}
+}

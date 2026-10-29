@@ -3,6 +3,7 @@ package sops
 import (
 	"fmt"
 	"io/ioutil"
+	"regexp"
 
 	"github.com/getsops/sops/v3/config"
 	"github.com/rs/zerolog/log"
@@ -36,6 +37,18 @@ func LoadSopsConfig() (SopsConfig, error) {
 		return SopsConfig{}, fmt.Errorf("parse .sops.yaml: %w", err)
 	}
 	log.Debug().Msg("Successfully unmarshaled YAML data into struct")
+
+	// Validate the regular expressions in each creation rule.
+	for _, rule := range config.CreationRules {
+		if _, err := regexp.Compile(rule.PathRegex); err != nil {
+			return SopsConfig{}, fmt.Errorf("invalid path regex in .sops.yaml: %w", err)
+		}
+		log.Debug().Msg("Successfully validated path_regex")
+		if _, err := regexp.Compile(rule.EncryptedRegex); err != nil {
+			return SopsConfig{}, fmt.Errorf("invalid encrypted regex in .sops.yaml: %w", err)
+		}
+		log.Debug().Msg("Successfully validated encrypted_regex")
+	}
 
 	// Log the loaded struct
 	log.Debug().Msg("Loaded SopsConfig successfully")
