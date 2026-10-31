@@ -9,7 +9,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/pkg/initfiles"
-	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
 )
 
 // EncryptAllFiles encrypts all unencrypted files as specified in the .sops.yaml configuration.
@@ -37,40 +36,23 @@ func EncryptAllFiles() error {
 func processFileEncryption(file EncrFileData) error {
 	// Skip files that are already encrypted
 	if file.Encrypted {
-		log.Info().Msgf("File %s is already encrypted, skipping.\n", file.Path)
+		log.Info().Msgf("File %s is already encrypted, skipping.", file.Path)
 		return nil
 	}
 
-	// Validate shared settings before staging or encrypting them.
+	// Validate shared settings before encrypting them.
 	if filepath.Base(file.Path) == "cluster-settings.sops.yaml" {
 		if _, err := initfiles.ReadClusterSettings(file.Path); err != nil {
 			return err
 		}
 	}
 
-	// Check if the file is partially staged
-	fullyStaged, err := fthelper.IsFileFullyStaged(file.Path)
-	if err != nil {
-		return fmt.Errorf("error checking staged status of file %s: %w", file.Path, err)
-	}
-
-	// If the file is not fully staged, stage it
-	if !fullyStaged {
-		log.Info().Msgf("File %s is partially staged, staging fully...\n", file.Path)
-		err := fthelper.StageFile(file.Path)
-		if err != nil {
-			return fmt.Errorf("error staging file %s: %w", file.Path, err)
-		}
-		log.Info().Msgf("File %s fully staged.\n", file.Path)
-	}
-
 	// Encrypt the file
-	err = encryptFile(file.Path)
+	err := encryptFile(file.Path)
 	if err != nil {
 		return fmt.Errorf("error encrypting file %s: %w", file.Path, err)
 	}
 
-	log.Debug().Msgf("File %s encrypted successfully.\n", file.Path)
 	return nil
 }
 
@@ -80,7 +62,7 @@ func encryptFile(filePath string) error {
 
 	// Read the content of the file
 	content, err := os.ReadFile(filePath)
-	log.Debug().Msgf("Encrypting '%s'... \n", filePath)
+	log.Debug().Msgf("Encrypting '%s'...", filePath)
 	if err != nil {
 		return fmt.Errorf("error reading file: %w", err)
 	}

@@ -84,8 +84,10 @@ func NewMasterKey(pubkey string) (keys.MasterKey, error) {
 }
 
 const (
-	formatYaml = "yaml"
-	formatJson = "json"
+	formatYaml   = "yaml"
+	formatJson   = "json"
+	formatDotenv = "dotenv"
+	formatIni    = "ini"
 )
 
 type Cypher interface {
@@ -129,8 +131,14 @@ func (m *cypher) Encrypt(content []byte, encrConfig EncryptionConfig) (result []
 	switch encrConfig.Format {
 	case formatYaml:
 		store = common.StoreForFormat(formats.Yaml, &encrConfig.Stores)
-	default:
+	case formatJson:
 		store = common.StoreForFormat(formats.Json, &encrConfig.Stores)
+	case formatDotenv:
+		store = common.StoreForFormat(formats.Dotenv, &encrConfig.Stores)
+	case formatIni:
+		store = common.StoreForFormat(formats.Ini, &encrConfig.Stores)
+	default:
+		return nil, fmt.Errorf("unsupported encryption format %q", encrConfig.Format)
 	}
 
 	log.Debug().Msg("Store initialized for encryption")

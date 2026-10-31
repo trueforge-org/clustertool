@@ -32,38 +32,42 @@ func ExecuteCheck(useStagedFiles bool) ([]EncrFileData, error) {
 	}
 	log.Trace().Msg("SOPS configuration loaded successfully")
 
-	// Step 2: Get the files from .sops.yaml configuration.
-	allFiles, err := filesToCheck(config)
-	if err != nil {
-		return nil, fmt.Errorf("find SOPS files: %w", err)
+	// Step 2: Use working-tree discovery only for non-staged checks.
+	var allFiles []EncrFileData
+	if !useStagedFiles {
+		allFiles, err = filesToCheck(config)
+		if err != nil {
+			return nil, fmt.Errorf("find SOPS files: %w", err)
+		}
+		log.Debug().Msgf("Files to check: %v", allFiles)
 	}
-	log.Debug().Msgf("Files to check: %v", allFiles)
 
 	var filesToCheck []EncrFileData
 
 	if useStagedFiles {
-		// Step 3: Get the staged files from Git.
-		stagedFiles, err := fthelper.GetStagedFiles()
+		// Step 3: Read staged paths verbatim, relative to the current directory.
+		// Exclude staged deletions, which have no file left to encrypt.
+		stagedFiles, err := helper.GetStagedFiles()
 		if err != nil {
 			return nil, fmt.Errorf("list staged files: %w", err)
 		}
-
 		if len(stagedFiles) == 0 {
 			log.Warn().Msg("No staged files to check")
-			return nil, fmt.Errorf("no staged files to check")
 		}
 		log.Info().Msgf("Staged files: %v", stagedFiles)
 
-		// Step 4: Filter the .sops.yaml files to include only those that are staged.
-		for _, file := range allFiles {
-			checkPath := file.Path
-			if _, err := os.Stat("./DEVTRIGGER"); err == nil {
-				checkPath = filepath.Join("clustertool", checkPath)
+		// Step 4: Match SOPS rules against the staged paths, including missing work files.
+		for _, rule := range config.CreationRules {
+			pathRegex, err := regexp.Compile(rule.PathRegex)
+			if err != nil {
+				return nil, fmt.Errorf("invalid path regex in .sops.yaml: %w", err)
 			}
 			for _, stagedFile := range stagedFiles {
-				if filepath.ToSlash(checkPath) == filepath.ToSlash(stagedFile) {
-					filesToCheck = append(filesToCheck, file)
-					break
+				if pathRegex.MatchString(filepath.ToSlash(stagedFile)) {
+					if _, err := os.Stat(stagedFile); err != nil {
+						return nil, fmt.Errorf("inspect staged SOPS file %s: %w", stagedFile, err)
+					}
+					filesToCheck = append(filesToCheck, EncrFileData{Path: stagedFile, Encrypted: false})
 				}
 			}
 		}
@@ -138,6 +142,7 @@ func CheckFilesAndReportEncryption(tryEncrypt bool, checkStaged bool) error {
 					err := fthelper.StageFile(file.Path)
 					if err != nil {
 						log.Error().Err(err).Msgf("Failed to stage file %s after encryption", file.Path)
+						return fmt.Errorf("error staging encrypted file %s: %w", file.Path, err)
 					} else {
 						log.Info().Msgf("File %s staged successfully after encryption.", file.Path)
 					}
