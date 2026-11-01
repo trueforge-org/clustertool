@@ -10,7 +10,7 @@ import (
 	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
 )
 
-// ConfirmInit checks the selected cluster before any repository files are changed.
+// ConfirmInit checks the cluster before any repository files are changed.
 func ConfirmInit() error {
 	for _, file := range []string{
 		filepath.Join(helper.TalosPath, "talconfig.yaml"),

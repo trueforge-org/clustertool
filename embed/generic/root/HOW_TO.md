@@ -194,11 +194,10 @@ report installation errors instead of reporting success.
 `init` prepares Flux placeholders and Kustomizations. After init, maintain these
 files yourself; `genconfig` and `talos apply` no longer update them.
 To optionally create missing `ks.yaml` files and add resources to
-`kustomization.yaml` files under `clusters/<cluster>/kubernetes`, run:
+`kustomization.yaml` files under `clusters/main/kubernetes`, run:
 
 ```sh
 clustertool genks
-clustertool genks --cluster main
 ```
 
 `kustomizations` is an alias for `genks`. Existing `ks.yaml` files are preserved.
