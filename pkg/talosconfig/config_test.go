@@ -134,8 +134,14 @@ func TestNativeGenerationIntegration(t *testing.T) {
 	require(at(docs["KubeletConfig/"], "config", "imageMinimumGCAge"), "30m")
 	require(at(legacy, "machine", "certSANs"), []any{"127.0.0.1", "192.168.20.200"})
 	require(at(docs["KubeletConfig/"], "config", "maxPods"), 250)
-	require(at(docs["KubeletConfig/"], "config", "shutdownGracePeriod"), "90s")
-	require(at(docs["KubeletConfig/"], "config", "shutdownGracePeriodCriticalPods"), "60s")
+	require(at(docs["KubeletConfig/"], "config", "shutdownGracePeriod"), "0s")
+	require(at(docs["KubeletConfig/"], "config", "shutdownGracePeriodCriticalPods"), "0s")
+	require(at(docs["KubeletConfig/"], "config", "shutdownGracePeriodByPodPriority"), []any{
+		map[string]any{"priority": 0, "shutdownGracePeriodSeconds": 210},
+		map[string]any{"priority": 1000000000, "shutdownGracePeriodSeconds": 60},
+		map[string]any{"priority": 2000000000, "shutdownGracePeriodSeconds": 30},
+		map[string]any{"priority": 2000001000, "shutdownGracePeriodSeconds": 30},
+	})
 	require(at(docs["KubeletConfig/"], "extraArgs", "rotate-server-certificates"), "true")
 	require(at(docs["TimeSyncConfig/"], "ntp", "servers"), []any{"time.cloudflare.com"})
 	require(at(docs["ResolverConfig/"], "nameservers"), []any{map[string]any{"address": "1.1.1.1"}, map[string]any{"address": "8.8.8.8"}})
