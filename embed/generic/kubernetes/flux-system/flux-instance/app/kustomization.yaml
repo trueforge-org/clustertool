@@ -4,4 +4,4 @@ kind: Kustomization
 resources:
   - ./deploy-key.sops.yaml
   - ./helm-release.yaml
-  # - sops-age.sops.yaml
+  # ../../sops-age.sops.yaml is applied directly during bootstrap.

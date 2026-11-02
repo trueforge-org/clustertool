@@ -11,10 +11,10 @@ import (
 
 func TestWindowsStagedSopsPath(t *testing.T) {
 	initStagedFilesRepo(t)
-	if err := os.WriteFile(".sops.yaml", []byte("creation_rules:\n  - path_regex: '^clusters/main/secret.yaml$'\n    age: unused\n"), 0600); err != nil {
+	if err := os.WriteFile(".sops.yaml", []byte("creation_rules:\n  - path_regex: '^kubernetes/config/secret.yaml$'\n    age: unused\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	p := filepath.Join("clusters", "main", "secret.yaml")
+	p := filepath.Join("kubernetes", "config", "secret.yaml")
 	config, err := LoadSopsConfig()
 	if err != nil {
 		t.Fatal(err)
@@ -36,7 +36,7 @@ func TestWindowsStagedSopsPath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(files) != 1 || files[0].Encrypted || filepath.ToSlash(files[0].Path) != "clusters/main/secret.yaml" {
+	if len(files) != 1 || files[0].Encrypted || filepath.ToSlash(files[0].Path) != "kubernetes/config/secret.yaml" {
 		t.Fatalf("staged secret was not selected: %#v", files)
 	}
 }

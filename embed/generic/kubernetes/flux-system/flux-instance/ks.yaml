@@ -10,7 +10,7 @@ spec:
   interval: 1h
   retryInterval: 10m
   timeout: 10m
-  path: clusters/REPLACEWITHCLUSTERNAME/kubernetes/flux-system/flux-instance/app
+  path: kubernetes/apps/flux-system/flux-instance/app
   prune: true
   sourceRef:
     kind: GitRepository

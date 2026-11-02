@@ -41,7 +41,7 @@ func processFileEncryption(file EncrFileData) error {
 	}
 
 	// Validate shared settings before encrypting them.
-	if filepath.Base(file.Path) == "cluster-settings.sops.yaml" {
+	if filepath.Base(file.Path) == "cluster-secrets.sops.yaml" {
 		if _, err := initfiles.ReadClusterSettings(file.Path); err != nil {
 			return err
 		}

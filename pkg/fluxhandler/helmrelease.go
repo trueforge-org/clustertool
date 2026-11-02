@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
+	"github.com/trueforge-org/clustertool/pkg/helper"
 	"gopkg.in/yaml.v3"
 )
 
@@ -94,7 +95,7 @@ func InstallCharts(charts []HelmChart, repos map[string]*HelmRepo, async bool) e
 			if ref.Kind != "OCIRepository" {
 				return fmt.Errorf("unsupported chartRef kind %q", ref.Kind)
 			}
-			ociRepos, err := LoadAllHelmRepos(filepath.Join("repositories", "oci"))
+			ociRepos, err := LoadAllHelmRepos(filepath.Join(helper.KubernetesPath, "repositories", "oci"))
 			if err != nil {
 				return fmt.Errorf("load OCI repositories: %w", err)
 			}

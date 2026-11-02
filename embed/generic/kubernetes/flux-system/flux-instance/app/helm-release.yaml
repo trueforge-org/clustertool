@@ -26,7 +26,7 @@ spec:
         kind: GitRepository
         url: ssh://REPLACEWITHGITREPO
         ref: refs/heads/main
-        path: clusters/REPLACEWITHCLUSTERNAME/flux-entry 
+        path: kubernetes/flux-entry
         name: cluster 
         pullSecret: deploy-key          
       kustomize:

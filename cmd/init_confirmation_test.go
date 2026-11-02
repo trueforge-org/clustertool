@@ -10,11 +10,11 @@ import (
 )
 
 func TestInitBlocksLegacyBeforeDecryption(t *testing.T) {
-	for _, legacy := range []string{"talos/talconfig.yaml", "clusterenv.yaml"} {
+	for _, legacy := range []string{"talos/talconfig.yaml", "clusterenv.yaml", "clusters/main/talos/talconfig.yaml", "clusters/main/clusterenv.yaml"} {
 		for _, marker := range []bool{false, true} {
 			t.Run(legacy+"/"+fmt.Sprint(marker), func(t *testing.T) {
 				dir := t.TempDir()
-				file := filepath.Join(dir, "clusters", "main", filepath.FromSlash(legacy))
+				file := filepath.Join(dir, filepath.FromSlash(legacy))
 				if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
 					t.Fatal(err)
 				}
@@ -67,11 +67,11 @@ func TestInitConfirmationBeforeDecryption(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			dir := t.TempDir()
-			if err := os.MkdirAll(filepath.Join(dir, "clusters", "main", "talos"), 0755); err != nil {
+			if err := os.MkdirAll(filepath.Join(dir, "talos"), 0755); err != nil {
 				t.Fatal(err)
 			}
 			if tc.secrets {
-				if err := os.WriteFile(filepath.Join(dir, "clusters", "main", "talos", "secrets.sops.yaml"), []byte("unchanged"), 0600); err != nil {
+				if err := os.WriteFile(filepath.Join(dir, "talos", "secrets.sops.yaml"), []byte("unchanged"), 0600); err != nil {
 					t.Fatal(err)
 				}
 			}

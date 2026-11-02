@@ -8,7 +8,7 @@ spec:
   interval: 1h
   retryInterval: 10m
   timeout: 10m
-  path: clusters/REPLACEWITHCLUSTERNAME/kubernetes/system/longhorn/app
+  path: kubernetes/apps/system/longhorn/app
   prune: true
   sourceRef:
     kind: GitRepository
@@ -26,7 +26,7 @@ spec:
   interval: 1h
   retryInterval: 10m
   timeout: 10m
-  path: clusters/REPLACEWITHCLUSTERNAME/kubernetes/system/longhorn/jobs
+  path: kubernetes/apps/system/longhorn/jobs
   prune: true
   sourceRef:
     kind: GitRepository

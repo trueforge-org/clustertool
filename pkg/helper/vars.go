@@ -15,10 +15,11 @@ var (
 	RootCache           = filepath.Join(CacheDir, "root")
 	DocsCache           = filepath.Join(CacheDir, "docs")
 	CacheDir            = filepath.Join(UserCacheDir, "clustertool")
-	ClusterPath         = filepath.Join("./clusters", ClusterName)
-	ClusterSettingsFile = filepath.Join(ClusterPath, "secrets", "cluster-settings.sops.yaml")
+	ClusterPath         = "."
+	ClusterSettingsFile = filepath.Join(KubernetesPath, "config", "cluster-secrets.sops.yaml")
 	TalosPath           = filepath.Join(ClusterPath, "/talos")
-	KubernetesPath      = filepath.Join(ClusterPath, "/kubernetes")
+	KubernetesPath      = filepath.Join(ClusterPath, "kubernetes")
+	KubernetesAppsPath  = filepath.Join(KubernetesPath, "apps")
 	TalosGenerated      = filepath.Join(TalosPath, "/generated")
 	TalosConfigFile     = filepath.Join(TalosGenerated, "talosconfig")
 

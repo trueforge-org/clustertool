@@ -8,7 +8,7 @@ spec:
   interval: 1h
   retryInterval: 10m
   timeout: 10m
-  path: ./clusters/REPLACEWITHCLUSTERNAME/secrets
+  path: ./kubernetes/config
   prune: true
   sourceRef:
     kind: GitRepository
@@ -28,7 +28,7 @@ spec:
   interval: 1h
   retryInterval: 10m
   timeout: 10m
-  path: ./repositories
+  path: ./kubernetes/repositories
   prune: true
   sourceRef:
     kind: GitRepository
@@ -43,7 +43,7 @@ spec:
   postBuild:
     substituteFrom:
       - kind: Secret
-        name: cluster-settings
+        name: cluster-secrets
   wait: true
   patches:
     - patch: |-
@@ -59,7 +59,7 @@ spec:
           postBuild:
             substituteFrom:
               - kind: Secret
-                name: cluster-settings
+                name: cluster-secrets
       target:
         group: kustomize.toolkit.fluxcd.io
         kind: Kustomization
@@ -74,7 +74,7 @@ spec:
   interval: 1h
   retryInterval: 10m
   timeout: 10m
-  path: ./clusters/REPLACEWITHCLUSTERNAME/kubernetes
+  path: ./kubernetes/apps
   prune: true
   sourceRef:
     kind: GitRepository
@@ -90,7 +90,7 @@ spec:
   postBuild:
     substituteFrom:
       - kind: Secret
-        name: cluster-settings
+        name: cluster-secrets
   patches:
     - patch: |-
         apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -105,7 +105,7 @@ spec:
           postBuild:
             substituteFrom:
               - kind: Secret
-                name: cluster-settings
+                name: cluster-secrets
       target:
         group: kustomize.toolkit.fluxcd.io
         kind: Kustomization
