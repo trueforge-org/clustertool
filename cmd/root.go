@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"os"
-	"path/filepath"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/trueforge-org/clustertool/pkg/helper"
@@ -22,25 +19,10 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	RootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
-
-	// Define the --cluster flag
-	RootCmd.PersistentFlags().StringVar(&helper.ClusterName, "cluster", "main", "Cluster name")
 }
 
 func Execute() error {
-	// Parse only the persistent flags (like --cluster) before executing any command
-	RootCmd.PersistentFlags().Parse(os.Args[1:])
-
-	// You can now access the helper.ClusterName variable
-	if helper.ClusterName != "" {
-		log.Info().Msgf("Cluster name: %s", helper.ClusterName)
-		helper.ClusterPath = filepath.Join("./clusters", helper.ClusterName)
-		helper.ClusterSettingsFile = filepath.Join(helper.ClusterPath, "secrets", "cluster-settings.sops.yaml")
-		helper.TalosPath = filepath.Join(helper.ClusterPath, "/talos")
-		helper.KubernetesPath = filepath.Join(helper.ClusterPath, "/kubernetes")
-		helper.TalosGenerated = filepath.Join(helper.TalosPath, "/generated")
-		helper.TalosConfigFile = filepath.Join(helper.TalosGenerated, "talosconfig")
-	}
+	log.Info().Msgf("Cluster name: %s", helper.ClusterName)
 
 	// Execute the root command and all subcommands
 	return RootCmd.Execute()

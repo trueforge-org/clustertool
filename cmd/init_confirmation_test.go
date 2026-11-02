@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,44 +12,41 @@ import (
 func TestInitBlocksLegacyBeforeDecryption(t *testing.T) {
 	for _, legacy := range []string{"talos/talconfig.yaml", "clusterenv.yaml"} {
 		for _, marker := range []bool{false, true} {
-			for _, selected := range []string{"main", "production"} {
-				t.Run(legacy+"/"+selected+"/"+fmt.Sprint(marker), func(t *testing.T) {
-					dir := t.TempDir()
-					file := filepath.Join(dir, "clusters", selected, filepath.FromSlash(legacy))
-					if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
+			t.Run(legacy+"/"+fmt.Sprint(marker), func(t *testing.T) {
+				dir := t.TempDir()
+				file := filepath.Join(dir, "clusters", "main", filepath.FromSlash(legacy))
+				if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(file, []byte("legacy configuration"), 0600); err != nil {
+					t.Fatal(err)
+				}
+				if marker {
+					if err := os.WriteFile(filepath.Join(dir, "RUNAGAIN"), nil, 0600); err != nil {
 						t.Fatal(err)
 					}
-					if err := os.WriteFile(file, []byte("legacy configuration"), 0600); err != nil {
-						t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, ".sops.yaml"), []byte("creation_rules: [\n"), 0600); err != nil {
+					t.Fatal(err)
+				}
+				process := exec.Command(os.Args[0], "-test.run=^TestCommandErrorProcess$")
+				process.Dir = dir
+				process.Env = append(os.Environ(), `CLUSTERTOOL_TEST_ARGS=["init"]`)
+				process.Stdin = strings.NewReader("y\n")
+				out, err := process.CombinedOutput()
+				if err == nil || !strings.Contains(string(out), "Legacy Talhelper-configured cluster found.") {
+					t.Fatalf("legacy init was not blocked: %v %s", err, out)
+				}
+				for _, unwanted := range []string{"parse .sops.yaml", "Continue with init?", "talconfig.yaml", "clusterenv.yaml"} {
+					if strings.Contains(string(out), unwanted) {
+						t.Fatalf("unexpected output %q: %s", unwanted, out)
 					}
-					if marker {
-						if err := os.WriteFile(filepath.Join(dir, "RUNAGAIN"), nil, 0600); err != nil {
-							t.Fatal(err)
-						}
-					}
-					if err := os.WriteFile(filepath.Join(dir, ".sops.yaml"), []byte("creation_rules: [\n"), 0600); err != nil {
-						t.Fatal(err)
-					}
-					args, _ := json.Marshal([]string{"init", "--cluster", selected})
-					process := exec.Command(os.Args[0], "-test.run=^TestCommandErrorProcess$")
-					process.Dir = dir
-					process.Env = append(os.Environ(), "CLUSTERTOOL_TEST_ARGS="+string(args))
-					process.Stdin = strings.NewReader("y\n")
-					out, err := process.CombinedOutput()
-					if err == nil || !strings.Contains(string(out), "Legacy Talhelper-configured cluster found.") {
-						t.Fatalf("legacy init was not blocked: %v %s", err, out)
-					}
-					for _, unwanted := range []string{"parse .sops.yaml", "Continue with init?", "talconfig.yaml", "clusterenv.yaml"} {
-						if strings.Contains(string(out), unwanted) {
-							t.Fatalf("unexpected output %q: %s", unwanted, out)
-						}
-					}
-					data, err := os.ReadFile(file)
-					if err != nil || string(data) != "legacy configuration" {
-						t.Fatalf("legacy file changed: %v", err)
-					}
-				})
-			}
+				}
+				data, err := os.ReadFile(file)
+				if err != nil || string(data) != "legacy configuration" {
+					t.Fatalf("legacy file changed: %v", err)
+				}
+			})
 		}
 	}
 }
