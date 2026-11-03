@@ -209,7 +209,7 @@ func TestNativeGenerationIntegration(t *testing.T) {
 	if bytes.Contains(withoutAuth, []byte("kind: RegistryAuthConfig")) {
 		t.Fatal("example activated automatically")
 	}
-	auth, err := os.ReadFile(filepath.Join(helper.TalosPath, "examples", "44-registry-auth.yaml"))
+	auth, err := os.ReadFile(filepath.Join(helper.TalosPath, "example-patches", "44-registry-auth.yaml"))
 	if err != nil {
 		t.Fatal(err)
 	}

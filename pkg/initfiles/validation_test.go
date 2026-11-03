@@ -13,7 +13,7 @@ import (
 
 func TestEnvironmentErrorsReturn(t *testing.T) {
 	old := helper.ClusterSettingsFile
-	helper.ClusterSettingsFile = filepath.Join(t.TempDir(), "cluster-settings.sops.yaml")
+	helper.ClusterSettingsFile = filepath.Join(t.TempDir(), "cluster-secrets.sops.yaml")
 	t.Cleanup(func() { helper.ClusterSettingsFile = old })
 	if err := LoadTalEnv(true); err != nil {
 		t.Fatal(err)
@@ -31,7 +31,7 @@ func TestEnvironmentErrorsReturn(t *testing.T) {
 
 func TestClusterSettingsRejectInvalidStringData(t *testing.T) {
 	old := helper.ClusterSettingsFile
-	helper.ClusterSettingsFile = filepath.Join(t.TempDir(), "cluster-settings.sops.yaml")
+	helper.ClusterSettingsFile = filepath.Join(t.TempDir(), "cluster-secrets.sops.yaml")
 	t.Cleanup(func() { helper.ClusterSettingsFile = old })
 	for _, source := range []string{
 		"data:\n  PASSWORD: c2VjcmV0\n",
@@ -50,7 +50,7 @@ func TestClusterSettingsRejectInvalidStringData(t *testing.T) {
 func TestNetworkValidationRetainsAllNodeChecks(t *testing.T) {
 	oldPath, oldFile, oldTalos, oldEnv := helper.ClusterPath, helper.ClusterSettingsFile, helper.TalosPath, helper.TalEnv
 	helper.ClusterPath = t.TempDir()
-	helper.ClusterSettingsFile = filepath.Join(helper.ClusterPath, "cluster-settings.sops.yaml")
+	helper.ClusterSettingsFile = filepath.Join(helper.ClusterPath, "cluster-secrets.sops.yaml")
 	helper.TalosPath = filepath.Join(helper.ClusterPath, "talos")
 	t.Cleanup(func() {
 		helper.ClusterPath, helper.ClusterSettingsFile, helper.TalosPath, helper.TalEnv = oldPath, oldFile, oldTalos, oldEnv

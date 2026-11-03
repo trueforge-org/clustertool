@@ -8,7 +8,7 @@ import (
 
 func TestRejectInvalidSettingsBeforeStaging(t *testing.T) {
 	t.Chdir(t.TempDir()) // No Git repository: validation must happen before staging.
-	file := "cluster-settings.sops.yaml"
+	file := "cluster-secrets.sops.yaml"
 	for _, value := range []string{"443", "true"} {
 		plain := "stringData:\n  VALUE: " + value + "\n"
 		if err := os.WriteFile(file, []byte(plain), 0600); err != nil {

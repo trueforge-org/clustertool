@@ -14,7 +14,7 @@ import (
 
 func GenConfig(args []string) error {
 	if initfiles.CheckRunAgainFileExists() {
-		return fmt.Errorf("run init again after completing secrets/cluster-settings.sops.yaml")
+		return fmt.Errorf("run init again after completing kubernetes/config/cluster-secrets.sops.yaml")
 	}
 	if err := sops.DecryptFiles(); err != nil {
 		return err

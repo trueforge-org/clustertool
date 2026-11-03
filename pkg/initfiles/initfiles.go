@@ -38,7 +38,7 @@ func InitFiles() error {
 		if err := createRunAgainFile(); err != nil {
 			return err
 		}
-		log.Warn().Msg("Fill in secrets/cluster-settings.sops.yaml, then run init again.")
+		log.Warn().Msg("Fill in kubernetes/config/cluster-secrets.sops.yaml, then run init again.")
 		return nil
 	}
 	log.Debug().Msg("Cluster settings found, continuing initialization")
@@ -60,11 +60,11 @@ func InitFiles() error {
 	if err := GenSopsSecret(); err != nil {
 		return err
 	}
-	if err := fluxhandler.ProcessDirectory(helper.KubernetesPath); err != nil {
+	if err := fluxhandler.ProcessDirectory(helper.KubernetesAppsPath); err != nil {
 		return err
 	}
 	// The second pass lets parent directories reference newly created ks.yaml files.
-	if err := fluxhandler.ProcessDirectory(helper.KubernetesPath); err != nil {
+	if err := fluxhandler.ProcessDirectory(helper.KubernetesAppsPath); err != nil {
 		return err
 	}
 	log.Info().Msg("Kustomizations processed successfully.")
@@ -80,7 +80,7 @@ func InitFiles() error {
 }
 
 func genKubernetes() error {
-	if err := fthelper.CopyDir(helper.KubeCache, helper.ClusterPath+"/kubernetes", false); err != nil {
+	if err := fthelper.CopyDir(helper.KubeCache, helper.KubernetesPath, false); err != nil {
 		return fmt.Errorf("copy Kubernetes files: %w", err)
 	}
 	log.Info().Msg("Kubernetes files copied successfully.")
@@ -90,13 +90,12 @@ func genKubernetes() error {
 // UpdateFluxConfig renders template placeholders without overwriting user settings.
 func UpdateFluxConfig() error {
 	files := []string{
-		filepath.Join(helper.ClusterPath, "kubernetes", "kube-system", "cilium", "app", "helm-release.yaml"),
-		filepath.Join(helper.ClusterPath, "flux-entry", "ks.yaml"),
-		filepath.Join(helper.ClusterPath, "kubernetes", "flux-system", "flux-operator", "ks.yaml"),
-		filepath.Join(helper.ClusterPath, "kubernetes", "flux-system", "flux-instance", "ks.yaml"),
-		filepath.Join(helper.ClusterPath, "kubernetes", "flux-system", "flux-instance", "app", "helm-release.yaml"),
-		filepath.Join(helper.ClusterPath, "kubernetes", "system", "longhorn", "ks.yaml"),
-		filepath.Join(helper.ClusterPath, "kubernetes", "system", "system-upgrade", "tuppr", "ks.yaml"),
+		filepath.Join(helper.KubernetesPath, "flux-entry", "ks.yaml"),
+		filepath.Join(helper.KubernetesAppsPath, "flux-system", "flux-operator", "ks.yaml"),
+		filepath.Join(helper.KubernetesAppsPath, "flux-system", "flux-instance", "ks.yaml"),
+		filepath.Join(helper.KubernetesAppsPath, "flux-system", "flux-instance", "app", "helm-release.yaml"),
+		filepath.Join(helper.KubernetesAppsPath, "system", "longhorn", "ks.yaml"),
+		filepath.Join(helper.KubernetesAppsPath, "system", "system-upgrade", "tuppr", "ks.yaml"),
 	}
 	for _, file := range files {
 		data, err := os.ReadFile(file)
@@ -106,7 +105,7 @@ func UpdateFluxConfig() error {
 		if err != nil {
 			return fmt.Errorf("read Flux configuration %s: %w", file, err)
 		}
-		content := strings.ReplaceAll(string(data), "REPLACEWITHCLUSTERNAME", helper.ClusterName)
+		content := string(data)
 		if repo := helper.TalEnv["GITHUB_REPOSITORY"]; repo != "" {
 			content = strings.ReplaceAll(content, "ssh://REPLACEWITHGITREPO", FormatGitURL(repo))
 		}
@@ -211,10 +210,10 @@ func ResetBootstrapValues() error {
 	if err := LoadTalEnv(false); err != nil {
 		return err
 	}
-	if err := fthelper.CopyDirFiltered(helper.KubeCache, helper.ClusterPath+"/kubernetes", true, `^bootstrap-values\.yaml.ct$`); err != nil {
+	if err := fthelper.CopyDirFiltered(helper.KubeCache, helper.KubernetesPath, true, `^bootstrap-values\.yaml.ct$`); err != nil {
 		return fmt.Errorf("copy bootstrap values: %w", err)
 	}
-	if err := fthelper.EnvSubstRecursive(helper.ClusterPath+"/kubernetes", `^bootstrap-values\.yaml.ct$`, helper.TalEnv); err != nil {
+	if err := fthelper.EnvSubstRecursive(helper.KubernetesAppsPath, `^bootstrap-values\.yaml.ct$`, helper.TalEnv); err != nil {
 		return fmt.Errorf("render bootstrap values: %w", err)
 	}
 	log.Info().Msg("Bootstrap values reset successfully.")
@@ -315,7 +314,7 @@ func GetSecKey() (string, error) {
 }
 
 func GenSopsSecret() error {
-	secretPath := filepath.Join(helper.ClusterPath, "kubernetes", "flux-system", "flux-instance", "app", "sops-age.sops.yaml")
+	secretPath := filepath.Join(helper.KubernetesAppsPath, "flux-system", "sops-age.sops.yaml")
 	ageSecKey, err := GetSecKey()
 
 	// Added by Boemeltrein, for linting purposes
