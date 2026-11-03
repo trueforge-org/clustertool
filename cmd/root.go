@@ -1,9 +1,14 @@
 package cmd
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/trueforge-org/clustertool/pkg/helper"
+	"gopkg.in/yaml.v3"
 )
 
 var thisversion string
@@ -22,7 +27,16 @@ func init() {
 }
 
 func Execute() error {
-	log.Info().Msgf("Cluster name: %s", helper.ClusterName)
+	clusterName := "<not configured>"
+	if data, err := os.ReadFile(filepath.Join(helper.TalosPath, "clustertool.yaml")); err == nil {
+		var config struct {
+			ClusterName string `yaml:"clusterName"`
+		}
+		if err := yaml.Unmarshal(data, &config); err == nil && strings.TrimSpace(config.ClusterName) != "" {
+			clusterName = config.ClusterName
+		}
+	}
+	log.Info().Msgf("Cluster name: %s", clusterName)
 
 	// Execute the root command and all subcommands
 	return RootCmd.Execute()

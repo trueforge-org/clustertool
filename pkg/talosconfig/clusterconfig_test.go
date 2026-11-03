@@ -19,6 +19,9 @@ func TestRequiredClusterConfig(t *testing.T) {
 	for _, replacement := range [][2]string{
 		{"clustertool/v1", "clustertool/v2"},
 		{"kind: ClusterConfig", "kind: Other"},
+		{"clusterName: main", ""},
+		{"clusterName: main", "clusterName: \"\""},
+		{"clusterName: main", "clusterName: \"   \""},
 		{"apiVersion: clustertool/v1", "version: 1"},
 		{"${CONTROL1IP}", "${UNDEFINED}"},
 		{"${CONTROL1IP}", "192.0.2.1/24"},

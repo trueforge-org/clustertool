@@ -41,8 +41,8 @@ func TestRepeatedLoadTalEnvKeepsEnvironmentBounded(t *testing.T) {
 		if err := LoadTalEnv(false); err != nil {
 			t.Fatal(err)
 		}
-		if len(helper.TalEnv) != 7 {
-			t.Fatalf("load %d generated %d keys; expected only 6 source keys and CLUSTERNAME", i, len(helper.TalEnv))
+		if len(helper.TalEnv) != 6 {
+			t.Fatalf("load %d generated %d keys; expected only 6 source keys", i, len(helper.TalEnv))
 		}
 		if helper.TalEnv["CONTROL1IP_IP_IP"] != "" {
 			t.Fatal("recursively derived IP variable")
