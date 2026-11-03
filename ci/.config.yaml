@@ -4,7 +4,7 @@
 # canaryHelmRelease: HelmRelease tested when CI tooling changes.
 # skipList: HelmRelease paths excluded from CI deployment tests.
 
-canaryHelmRelease: embed/generic/kubernetes/other/librespeed/app/helm-release.yaml
+canaryHelmRelease: embed/generic/kubernetes/apps/other/librespeed/app/helm-release.yaml
 
 dummyEnv:
   DOMAIN_0: dummy.local
@@ -12,8 +12,8 @@ dummyEnv:
   METALLB_RANGE: 192.168.20.211-192.168.20.219
 
 skipList:
-  - embed/generic/kubernetes/core/clusterissuer/app
-  - embed/generic/kubernetes/flux-system/flux-instance/app
-  - embed/generic/kubernetes/kube-system/cilium/app
-  - embed/generic/kubernetes/system/longhorn/app
-  - embed/generic/kubernetes/system/system-upgrade/tuppr/app
+  - embed/generic/kubernetes/apps/core/clusterissuer/app
+  - embed/generic/kubernetes/apps/flux-system/flux-instance/app
+  - embed/generic/kubernetes/apps/kube-system/cilium/app
+  - embed/generic/kubernetes/apps/system/longhorn/app
+  - embed/generic/kubernetes/apps/system/system-upgrade/tuppr/app

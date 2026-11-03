@@ -80,7 +80,7 @@ func InitFiles() error {
 }
 
 func genKubernetes() error {
-	if err := fthelper.CopyDir(helper.KubeCache, helper.KubernetesAppsPath, false); err != nil {
+	if err := fthelper.CopyDir(helper.KubeCache, helper.KubernetesPath, false); err != nil {
 		return fmt.Errorf("copy Kubernetes files: %w", err)
 	}
 	log.Info().Msg("Kubernetes files copied successfully.")
@@ -210,7 +210,7 @@ func ResetBootstrapValues() error {
 	if err := LoadTalEnv(false); err != nil {
 		return err
 	}
-	if err := fthelper.CopyDirFiltered(helper.KubeCache, helper.KubernetesAppsPath, true, `^bootstrap-values\.yaml.ct$`); err != nil {
+	if err := fthelper.CopyDirFiltered(helper.KubeCache, helper.KubernetesPath, true, `^bootstrap-values\.yaml.ct$`); err != nil {
 		return fmt.Errorf("copy bootstrap values: %w", err)
 	}
 	if err := fthelper.EnvSubstRecursive(helper.KubernetesAppsPath, `^bootstrap-values\.yaml.ct$`, helper.TalEnv); err != nil {

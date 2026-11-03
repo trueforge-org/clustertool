@@ -137,7 +137,7 @@ install_dependency_crds() {
 }
 
 install_cnpg_operator() {
-  local helmrelease_path="embed/generic/kubernetes/system/cloudnative-pg/app/helm-release.yaml"
+  local helmrelease_path="embed/generic/kubernetes/apps/system/cloudnative-pg/app/helm-release.yaml"
 
   resolve_dependency_chart "$helmrelease_path"
 
@@ -379,14 +379,14 @@ if $install_certmanager; then
   install_dependency_crds \
     "cert-manager" \
     "🔐" \
-    "embed/generic/kubernetes/system/cert-manager/app/helm-release.yaml"
+    "embed/generic/kubernetes/apps/system/cert-manager/app/helm-release.yaml"
 fi
 
 if $install_prometheus; then
   install_dependency_crds \
     "kube-prometheus-stack" \
     "📊" \
-    "embed/generic/kubernetes/observability/kube-prometheus-stack/app/helm-release.yaml"
+    "embed/generic/kubernetes/apps/observability/kube-prometheus-stack/app/helm-release.yaml"
 fi
 
 if $install_metallb; then
@@ -398,28 +398,28 @@ if $install_metallb; then
   install_dependency_crds \
     "metallb" \
     "📡" \
-    "embed/generic/kubernetes/system/metallb/app/helm-release.yaml"
+    "embed/generic/kubernetes/apps/system/metallb/app/helm-release.yaml"
 fi
 
 if $install_gateway; then
   install_dependency_crds \
     "envoy-gateway" \
     "🌉" \
-    "embed/generic/kubernetes/networking/envoy-gateway/app/helm-release.yaml"
+    "embed/generic/kubernetes/apps/networking/envoy-gateway/app/helm-release.yaml"
 fi
 
 if $install_grafana; then
   install_dependency_crds \
     "grafana-operator" \
     "📈" \
-    "embed/generic/kubernetes/observability/grafana-operator/app/helm-release.yaml"
+    "embed/generic/kubernetes/apps/observability/grafana-operator/app/helm-release.yaml"
 fi
 
 if $install_nfd; then
   install_dependency_crds \
     "node-feature-discovery" \
     "🖥️" \
-    "embed/generic/kubernetes/kube-system/node-feature-discovery/app/helm-release.yaml"
+    "embed/generic/kubernetes/apps/kube-system/node-feature-discovery/app/helm-release.yaml"
 fi
 
 # --------------------------------------------------
