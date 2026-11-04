@@ -8,7 +8,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  KUBERNETES_DIR: ./embed/generic/kubernetes
+  KUBERNETES_DIR: ./embed/generic/kubernetes/apps
 
 jobs:
   kubeconform:
@@ -26,7 +26,7 @@ jobs:
       - name: Create dummy deploykey secret (CI only)
         shell: bash
         run: |
-          SECRET_PATH="embed/generic/kubernetes/flux-system/flux-instance/app/deploy-key.sops.yaml"
+          SECRET_PATH="embed/generic/kubernetes/apps/flux-system/flux-instance/app/deploy-key.sops.yaml"
 
           if [[ ! -f "$SECRET_PATH" ]]; then
             echo "Creating dummy deploy-key.sops.yaml for kubeconform"

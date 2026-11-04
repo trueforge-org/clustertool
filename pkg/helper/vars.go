@@ -9,16 +9,17 @@ var (
 	HelmCache           = filepath.Join(CacheDir, "tgz_cache")
 	UserCacheDir, _     = os.UserCacheDir()
 	TalEnv              = make(map[string]string)
-	ClusterName         = "main"
+	ClusterName         = "main" // Retained for legacy layout checks; active names come from talos/clustertool.yaml.
 	KubeCache           = filepath.Join(CacheDir, "kubernetes")
 	BaseCache           = filepath.Join(CacheDir, "base")
 	RootCache           = filepath.Join(CacheDir, "root")
 	DocsCache           = filepath.Join(CacheDir, "docs")
 	CacheDir            = filepath.Join(UserCacheDir, "clustertool")
-	ClusterPath         = filepath.Join("./clusters", ClusterName)
-	ClusterSettingsFile = filepath.Join(ClusterPath, "secrets", "cluster-settings.sops.yaml")
+	ClusterPath         = "."
+	ClusterSettingsFile = filepath.Join(KubernetesPath, "config", "cluster-secrets.sops.yaml")
 	TalosPath           = filepath.Join(ClusterPath, "/talos")
-	KubernetesPath      = filepath.Join(ClusterPath, "/kubernetes")
+	KubernetesPath      = filepath.Join(ClusterPath, "kubernetes")
+	KubernetesAppsPath  = filepath.Join(KubernetesPath, "apps")
 	TalosGenerated      = filepath.Join(TalosPath, "/generated")
 	TalosConfigFile     = filepath.Join(TalosGenerated, "talosconfig")
 

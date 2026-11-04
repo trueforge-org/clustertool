@@ -3,10 +3,12 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/trueforge-org/clustertool/pkg/helper"
+	"gopkg.in/yaml.v3"
 )
 
 var thisversion string
@@ -22,25 +24,19 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	RootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
-
-	// Define the --cluster flag
-	RootCmd.PersistentFlags().StringVar(&helper.ClusterName, "cluster", "main", "Cluster name")
 }
 
 func Execute() error {
-	// Parse only the persistent flags (like --cluster) before executing any command
-	RootCmd.PersistentFlags().Parse(os.Args[1:])
-
-	// You can now access the helper.ClusterName variable
-	if helper.ClusterName != "" {
-		log.Info().Msgf("Cluster name: %s", helper.ClusterName)
-		helper.ClusterPath = filepath.Join("./clusters", helper.ClusterName)
-		helper.ClusterSettingsFile = filepath.Join(helper.ClusterPath, "secrets", "cluster-settings.sops.yaml")
-		helper.TalosPath = filepath.Join(helper.ClusterPath, "/talos")
-		helper.KubernetesPath = filepath.Join(helper.ClusterPath, "/kubernetes")
-		helper.TalosGenerated = filepath.Join(helper.TalosPath, "/generated")
-		helper.TalosConfigFile = filepath.Join(helper.TalosGenerated, "talosconfig")
+	clusterName := "<not configured>"
+	if data, err := os.ReadFile(filepath.Join(helper.TalosPath, "clustertool.yaml")); err == nil {
+		var config struct {
+			ClusterName string `yaml:"clusterName"`
+		}
+		if err := yaml.Unmarshal(data, &config); err == nil && strings.TrimSpace(config.ClusterName) != "" {
+			clusterName = config.ClusterName
+		}
 	}
+	log.Info().Msgf("Cluster name: %s", clusterName)
 
 	// Execute the root command and all subcommands
 	return RootCmd.Execute()

@@ -2,11 +2,11 @@ stores:
   yaml:
     indent: 2
 creation_rules:
-  - path_regex: ^clusters/[^/]+/(kubernetes|components|secrets)/.*\.(secret|sops)\.ya?ml$
+  - path_regex: ^kubernetes/.*\.(secret|sops)\.ya?ml$
     encrypted_regex: "^(data|stringData)$"
     mac_only_encrypted: true
     age: REPLACEME
-  - path_regex: ^clusters/[^/]+/talos/secrets\.sops\.ya?ml$
+  - path_regex: ^talos/secrets\.sops\.ya?ml$
     age: REPLACEME
 # Compatibility with previous version of clustertool:
   - path_regex: ^clusters.*kubernetes.*values.ya?ml$

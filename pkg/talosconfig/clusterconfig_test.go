@@ -19,6 +19,9 @@ func TestRequiredClusterConfig(t *testing.T) {
 	for _, replacement := range [][2]string{
 		{"clustertool/v1", "clustertool/v2"},
 		{"kind: ClusterConfig", "kind: Other"},
+		{"clusterName: main", ""},
+		{"clusterName: main", "clusterName: \"\""},
+		{"clusterName: main", "clusterName: \"   \""},
 		{"apiVersion: clustertool/v1", "version: 1"},
 		{"${CONTROL1IP}", "${UNDEFINED}"},
 		{"${CONTROL1IP}", "192.0.2.1/24"},
@@ -46,7 +49,7 @@ func TestRequiredClusterConfig(t *testing.T) {
 func TestExamplesAreInactive(t *testing.T) {
 	fixture(t)
 	helper.TalEnv["DOCKERHUB_USER"] = "only-one-variable"
-	if err := os.WriteFile(filepath.Join(helper.TalosPath, "examples", "invalid.yaml"), []byte("invalid: ["), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(helper.TalosPath, "example-patches", "invalid.yaml"), []byte("invalid: ["), 0600); err != nil {
 		t.Fatal(err)
 	}
 	env := make(map[string]string, len(helper.TalEnv)+1)
@@ -58,7 +61,7 @@ func TestExamplesAreInactive(t *testing.T) {
 	if _, err := renderPatchDirs(t.TempDir(), dirs, env); err != nil {
 		t.Fatalf("inactive example or credentials affected generation: %v", err)
 	}
-	auth, err := os.ReadFile(filepath.Join(helper.TalosPath, "examples", "44-registry-auth.yaml"))
+	auth, err := os.ReadFile(filepath.Join(helper.TalosPath, "example-patches", "44-registry-auth.yaml"))
 	if err != nil {
 		t.Fatal(err)
 	}

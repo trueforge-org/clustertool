@@ -26,7 +26,7 @@ cluster or its storage data.
 paths.** The supplied templates already contain these settings. If you keep your
 own HelmReleases, update the following values before using the new storage layout.
 
-Longhorn — `clusters/main/kubernetes/system/longhorn/app/helm-release.yaml`:
+Longhorn — `kubernetes/apps/system/longhorn/app/helm-release.yaml`:
 
 ```yaml
 spec:
@@ -37,7 +37,7 @@ spec:
 
 For multi-node clusters, increase the Longhorn replica counts as indicated by the comments in its HelmRelease.
 
-OpenEBS — `clusters/main/kubernetes/system/openebs/app/helm-release.yaml`:
+OpenEBS — `kubernetes/apps/system/openebs/app/helm-release.yaml`:
 
 ```yaml
 spec:
@@ -63,7 +63,7 @@ plan that storage change separately before replacing the old mounts.
 
 ## Initialize and edit
 
-Run `clustertool init`, fill in `clusters/main/secrets/cluster-settings.sops.yaml`, then run
+Run `clustertool init`, fill in `kubernetes/config/cluster-secrets.sops.yaml`, then run
 `clustertool init` again to complete setup. Existing Talos secrets are retained.
 
 Init blocks legacy Talhelper-configured clusters. Initialize ClusterTool 5 in a new folder.
@@ -74,7 +74,7 @@ decrypting or changing repository files. Prefer initializing in a new folder and
 it with your existing configuration.
 
 ```text
-clusters/main/talos/
+talos/
 ├── clustertool.yaml
 ├── secrets.sops.yaml
 ├── patches/
@@ -83,15 +83,15 @@ clusters/main/talos/
 │   ├── worker/
 │   └── nodes/
 │       └── control-1/
-├── examples/
+├── example-patches/
 └── generated/
 ```
 
-- `clustertool.yaml`: Talos/Kubernetes versions and the list of nodes.
+- `clustertool.yaml`: cluster name, Talos/Kubernetes versions and the list of nodes.
 - `patches/all/`: shared Talos settings.
 - `patches/control-plane/` and `patches/worker/`: settings for that role.
 - `patches/nodes/<name>/`: a node's hostname, network, disk and installer image.
-- `examples/`: inactive examples; copy the required YAML into a patch directory.
+- `example-patches/`: inactive examples; copy the required YAML into a patch directory.
 - `generated/`: generated node configurations and client configuration; do not edit.
 - `secrets.sops.yaml`: the cluster's keys, certificates and tokens; retain this file
   when regenerating configuration or adding nodes.
@@ -100,13 +100,14 @@ Patches are applied in that order: shared, role, then node. Within each director
 YAML files are read in filename order. Later patches can override earlier settings.
 Encrypt secrets with `clustertool encrypt` before committing them to Git.
 
-## Configure nodes and versions
+## Configure the cluster name, nodes and versions
 
 `clustertool.yaml` is required even for a single node:
 
 ```yaml
 apiVersion: clustertool/v1
 kind: ClusterConfig
+clusterName: main
 # renovate: datasource=github-releases depName=siderolabs/talos
 talosVersion: v1.14.0
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
@@ -124,11 +125,16 @@ nodes:
   #   address: ${WORKER1IP}
 ```
 
+`clusterName` is required and sets the Talos cluster name and generated Talos client
+context. The template uses `main`; choose your name before generating and applying
+the configuration. It does not affect repository paths or Cilium settings.
+ClusterTool no longer injects a `CLUSTERNAME` environment variable.
+
 `apiVersion` identifies the ClusterTool file format. ClusterTool automatically
 uses the alphabetically first control-plane node by `name` for bootstrap, not as
 a permanent leader. A node's `name` matches its patch directory; its actual hostname is set in `HostnameConfig`.
 
-Set bare IP addresses in `secrets/cluster-settings.sops.yaml`, for example
+Set bare IP addresses in `kubernetes/config/cluster-secrets.sops.yaml`, for example
 `CONTROL1IP: 192.168.20.210`. Specify the subnet prefix in the node's
 network patch, for example `address: ${CONTROL1IP}/24`.
 
@@ -194,19 +200,21 @@ report installation errors instead of reporting success.
 `init` prepares Flux placeholders and Kustomizations. After init, maintain these
 files yourself; `genconfig` and `talos apply` no longer update them.
 To optionally create missing `ks.yaml` files and add resources to
-`kustomization.yaml` files under `clusters/<cluster>/kubernetes`, run:
+`kustomization.yaml` files under `kubernetes/apps`, run:
 
 ```sh
 clustertool genks
-clustertool genks --cluster main
 ```
 
 `kustomizations` is an alias for `genks`. Existing `ks.yaml` files are preserved.
-Review the generated changes before committing.
+Review the generated changes before committing. `genks` only processes
+`kubernetes/apps/`. Keep optional user components in `kubernetes/components/`;
+reference them from application Kustomize files. Shared configuration, repositories,
+Flux entry and components are not processed by `genks`.
 
 ## Flux Operator
 
-Set `GITHUB_REPOSITORY` in `clusters/main/secrets/cluster-settings.sops.yaml` before completing
+Set `GITHUB_REPOSITORY` in `kubernetes/config/cluster-secrets.sops.yaml` before completing
 `init`. Add the generated `ssh-public-key.txt` to that repository's deploy keys. 
 Run `clustertool genconfig` and `clustertool encrypt`, then commit and push 
 the configuration before accepting the Flux bootstrap prompt.
@@ -222,29 +230,28 @@ clustertool flux bootstrap
 
 The configuration is in:
 
-- `clusters/main/kubernetes/flux-system/flux-operator/app/helm-release.yaml`:
+- `kubernetes/apps/flux-system/flux-operator/app/helm-release.yaml`:
   operator settings.
-- `clusters/main/kubernetes/flux-system/flux-instance/app/helm-release.yaml`:
+- `kubernetes/apps/flux-system/flux-instance/app/helm-release.yaml`:
   Flux controllers and `spec.values.instance.sync` settings. The default Git branch
   is `refs/heads/main`; change it if your repository uses another branch.
-- `clusters/main/flux-entry/ks.yaml`: entry points for repositories and cluster
-  resources.
-- `repositories/oci/flux-operator.yaml` and `flux-instance.yaml`: chart versions
+- `kubernetes/flux-entry/ks.yaml`: entry points for shared configuration, repositories and
+  applications.
+- `kubernetes/repositories/oci/flux-operator.yaml` and `flux-instance.yaml`: chart versions
   in `spec.ref.tag`.
 
-Under `clusters/main/kubernetes/`, `init` creates both credential files in
-`flux-system/flux-instance/app/`:
-`deploy-key.sops.yaml` holds the Git deploy key and must be encrypted before
-committing. `sops-age.sops.yaml` holds the private age key and must also be encrypted
+`init` creates `kubernetes/apps/flux-system/flux-instance/app/deploy-key.sops.yaml`.
+It holds the Git deploy key and must be encrypted before committing.
+`kubernetes/apps/flux-system/sops-age.sops.yaml` holds the private age key and must also be encrypted
 before committing. It is excluded from Kustomizations and applied directly during
 Flux bootstrap. Keep the original `age.agekey` separately to decrypt a fresh clone.
 ClusterTool reads bootstrap and Talos variables from `stringData` in
-`clusters/main/secrets/cluster-settings.sops.yaml`. Quote numeric and boolean
+`kubernetes/config/cluster-secrets.sops.yaml`. Quote numeric and boolean
 values so they remain strings. `clustertool encrypt` checks that all `stringData`
-values in `cluster-settings.sops.yaml` are strings before encrypting the file.
+values in `cluster-secrets.sops.yaml` are strings before encrypting the file.
 Bootstrap applies this Secret directly; Flux
 manages the same file through `flux-entry-secrets` and uses the
-`cluster-settings` Secret for substitutions. There is no generated settings copy.
+`cluster-secrets` Secret for substitutions. There is no generated settings copy.
 
 After chart installation, Flux continues synchronizing in the background. Check
 its status with:
@@ -284,9 +291,9 @@ Tuppr independently uses each node's running schematic; it does not read
 
 ## Optional configuration
 
-For registry authentication, copy `examples/44-registry-auth.yaml` into the
+For registry authentication, copy `example-patches/44-registry-auth.yaml` into the
 appropriate patch directory and configure `DOCKERHUB_USER` and
 `DOCKERHUB_PASSWORD`. Setting the variables alone does not enable authentication.
 
-For NVIDIA, copy `examples/50-nvidia.yaml` to the relevant node patch directories
+For NVIDIA, copy `example-patches/50-nvidia.yaml` to the relevant node patch directories
 and use an image schematic with the required NVIDIA extensions.

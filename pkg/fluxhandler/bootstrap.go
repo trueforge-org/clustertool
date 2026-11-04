@@ -43,16 +43,16 @@ func bootstrapFluxCD(ctx context.Context) error {
 	if !isRepo {
 		return fmt.Errorf("current directory is not a Git repository")
 	}
-	repos, err := LoadAllHelmRepos(filepath.Join("repositories", "helm"))
+	repos, err := LoadAllHelmRepos(filepath.Join(helper.KubernetesPath, "repositories", "helm"))
 	if err != nil {
 		return fmt.Errorf("load Helm repositories: %w", err)
 	}
 
-	fluxPath := filepath.Join(helper.ClusterPath, "kubernetes", "flux-system")
+	fluxPath := filepath.Join(helper.KubernetesAppsPath, "flux-system")
 	manifestPaths := []string{
 		filepath.Join(fluxPath, "namespace.yaml"),
 		filepath.Join(fluxPath, "flux-instance", "app", "deploy-key.sops.yaml"),
-		filepath.Join(fluxPath, "flux-instance", "app", "sops-age.sops.yaml"),
+		filepath.Join(fluxPath, "sops-age.sops.yaml"),
 		helper.ClusterSettingsFile,
 	}
 	for _, filePath := range manifestPaths {
