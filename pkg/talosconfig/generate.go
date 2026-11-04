@@ -25,7 +25,7 @@ func generateInventory(inv *Inventory) error {
 	if strings.Contains(endpoint, ":") {
 		endpoint = "[" + endpoint + "]"
 	}
-	if err = runTalosctl("gen", "config", helper.ClusterName, "https://"+endpoint+":6443", "--kubernetes-version", strings.TrimPrefix(inv.KubernetesVersion, "v"), "--with-secrets", SecretsPath(), "--output", work, "--output-types", "controlplane,worker,talosconfig", "--with-docs=false", "--with-examples=false"); err != nil {
+	if err = runTalosctl("gen", "config", inv.ClusterName, "https://"+endpoint+":6443", "--kubernetes-version", strings.TrimPrefix(inv.KubernetesVersion, "v"), "--with-secrets", SecretsPath(), "--output", work, "--output-types", "controlplane,worker,talosconfig", "--with-docs=false", "--with-examples=false"); err != nil {
 		return err
 	}
 	staged := filepath.Join(work, "validated")

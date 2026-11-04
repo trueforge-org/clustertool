@@ -87,7 +87,7 @@ talos/
 └── generated/
 ```
 
-- `clustertool.yaml`: Talos/Kubernetes versions and the list of nodes.
+- `clustertool.yaml`: cluster name, Talos/Kubernetes versions and the list of nodes.
 - `patches/all/`: shared Talos settings.
 - `patches/control-plane/` and `patches/worker/`: settings for that role.
 - `patches/nodes/<name>/`: a node's hostname, network, disk and installer image.
@@ -100,13 +100,14 @@ Patches are applied in that order: shared, role, then node. Within each director
 YAML files are read in filename order. Later patches can override earlier settings.
 Encrypt secrets with `clustertool encrypt` before committing them to Git.
 
-## Configure nodes and versions
+## Configure the cluster name, nodes and versions
 
 `clustertool.yaml` is required even for a single node:
 
 ```yaml
 apiVersion: clustertool/v1
 kind: ClusterConfig
+clusterName: main
 # renovate: datasource=github-releases depName=siderolabs/talos
 talosVersion: v1.14.0
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
@@ -123,6 +124,11 @@ nodes:
   #   role: worker
   #   address: ${WORKER1IP}
 ```
+
+`clusterName` is required and sets the Talos cluster name and generated Talos client
+context. The template uses `main`; choose your name before generating and applying
+the configuration. It does not affect repository paths or Cilium settings.
+ClusterTool no longer injects a `CLUSTERNAME` environment variable.
 
 `apiVersion` identifies the ClusterTool file format. ClusterTool automatically
 uses the alphabetically first control-plane node by `name` for bootstrap, not as

@@ -3,6 +3,8 @@
 apiVersion: clustertool/v1
 kind: ClusterConfig
 
+clusterName: main
+
 # renovate: datasource=github-releases depName=siderolabs/talos
 talosVersion: v1.14.5
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet

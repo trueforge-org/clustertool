@@ -27,7 +27,7 @@ func multiFixture(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	write("clustertool.yaml", "apiVersion: clustertool/v1\nkind: ClusterConfig\ntalosVersion: v1.14.0\nkubernetesVersion: v1.37.0\nnodes:\n  - {name: worker-1, role: worker, address: 192.0.2.21}\n  - {name: control-2, role: control-plane, address: 192.0.2.12}\n  - {name: control-1, role: control-plane, address: 192.0.2.11}\n")
+	write("clustertool.yaml", "apiVersion: clustertool/v1\nkind: ClusterConfig\nclusterName: main\ntalosVersion: v1.14.0\nkubernetesVersion: v1.37.0\nnodes:\n  - {name: worker-1, role: worker, address: 192.0.2.21}\n  - {name: control-2, role: control-plane, address: 192.0.2.12}\n  - {name: control-1, role: control-plane, address: 192.0.2.11}\n")
 	for index, name := range []string{"control-1", "control-2", "worker-1"} {
 		// Synthetic schematic hashes are used only for offline generation, never for image pulls.
 		id := strings.Repeat(fmt.Sprint(index+1), 64)

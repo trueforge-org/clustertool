@@ -20,7 +20,7 @@ func withSingleNodeFixture(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(helper.TalosPath, "patches", "nodes", "control-1"), 0700); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(helper.TalosPath, "clustertool.yaml"), []byte("apiVersion: clustertool/v1\nkind: ClusterConfig\ntalosVersion: v1.14.0\nkubernetesVersion: v1.37.0\nnodes:\n  - name: control-1\n    role: control-plane\n    address: ${CONTROL1IP}\n"), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(helper.TalosPath, "clustertool.yaml"), []byte("apiVersion: clustertool/v1\nkind: ClusterConfig\nclusterName: homelab\ntalosVersion: v1.14.0\nkubernetesVersion: v1.37.0\nnodes:\n  - name: control-1\n    role: control-plane\n    address: ${CONTROL1IP}\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -45,7 +45,7 @@ func TestGenApplySingleNode(t *testing.T) {
 	if len(cmds) != 1 {
 		t.Fatalf("expected 1 command, got %d", len(cmds))
 	}
-	if !strings.Contains(cmds[0].String(), " apply-config ") || !strings.Contains(cmds[0].String(), " -f "+talosconfig.NodeConfigPath(talosconfig.Node{Name: "control-1"})) {
+	if !strings.Contains(cmds[0].String(), " apply-config ") || !strings.Contains(cmds[0].String(), " -f "+talosconfig.NodeConfigPath(talosconfig.Node{Name: "control-1"})) || !strings.Contains(cmds[0].String(), "--talosconfig "+talosconfig.TalosconfigPath()) {
 		t.Fatalf("unexpected command %q", cmds[0])
 	}
 	if !strings.Contains(cmds[0].String(), " -n 10.0.0.1") || !strings.HasSuffix(cmds[0].String(), " --timeout=1m") {

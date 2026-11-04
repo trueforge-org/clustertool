@@ -9,7 +9,7 @@ var (
 	HelmCache           = filepath.Join(CacheDir, "tgz_cache")
 	UserCacheDir, _     = os.UserCacheDir()
 	TalEnv              = make(map[string]string)
-	ClusterName         = "main"
+	ClusterName         = "main" // Retained for legacy layout checks; active names come from talos/clustertool.yaml.
 	KubeCache           = filepath.Join(CacheDir, "kubernetes")
 	BaseCache           = filepath.Join(CacheDir, "base")
 	RootCache           = filepath.Join(CacheDir, "root")

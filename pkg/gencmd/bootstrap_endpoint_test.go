@@ -19,7 +19,7 @@ func TestBootstrapEndpointsAndResume(t *testing.T) {
 				out, _, err := runCommand(args, true)
 				return []byte(out), err
 			}
-			inv := &talosconfig.Inventory{APIVersion: "clustertool/v1", Kind: "ClusterConfig", Nodes: []talosconfig.Node{
+			inv := &talosconfig.Inventory{APIVersion: "clustertool/v1", Kind: "ClusterConfig", ClusterName: "homelab", Nodes: []talosconfig.Node{
 				{Name: "cp1", Role: "control-plane", Address: "192.0.2.12"},
 				{Name: "cp2", Role: "control-plane", Address: "192.0.2.11"},
 				{Name: "cp3", Role: "control-plane", Address: "192.0.2.13"},
@@ -27,6 +27,9 @@ func TestBootstrapEndpointsAndResume(t *testing.T) {
 			bootstraps, kubeconfigs := 0, 0
 			runCommand = func(args []string, _ bool) (string, string, error) {
 				argv := strings.Join(args, " ")
+				if !strings.Contains(argv, "--talosconfig "+talosconfig.TalosconfigPath()) {
+					t.Fatalf("bootstrap must use the generated client configuration: %s", argv)
+				}
 				if strings.Contains(argv, "--insecure") {
 					t.Fatalf("TLS verification disabled: %s", argv)
 				}

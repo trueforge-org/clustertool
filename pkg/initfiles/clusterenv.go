@@ -50,16 +50,11 @@ func LoadTalEnv(noFail bool) error {
 		return err
 	}
 	helper.TalEnv = sourceEnv
-	clusterName()
 	if err := clusterEnvtoEnv(); err != nil {
 		return err
 	}
 	log.Info().Msg("Cluster settings loaded successfully")
 	return nil
-}
-
-func clusterName() {
-	helper.TalEnv["CLUSTERNAME"] = helper.ClusterName
 }
 
 func clusterEnvtoEnv() error {

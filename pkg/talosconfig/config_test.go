@@ -17,16 +17,14 @@ import (
 
 func fixture(t *testing.T) {
 	t.Helper()
-	oldPath, oldGenerated, oldEnv, oldName := helper.TalosPath, helper.TalosGenerated, helper.TalEnv, helper.ClusterName
+	oldPath, oldGenerated, oldEnv := helper.TalosPath, helper.TalosGenerated, helper.TalEnv
 	helper.TalosPath = filepath.Join(t.TempDir(), "talos")
 	helper.TalosGenerated = filepath.Join(helper.TalosPath, "generated")
-	helper.ClusterName = "main"
-	helper.TalEnv = map[string]string{"CLUSTERNAME": "main", "CONTROL1IP": "192.168.20.210", "VIP": "192.168.20.200", "GATEWAY": "192.168.20.1", "PODNET": "172.16.0.0/16", "SVCNET": "172.17.0.0/16"}
+	helper.TalEnv = map[string]string{"CONTROL1IP": "192.168.20.210", "VIP": "192.168.20.200", "GATEWAY": "192.168.20.1", "PODNET": "172.16.0.0/16", "SVCNET": "172.17.0.0/16"}
 	t.Cleanup(func() {
 		helper.TalosPath = oldPath
 		helper.TalosGenerated = oldGenerated
 		helper.TalEnv = oldEnv
-		helper.ClusterName = oldName
 	})
 	sub, err := fs.Sub(embed.GenericFiles, "generic/base/talos")
 	if err != nil {
@@ -102,6 +100,17 @@ func TestNativeGenerationIntegration(t *testing.T) {
 		t.Skip("set TALOSCTL_INTEGRATION=1 with talosctl 1.14 on PATH")
 	}
 	fixture(t)
+	configPath := filepath.Join(helper.TalosPath, "clustertool.yaml")
+	source, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	source = bytes.Replace(source, []byte("clusterName: main"), []byte("clusterName: homelab"), 1)
+	if err := os.WriteFile(configPath, source, 0600); err != nil {
+		t.Fatal(err)
+	}
+	// A stale settings value must not override the name in clustertool.yaml.
+	helper.TalEnv["CLUSTERNAME"] = "stale-name"
 	if err := EnsureSecrets(); err != nil {
 		t.Fatal(err)
 	}
@@ -128,6 +137,18 @@ func TestNativeGenerationIntegration(t *testing.T) {
 		if !reflect.DeepEqual(got, want) {
 			t.Fatalf("got %#v, want %#v", got, want)
 		}
+	}
+	require(at(docs["KubeClusterConfig/"], "clusterName"), "homelab")
+	var clientConfig struct {
+		Context  string         `yaml:"context"`
+		Contexts map[string]any `yaml:"contexts"`
+	}
+	if err := yaml.Unmarshal(tc, &clientConfig); err != nil {
+		t.Fatal(err)
+	}
+	require(clientConfig.Context, "homelab")
+	if _, ok := clientConfig.Contexts["homelab"]; !ok || len(clientConfig.Contexts) != 1 {
+		t.Fatal("talosconfig does not contain only the configured cluster context")
 	}
 	require(at(docs["KubeletConfig/"], "config", "imageGCHighThresholdPercent"), 50)
 	require(at(docs["KubeletConfig/"], "config", "imageGCLowThresholdPercent"), 30)

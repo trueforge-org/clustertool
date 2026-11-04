@@ -17,6 +17,7 @@ import (
 
 // Inventory contains cluster versions and command targeting metadata. Node settings stay in patches.
 type Inventory struct {
+	ClusterName       string `yaml:"clusterName"`
 	TalosVersion      string `yaml:"talosVersion"`
 	KubernetesVersion string `yaml:"kubernetesVersion"`
 	APIVersion        string `yaml:"apiVersion"`
@@ -59,6 +60,9 @@ func LoadInventory() (*Inventory, error) {
 	}
 	if inv.APIVersion != "clustertool/v1" || inv.Kind != "ClusterConfig" || len(inv.Nodes) == 0 {
 		return nil, fmt.Errorf("clustertool.yaml requires apiVersion: clustertool/v1, kind: ClusterConfig and at least one node")
+	}
+	if strings.TrimSpace(inv.ClusterName) == "" {
+		return nil, fmt.Errorf("clustertool.yaml requires a non-empty clusterName")
 	}
 	for _, setting := range []struct{ name, value string }{
 		{"talosVersion", inv.TalosVersion}, {"kubernetesVersion", inv.KubernetesVersion},
