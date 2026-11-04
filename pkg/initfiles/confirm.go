@@ -16,10 +16,11 @@ func ConfirmInit() error {
 		filepath.Join(helper.TalosPath, "talconfig.yaml"),
 		filepath.Join(helper.ClusterPath, "clusterenv.yaml"),
 		filepath.Join("clusters", helper.ClusterName, "talos", "talconfig.yaml"),
+		filepath.Join("clusters", helper.ClusterName, "talos", "clustertool.yaml"),
 		filepath.Join("clusters", helper.ClusterName, "clusterenv.yaml"),
 	} {
 		if _, err := os.Stat(file); err == nil {
-			return fmt.Errorf("Legacy Talhelper-configured cluster found. Initialize ClusterTool 5 in a new folder.")
+			return fmt.Errorf("Legacy cluster layout found. Initialize ClusterTool in a new folder.")
 		} else if !os.IsNotExist(err) {
 			return fmt.Errorf("check legacy configuration: %w", err)
 		}

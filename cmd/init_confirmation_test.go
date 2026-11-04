@@ -10,7 +10,7 @@ import (
 )
 
 func TestInitBlocksLegacyBeforeDecryption(t *testing.T) {
-	for _, legacy := range []string{"talos/talconfig.yaml", "clusterenv.yaml", "clusters/main/talos/talconfig.yaml", "clusters/main/clusterenv.yaml"} {
+	for _, legacy := range []string{"talos/talconfig.yaml", "clusterenv.yaml", "clusters/main/talos/talconfig.yaml", "clusters/main/talos/clustertool.yaml", "clusters/main/clusterenv.yaml"} {
 		for _, marker := range []bool{false, true} {
 			t.Run(legacy+"/"+fmt.Sprint(marker), func(t *testing.T) {
 				dir := t.TempDir()
@@ -34,7 +34,7 @@ func TestInitBlocksLegacyBeforeDecryption(t *testing.T) {
 				process.Env = append(os.Environ(), `CLUSTERTOOL_TEST_ARGS=["init"]`)
 				process.Stdin = strings.NewReader("y\n")
 				out, err := process.CombinedOutput()
-				if err == nil || !strings.Contains(string(out), "Legacy Talhelper-configured cluster found.") {
+				if err == nil || !strings.Contains(string(out), "Legacy cluster layout found.") {
 					t.Fatalf("legacy init was not blocked: %v %s", err, out)
 				}
 				for _, unwanted := range []string{"parse .sops.yaml", "Continue with init?", "talconfig.yaml", "clusterenv.yaml"} {
