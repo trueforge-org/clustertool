@@ -84,15 +84,15 @@ func runBootstrapSteps(config clusterconfig.BootstrapConfig, runChart func(strin
 		switch {
 		case step.Chart != "":
 			if err := runChart(step.Chart, step.Wait); err != nil {
-				return fmt.Errorf("bootstrap[%d] chart %s: %w", i, step.Chart, err)
+				return fmt.Errorf("bootstrap step %d, chart %s: %w", i+1, step.Chart, err)
 			}
 		case step.CRD != "":
 			if err := applyCRDs(step.CRD); err != nil {
-				return fmt.Errorf("bootstrap[%d] crd %s: %w", i, step.CRD, err)
+				return fmt.Errorf("bootstrap step %d, crd %s: %w", i+1, step.CRD, err)
 			}
 		case step.Manifest != "":
 			if err := applyManifest(step.Manifest); err != nil {
-				return fmt.Errorf("bootstrap[%d] manifest %s: %w", i, step.Manifest, err)
+				return fmt.Errorf("bootstrap step %d, manifest %s: %w", i+1, step.Manifest, err)
 			}
 		}
 	}

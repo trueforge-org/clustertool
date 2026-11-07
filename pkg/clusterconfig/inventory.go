@@ -1,6 +1,7 @@
 package clusterconfig
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/netip"
@@ -39,6 +40,7 @@ func LoadInventory() (*Inventory, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read required clustertool.yaml: %w", err)
 	}
+	source := data
 	// The embedded inventory is a template so init can copy one consistent
 	// layout while the actual management addresses remain in kubernetes/config/cluster-secrets.sops.yaml.
 	// Render only when a template variable is present; hand-written inventories
@@ -53,6 +55,10 @@ func LoadInventory() (*Inventory, error) {
 	dec := yaml.NewDecoder(strings.NewReader(string(data)))
 	dec.KnownFields(true)
 	if err := dec.Decode(&inv); err != nil {
+		var bootstrapErr *bootstrapConfigError
+		if errors.As(err, &bootstrapErr) {
+			bootstrapErr.useSourceLine(source, data)
+		}
 		return nil, fmt.Errorf("read clustertool.yaml: %w", err)
 	}
 	var extra any

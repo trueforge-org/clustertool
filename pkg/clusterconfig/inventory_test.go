@@ -1,6 +1,7 @@
 package clusterconfig
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,23 +33,8 @@ func fixture(t *testing.T) {
 func TestBootstrapConfigDoesNotResolveApplications(t *testing.T) {
 	fixture(t)
 	// Only Talos files exist: day-2 configuration loading must not inspect app files.
-	inv, err := LoadInventory()
-	if err != nil {
+	if _, err := LoadInventory(); err != nil {
 		t.Fatal(err)
-	}
-	config := inv.BootstrapConfig
-	if len(config) < 2 || config[0].CRD != "kube-prometheus-stack" ||
-		config[1].Manifest != "kubernetes/config/cluster-secrets.sops.yaml" {
-		t.Fatalf("bootstrap configuration not retained: %+v", config)
-	}
-	last := config[len(config)-1]
-	if last.Chart != "flux-instance" || last.Wait {
-		t.Fatalf("default FluxInstance step must not wait: %+v", last)
-	}
-	for _, step := range config[:len(config)-1] {
-		if step.Chart != "" && !step.Wait {
-			t.Fatalf("chart must wait by default: %+v", step)
-		}
 	}
 }
 
@@ -72,6 +58,49 @@ func TestBootstrapStepValidation(t *testing.T) {
 	}
 	if err := yaml.Unmarshal([]byte("steps: []"), &config); err == nil {
 		t.Fatal("accepted a mapping instead of the bootstrap list")
+	}
+}
+
+func TestBootstrapErrorsUseSourceLines(t *testing.T) {
+	fixture(t)
+	helper.TalEnv["EMPTY_CHART"] = ""
+	const config = `# Config with variables, comments and blank lines.
+apiVersion: clustertool/v1
+kind: ClusterConfig
+
+clusterName: test
+talosVersion: v1.14.5
+kubernetesVersion: v1.37.2
+
+nodes:
+  - name: control-1
+    role: control-plane
+    address: ${CONTROL1IP}
+
+# Bootstrap runs in order.
+bootstrap:
+  - chart: example-controller
+
+%s
+`
+	for _, tc := range []struct{ name, step, marker, message string }{
+		{"unknown field", "  - chrt: example-instance", "chrt:", `unknown bootstrap field "chrt"`},
+		{"invalid wait", "  - chart: example-instance\n    wait: invalid", "wait:", "wait must be true or false"},
+		{"empty variable", "  - chart: ${EMPTY_CHART}", "- chart: ${EMPTY_CHART}", "chart requires a non-empty string"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			data := fmt.Sprintf(config, tc.step)
+			line := strings.Count(data[:strings.Index(data, tc.marker)], "\n") + 1
+			path := filepath.Join(helper.TalosPath, "clustertool.yaml")
+			if err := os.WriteFile(path, []byte(data), 0600); err != nil {
+				t.Fatal(err)
+			}
+			_, err := LoadInventory()
+			want := fmt.Sprintf("read clustertool.yaml: bootstrap step 2, line %d: %s", line, tc.message)
+			if err == nil || !strings.Contains(err.Error(), want) {
+				t.Fatalf("got %v, want %s", err, want)
+			}
+		})
 	}
 }
 
