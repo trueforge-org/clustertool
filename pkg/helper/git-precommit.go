@@ -107,7 +107,7 @@ func validateCurrentRepoForHook() (bool, error) {
 		return false, fmt.Errorf("error checking if current directory is a Git repository: %v", err)
 	}
 	if !isRepo {
-		log.Info().Msg("The current directory is not a valid GIT repository. Skipping precommit hook creation...")
+		log.Warn().Msg("The current directory is not a valid GIT repository. Skipping precommit hook creation...")
 		return false, nil
 	}
 
