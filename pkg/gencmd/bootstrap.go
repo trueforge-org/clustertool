@@ -176,5 +176,13 @@ func RunBootstrap(args []string) error {
 	}
 
 	log.Info().Msg("Bootstrap: Completed Successfully!")
+	for _, step := range inv.BootstrapConfig {
+		if step.Chart == "flux-instance" {
+			log.Info().Msg("Flux configuration installed. Reconciliation continues in the background.")
+			log.Info().Msg("Ensure the public key from ssh-public-key.txt is added to your GitHub account under Settings > SSH and GPG keys.")
+			log.Info().Msg("Check progress with: kubectl get fluxinstance,gitrepository,kustomization -n flux-system")
+			break
+		}
+	}
 	return os.Remove(bootstrapStatePath())
 }
