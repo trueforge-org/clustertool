@@ -1,4 +1,4 @@
-package fluxhandler
+package helmhandler
 
 import (
 	"context"
@@ -126,8 +126,9 @@ func HelmPull(repo string, name string, version string, dest string, silent bool
 }
 
 // HelmInstall installs a Helm chart with provided parameters
-func HelmInstall(repoURL string, chartName string, releaseName string, namespace string, valuesFile string, version string, dryRun bool, wait bool, silent bool) error {
-	if dryRun {
+func HelmInstall(repoURL, chartName, version string, spec HelmChart, helmRelease *HelmRelease) error {
+	releaseName, namespace := helmRelease.releaseName(), helmRelease.Metadata.Namespace
+	if spec.Retry {
 		log.Info().Msg("dryRun not possible...")
 		return nil
 	}
@@ -145,7 +146,7 @@ func HelmInstall(repoURL string, chartName string, releaseName string, namespace
 	}
 
 	// Ensure namespace exists or create it
-	if found, err := resumeHelmRelease(actionConfig, releaseName, wait); found || err != nil {
+	if found, err := resumeHelmRelease(actionConfig, releaseName, spec.Wait, spec.WaitForJobs); found || err != nil {
 		return err
 	}
 	if err := ensureNamespace(actionConfig, namespace); err != nil {
@@ -161,26 +162,9 @@ func HelmInstall(repoURL string, chartName string, releaseName string, namespace
 	}
 	defer os.RemoveAll(workDir)
 
-	var chartPath string
-
-	// Determine chart path based on chartName format
-	if strings.HasPrefix(repoURL, "http://") || strings.HasPrefix(repoURL, "https://") || strings.HasPrefix(repoURL, "oci://") {
-		// Handle HTTP or OCI URL
-		err = HelmPull(repoURL, chartName, version, workDir, true)
-		if err != nil {
-			return fmt.Errorf("failed to pull chart %s: %w", chartName, err)
-		}
-		chartPath = path.Join(workDir, fmt.Sprintf("%s-%s.tgz", chartName, version))
-
-	} else {
-		// Local chart path
-		chartPath = repoURL
-	}
-
-	// Load the Helm chart using loader.Load
-	chart, err := loader.Load(chartPath)
+	chart, vals, err := prepareChart(workDir, repoURL, chartName, version, spec.ChartPath, helmRelease)
 	if err != nil {
-		return fmt.Errorf("failed to load chart: %w", err)
+		return err
 	}
 
 	// Set up Helm install action
@@ -191,64 +175,11 @@ func HelmInstall(repoURL string, chartName string, releaseName string, namespace
 	client.Version = version
 	client.ServerSideApply = true
 	client.WaitStrategy = kube.HookOnlyStrategy
-	if wait {
+	if spec.Wait {
 		client.WaitStrategy = kube.StatusWatcherStrategy
 	}
+	client.WaitForJobs = spec.WaitForJobs
 	client.Timeout = 15 * time.Minute
-
-	tempValuesName := releaseName + "tempvalues.yaml"
-	tempValuesPath := path.Join(workDir, tempValuesName)
-	// Create values.yaml from chart.Values
-	err = createValuesYAML(chart.Values, tempValuesPath)
-	if err != nil {
-		return fmt.Errorf("error creating tempvalues.yaml: %w", err)
-	}
-	valueFiles := []string{tempValuesPath}
-
-	// Get the directory part of the path
-	directory := filepath.Dir(valuesFile)
-
-	helmreleasePath := path.Join(directory, "helm-release.yaml")
-
-	helmRelease, err := LoadHelmRelease(helmreleasePath)
-	if err != nil {
-		return err
-	}
-	tempHRValuesName := releaseName + "temphrvalues.yaml"
-	tempHRValuesPath := path.Join(workDir, tempHRValuesName)
-	err = createValuesYAML(helmRelease.Spec.Values, tempHRValuesPath)
-	if err != nil {
-		return fmt.Errorf("error creating temphrvalues.yaml: %w", err)
-	}
-	if _, err := fthelper.EnvSubst(tempHRValuesPath, helper.TalEnv); err != nil {
-		return fmt.Errorf("render values for %s: %w", releaseName, err)
-	}
-	valueFiles = append(valueFiles, tempHRValuesPath)
-
-	if _, err := os.Stat(valuesFile); err == nil {
-		valueFiles = append(valueFiles, valuesFile)
-
-	}
-
-	overrideValuesPath := path.Join(directory, "bootstrap-values.yaml.ct")
-
-	if _, err := os.Stat(overrideValuesPath); err == nil {
-		valueFiles = append(valueFiles, overrideValuesPath)
-	}
-
-	// Prepare values for installation
-	valOpts := &values.Options{
-		ValueFiles: valueFiles, // Specify value file to merge
-	}
-
-	// Create getter to fetch values from file
-	valProviders := getter.All(settings)
-
-	// Merge values with chart's default values
-	vals, err := valOpts.MergeValues(valProviders)
-	if err != nil {
-		return fmt.Errorf("failed to merge values: %w", err)
-	}
 
 	// Install the chart with merged values
 	log.Debug().Msg("Installing chart...")

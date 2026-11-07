@@ -7,18 +7,19 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 )
 
-func bootstrapNodesFixture() *talosconfig.Inventory {
-	return &talosconfig.Inventory{Nodes: []talosconfig.Node{
+func bootstrapNodesFixture() *clusterconfig.Inventory {
+	return &clusterconfig.Inventory{Nodes: []clusterconfig.Node{
 		{Name: "cp1", Role: "control-plane", Address: "192.0.2.11"},
 		{Name: "cp2", Role: "control-plane", Address: "192.0.2.12"},
 		{Name: "worker", Role: "worker", Address: "192.0.2.21"},
 	}}
 }
 
-func mockBootstrapNodes(t *testing.T, inv *talosconfig.Inventory, stages map[string]string, existing bool) (*[]string, func(string) error) {
+func mockBootstrapNodes(t *testing.T, inv *clusterconfig.Inventory, stages map[string]string, existing bool) (*[]string, func(string) error) {
 	t.Helper()
 	mockExecution(t)
 	oldWait, oldBootstrapRun := waitForBootstrapHealth, runBootstrapCommand

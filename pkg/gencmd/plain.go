@@ -2,8 +2,9 @@ package gencmd
 
 import (
 	"fmt"
-	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 	"strings"
+
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 )
 
 func GenPlain(operation, target string, extra []string) []Command {
@@ -15,7 +16,7 @@ func GenPlain(operation, target string, extra []string) []Command {
 			return []Command{{Err: err}}
 		}
 	}
-	inv, err := talosconfig.LoadInventory()
+	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		return []Command{{Err: err}}
 	}
@@ -24,7 +25,7 @@ func GenPlain(operation, target string, extra []string) []Command {
 		return []Command{{Err: err}}
 	}
 	if operation == "kubeconfig" && (target == "" || target == "all") {
-		nodes = []talosconfig.Node{inv.Bootstrap()}
+		nodes = []clusterconfig.Node{inv.Bootstrap()}
 	}
 	if operation == "health" {
 		var workers []string

@@ -3,13 +3,13 @@ package gencmd
 import (
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/trueforge-org/clustertool/pkg/talosconfig"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"strings"
 )
 
 // ExistingControlPlane proves authenticated etcd access before choosing a join
 // path. Failure is not evidence that bootstrapping a new cluster is safe.
-func ExistingControlPlane(inv *talosconfig.Inventory) (string, error) {
+func ExistingControlPlane(inv *clusterconfig.Inventory) (string, error) {
 	for _, n := range inv.Nodes {
 		if n.Role != "control-plane" {
 			continue
@@ -27,7 +27,7 @@ func ExistingControlPlane(inv *talosconfig.Inventory) (string, error) {
 	return "", fmt.Errorf("no control-plane node has authenticated etcd access")
 }
 
-func NeedsBootstrap(inv *talosconfig.Inventory) (bool, error) {
+func NeedsBootstrap(inv *clusterconfig.Inventory) (bool, error) {
 	if _, err := ExistingControlPlane(inv); err == nil {
 		return false, nil
 	}

@@ -1,4 +1,4 @@
-package fluxhandler
+package helmhandler
 
 import (
 	"errors"
@@ -18,7 +18,7 @@ import (
 
 // Resume does not change an existing release. A deployed Helm status alone
 // does not prove its workloads are ready, so retain the caller's wait policy.
-func resumeHelmRelease(config *action.Configuration, name string, wait bool) (bool, error) {
+func resumeHelmRelease(config *action.Configuration, name string, wait, waitForJobs bool) (bool, error) {
 	result, err := action.NewGet(config).Run(name)
 	if errors.Is(err, driver.ErrReleaseNotFound) {
 		return false, nil
@@ -39,7 +39,12 @@ func resumeHelmRelease(config *action.Configuration, name string, wait bool) (bo
 		if err != nil {
 			return true, fmt.Errorf("wait for existing release %s: %w", name, err)
 		}
-		if err := waiter.Wait(resources, 15*time.Minute); err != nil {
+		if waitForJobs {
+			err = waiter.WaitWithJobs(resources, 15*time.Minute)
+		} else {
+			err = waiter.Wait(resources, 15*time.Minute)
+		}
+		if err != nil {
 			return true, fmt.Errorf("wait for existing release %s: %w", name, err)
 		}
 	}

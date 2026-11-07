@@ -1,4 +1,4 @@
-package talosconfig
+package clusterconfig
 
 import (
 	"fmt"
@@ -17,12 +17,13 @@ import (
 
 // Inventory contains cluster versions and command targeting metadata. Node settings stay in patches.
 type Inventory struct {
-	ClusterName       string `yaml:"clusterName"`
-	TalosVersion      string `yaml:"talosVersion"`
-	KubernetesVersion string `yaml:"kubernetesVersion"`
-	APIVersion        string `yaml:"apiVersion"`
-	Kind              string `yaml:"kind"`
-	Nodes             []Node `yaml:"nodes"`
+	ClusterName       string          `yaml:"clusterName"`
+	TalosVersion      string          `yaml:"talosVersion"`
+	KubernetesVersion string          `yaml:"kubernetesVersion"`
+	APIVersion        string          `yaml:"apiVersion"`
+	Kind              string          `yaml:"kind"`
+	Nodes             []Node          `yaml:"nodes"`
+	BootstrapConfig   BootstrapConfig `yaml:"bootstrap"`
 }
 
 type Node struct {
@@ -43,7 +44,7 @@ func LoadInventory() (*Inventory, error) {
 	// Render only when a template variable is present; hand-written inventories
 	// remain ordinary YAML files.
 	if strings.Contains(string(data), "${") {
-		data, err = render(data, helper.TalEnv)
+		data, err = helper.RenderYAML(data, helper.TalEnv)
 		if err != nil {
 			return nil, fmt.Errorf("render clustertool.yaml: %w", err)
 		}
@@ -145,4 +146,11 @@ func (i *Inventory) Endpoints() []string {
 	return result
 }
 
-func NodeConfigPath(n Node) string { return filepath.Join(helper.TalosGenerated, n.Name+".yaml") }
+func ValidateNode(node string) error {
+	inv, err := LoadInventory()
+	if err != nil {
+		return err
+	}
+	_, err = inv.Select(node)
+	return err
+}

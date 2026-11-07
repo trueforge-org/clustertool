@@ -87,7 +87,7 @@ talos/
 └── generated/
 ```
 
-- `clustertool.yaml`: cluster name, Talos/Kubernetes versions and the list of nodes.
+- `clustertool.yaml`: cluster name, Talos/Kubernetes versions, nodes and bootstrap steps.
 - `patches/all/`: shared Talos settings.
 - `patches/control-plane/` and `patches/worker/`: settings for that role.
 - `patches/nodes/<name>/`: a node's hostname, network, disk and installer image.
@@ -180,11 +180,44 @@ or IP selects one node. Do not run generation and apply concurrently.
 For a new cluster, apply asks before bootstrapping. Initial setup applies the
 configuration to all nodes, bootstraps one control plane, then installs Cilium
 and the CSR approver. It waits for the remaining nodes to become ready before
-continuing with the other charts and Flux.
+creating namespaces and completing the base health checks. It then runs the
+configured CRDs and application steps below.
 
 If setup is interrupted, run apply again. When a matching
 `.bootstrap-in-progress.json` exists, ClusterTool asks whether to resume.
 The file is removed after successful setup. Keep the original cluster secrets.
+
+## Configure application bootstrap
+
+Edit `bootstrap.crd` and `bootstrap.steps` in `talos/clustertool.yaml` before
+initial setup. Cilium and the kubelet CSR approver are fixed base charts in code;
+they run before these lists and do not need entries here.
+
+- `crd`: HelmRelease `metadata.name` values. ClusterTool renders the referenced
+  chart versions with CRDs included and hooks excluded, then applies only CRDs
+  server-side, in list order.
+- `steps`: HelmRelease `metadata.name` values or `manifest: path` entries.
+  Manifest paths are relative to the cluster repository root. Entries run in order;
+  every chart uses Helm waiting, including Jobs, with a 15-minute timeout.
+
+The supplied example applies the three Secrets, installs the infrastructure and
+restore operators, and ends with `flux-operator` and `flux-instance`. The Longhorn
+VolumeSnapshotClass follows snapshot-controller and Longhorn. Monitoring CRDs
+are prepared separately; Flux installs the monitoring chart and remaining apps.
+Choose your applications and their order; ClusterTool does not enforce required
+charts or dependency ordering. Omitting an app here does not disable its Flux manifests.
+
+ClusterTool looks up HelmReleases once per bootstrap run. Chart installation and
+CRD rendering share the chart source, version and values: chart defaults,
+substituted HelmRelease values, optional `values.yaml`, then `bootstrap-values.yaml.ct`.
+`spec.releaseName` is respected when set. Temporary chart and values files use the
+local Helm cache and are removed after use.
+
+Execution stops on the first error. On resume, deployed releases are retained
+and checked with the same Helm waiting; resolve failed or pending Helm releases
+before resuming. Ordinary `talos apply` configuration changes do not look up or
+execute these bootstrap lists. Flux continues deployment after its configured steps;
+bootstrap does not wait for a full GitOps rollout or restores.
 
 ## Restore the Git hook
 
@@ -217,12 +250,12 @@ Flux entry and components are not processed by `genks`.
 Set `GITHUB_REPOSITORY` in `kubernetes/config/cluster-secrets.sops.yaml` before completing
 `init`. Add the generated `ssh-public-key.txt` to that repository's deploy keys. 
 Run `clustertool genconfig` and `clustertool encrypt`, then commit and push 
-the configuration before accepting the Flux bootstrap prompt.
+the configuration before starting bootstrap.
 
-At the end of a new Talos bootstrap, ClusterTool asks whether to bootstrap Flux.
-It applies the required secrets, installs the Flux Operator chart and waits for
-the operator to be ready, then installs the FluxInstance chart. To start this
-separately on an existing cluster:
+The supplied `bootstrap.steps` applies the required secrets and finishes with
+the Flux Operator and FluxInstance charts, waiting for each through Helm.
+To start Flux separately on an existing cluster, use the standalone command,
+which asks for confirmation:
 
 ```sh
 clustertool flux bootstrap

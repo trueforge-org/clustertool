@@ -5,10 +5,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/gencmd"
 	"github.com/trueforge-org/clustertool/pkg/initfiles"
 	"github.com/trueforge-org/clustertool/pkg/sops"
-	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 )
 
 var advResetLongHelp = strings.TrimSpace(`
@@ -40,7 +40,7 @@ var reset = &cobra.Command{
 		if err := initfiles.LoadTalEnv(false); err != nil {
 			return err
 		}
-		if err := talosconfig.ValidateNode(node); err != nil {
+		if err := clusterconfig.ValidateNode(node); err != nil {
 			return err
 		}
 		if err := gencmd.ValidateExtraArgs(extraArgs); err != nil {

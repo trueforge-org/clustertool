@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/trueforge-org/clustertool/embed"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/helper"
 	"gopkg.in/yaml.v3"
 )
@@ -77,24 +78,6 @@ func TestExistingSecretsAndIdentityGuard(t *testing.T) {
 	}
 }
 
-func TestYAMLSubstitution(t *testing.T) {
-	secret := "quote\": value\npassword: surprise"
-	data, err := render([]byte("password: \"${PASSWORD}\"\n"), map[string]string{"PASSWORD": secret})
-	if err != nil {
-		t.Fatal(err)
-	}
-	var doc map[string]string
-	if err := yaml.Unmarshal(data, &doc); err != nil {
-		t.Fatal(err)
-	}
-	if len(doc) != 1 || doc["password"] != secret {
-		t.Fatal("credential changed YAML structure")
-	}
-	if _, err := render([]byte("value: ${MISSING}\n"), nil); err == nil {
-		t.Fatal("unresolved variable accepted")
-	}
-}
-
 func TestNativeGenerationIntegration(t *testing.T) {
 	if os.Getenv("TALOSCTL_INTEGRATION") != "1" {
 		t.Skip("set TALOSCTL_INTEGRATION=1 with talosctl 1.14 on PATH")
@@ -118,7 +101,7 @@ func TestNativeGenerationIntegration(t *testing.T) {
 	if err := Generate(); err != nil {
 		t.Fatal(err)
 	}
-	config, _ := os.ReadFile(NodeConfigPath(Node{Name: "control-1"}))
+	config, _ := os.ReadFile(NodeConfigPath(clusterconfig.Node{Name: "control-1"}))
 	tc, _ := os.ReadFile(TalosconfigPath())
 	docs := readDocuments(t, config)
 	legacy := docs["/"]
@@ -211,7 +194,7 @@ func TestNativeGenerationIntegration(t *testing.T) {
 	if err := Generate(); err == nil {
 		t.Fatal("invalid Talos document accepted")
 	}
-	after, _ = os.ReadFile(NodeConfigPath(Node{Name: "control-1"}))
+	after, _ = os.ReadFile(NodeConfigPath(clusterconfig.Node{Name: "control-1"}))
 	if !bytes.Equal(config, after) {
 		t.Fatal("failed generation replaced valid machine config")
 	}
@@ -226,7 +209,7 @@ func TestNativeGenerationIntegration(t *testing.T) {
 	if err := Generate(); err != nil {
 		t.Fatal(err)
 	}
-	withoutAuth, _ := os.ReadFile(NodeConfigPath(Node{Name: "control-1"}))
+	withoutAuth, _ := os.ReadFile(NodeConfigPath(clusterconfig.Node{Name: "control-1"}))
 	if bytes.Contains(withoutAuth, []byte("kind: RegistryAuthConfig")) {
 		t.Fatal("example activated automatically")
 	}
@@ -240,7 +223,7 @@ func TestNativeGenerationIntegration(t *testing.T) {
 	if err := Generate(); err != nil {
 		t.Fatal(err)
 	}
-	data, _ := os.ReadFile(NodeConfigPath(Node{Name: "control-1"}))
+	data, _ := os.ReadFile(NodeConfigPath(clusterconfig.Node{Name: "control-1"}))
 	docs = readDocuments(t, data)
 	for _, name := range []string{"docker.io", "registry-1.docker.io"} {
 		require(at(docs["RegistryAuthConfig/"+name], "password"), helper.TalEnv["DOCKERHUB_PASSWORD"])

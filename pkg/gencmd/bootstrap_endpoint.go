@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/trueforge-org/clustertool/pkg/talosconfig"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 )
 
-func bootstrapCommand(inv *talosconfig.Inventory, operation string, extra ...string) Command {
+func bootstrapCommand(inv *clusterconfig.Inventory, operation string, extra ...string) Command {
 	node := inv.Bootstrap()
 	return nodeCommand(operation, node, append([]string{"-e", node.Address}, extra...)...)
 }
@@ -82,13 +82,13 @@ func temporaryBootstrapError(out []byte, err error) bool {
 	return strings.Contains(message, "code = unavailable") && strings.Contains(message, "eof")
 }
 
-func bootstrapIfNeeded(inv *talosconfig.Inventory) error {
+func bootstrapIfNeeded(inv *clusterconfig.Inventory) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancel()
 	return waitForBootstrap(ctx, inv, 5*time.Second)
 }
 
-func waitForBootstrap(ctx context.Context, inv *talosconfig.Inventory, interval time.Duration) error {
+func waitForBootstrap(ctx context.Context, inv *clusterconfig.Inventory, interval time.Duration) error {
 	node := inv.Bootstrap().Address
 	var lastErr error
 	waiting := false

@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/helper"
-	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 	"gopkg.in/yaml.v3"
 )
 
@@ -75,7 +75,7 @@ func CheckEnvVariables() error {
 			return fmt.Errorf("%s cannot be empty", key)
 		}
 	}
-	inv, err := talosconfig.LoadInventory()
+	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		return err
 	}

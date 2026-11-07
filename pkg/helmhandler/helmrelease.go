@@ -1,4 +1,4 @@
-package fluxhandler
+package helmhandler
 
 import (
 	"errors"
@@ -16,9 +16,11 @@ import (
 )
 
 type HelmChart struct {
-	ChartPath string
-	Retry     bool
-	Wait      bool
+	ChartPath   string
+	Retry       bool
+	Wait        bool
+	WaitForJobs bool
+	Release     *HelmRelease
 }
 
 type SourceRef struct {
@@ -80,53 +82,66 @@ func LoadHelmRelease(filename string) (*HelmRelease, error) {
 	return config, nil
 }
 
+func (release *HelmRelease) releaseName() string {
+	if release.Spec.ReleaseName != "" {
+		return release.Spec.ReleaseName
+	}
+	return release.Metadata.Name
+}
+
+// chartSource is shared by chart installation and CRD rendering.
+func chartSource(release *HelmRelease, repos map[string]*HelmRepo) (string, string, string, error) {
+	repo := repos[release.Spec.Chart.Spec.SourceRef.Name]
+	chartName, version := release.Spec.Chart.Spec.Chart, release.Spec.Chart.Spec.Version
+	if ref := release.Spec.ChartRef; ref != nil {
+		if ref.Kind != "OCIRepository" {
+			return "", "", "", fmt.Errorf("unsupported chartRef kind %q", ref.Kind)
+		}
+		ociRepos, err := LoadAllHelmRepos(filepath.Join(helper.KubernetesPath, "repositories", "oci"))
+		if err != nil {
+			return "", "", "", fmt.Errorf("load OCI repositories: %w", err)
+		}
+		repo = ociRepos[ref.Name]
+		namespace := ref.Namespace
+		if namespace == "" {
+			namespace = release.Metadata.Namespace
+		}
+		if repo == nil || repo.Kind != "OCIRepository" || repo.Metadata.Namespace != namespace {
+			return "", "", "", fmt.Errorf("missing OCIRepository %s/%s", namespace, ref.Name)
+		}
+		if repo.Spec.Ref.Tag == "" || !strings.HasPrefix(repo.Spec.URL, "oci://") {
+			return "", "", "", fmt.Errorf("OCIRepository %s requires an OCI URL and ref.tag", ref.Name)
+		}
+		chartName = filepath.Base(strings.TrimSuffix(repo.Spec.URL, "/"))
+		version = repo.Spec.Ref.Tag
+	}
+	if repo == nil || repo.Spec.URL == "" {
+		return "", "", "", fmt.Errorf("missing Helm repository for %s", release.Metadata.Name)
+	}
+	repoURL := repo.Spec.URL
+	if release.Spec.ChartRef != nil {
+		repoURL = strings.TrimSuffix(strings.TrimSuffix(repoURL, "/"), "/"+chartName)
+	}
+	return repoURL, chartName, version, nil
+}
+
 func InstallCharts(charts []HelmChart, repos map[string]*HelmRepo, async bool) error {
 	install := func(chart HelmChart) error {
-		release, err := LoadHelmRelease(filepath.Join(chart.ChartPath, "helm-release.yaml"))
-		if err != nil {
-			return fmt.Errorf("load chart %s: %w", chart.ChartPath, err)
-		}
+		release := chart.Release
 		if release == nil {
-			return fmt.Errorf("empty Helm release: %s", chart.ChartPath)
-		}
-		repo := repos[release.Spec.Chart.Spec.SourceRef.Name]
-		chartName, version := release.Spec.Chart.Spec.Chart, release.Spec.Chart.Spec.Version
-		if ref := release.Spec.ChartRef; ref != nil {
-			if ref.Kind != "OCIRepository" {
-				return fmt.Errorf("unsupported chartRef kind %q", ref.Kind)
-			}
-			ociRepos, err := LoadAllHelmRepos(filepath.Join(helper.KubernetesPath, "repositories", "oci"))
+			var err error
+			release, err = LoadHelmRelease(filepath.Join(chart.ChartPath, "helm-release.yaml"))
 			if err != nil {
-				return fmt.Errorf("load OCI repositories: %w", err)
+				return fmt.Errorf("load chart %s: %w", chart.ChartPath, err)
 			}
-			repo = ociRepos[ref.Name]
-			namespace := ref.Namespace
-			if namespace == "" {
-				namespace = release.Metadata.Namespace
-			}
-			if repo == nil || repo.Kind != "OCIRepository" || repo.Metadata.Namespace != namespace {
-				return fmt.Errorf("missing OCIRepository %s/%s", namespace, ref.Name)
-			}
-			if repo.Spec.Ref.Tag == "" || !strings.HasPrefix(repo.Spec.URL, "oci://") {
-				return fmt.Errorf("OCIRepository %s requires an OCI URL and ref.tag", ref.Name)
-			}
-			chartName = filepath.Base(strings.TrimSuffix(repo.Spec.URL, "/"))
-			version = repo.Spec.Ref.Tag
 		}
-		if repo == nil || repo.Spec.URL == "" {
-			return fmt.Errorf("missing Helm repository for %s", chart.ChartPath)
-		}
-		repoURL := repo.Spec.URL
-		if release.Spec.ChartRef != nil {
-			repoURL = strings.TrimSuffix(strings.TrimSuffix(repoURL, "/"), "/"+chartName)
-		}
-		name := release.Metadata.Name
-		if release.Spec.ReleaseName != "" {
-			name = release.Spec.ReleaseName
+		repoURL, chartName, version, err := chartSource(release, repos)
+		if err != nil {
+			return err
 		}
 		log.Info().Msgf("Bootstrap: Installing %s", release.Metadata.Name)
-		if err := HelmInstall(repoURL, chartName, name, release.Metadata.Namespace, filepath.Join(chart.ChartPath, "values.yaml"), version, chart.Retry, chart.Wait, true); err != nil {
-			return fmt.Errorf("install chart %s: %w", name, err)
+		if err := HelmInstall(repoURL, chartName, version, chart, release); err != nil {
+			return fmt.Errorf("install chart %s: %w", release.releaseName(), err)
 		}
 		return nil
 	}

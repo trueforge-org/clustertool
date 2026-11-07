@@ -26,3 +26,28 @@ nodes:
   # - name: worker-1
   #   role: worker
   #   address: ${WORKER1IP}
+
+# Cilium and the kubelet CSR approver are installed before these lists.
+# Names refer to HelmRelease metadata.name. Steps run in order after the CRDs.
+bootstrap:
+  crd:
+    - kube-prometheus-stack
+
+  steps:
+    - manifest: kubernetes/config/cluster-secrets.sops.yaml
+    - manifest: kubernetes/apps/flux-system/flux-instance/app/deploy-key.sops.yaml
+    - manifest: kubernetes/apps/flux-system/sops-age.sops.yaml
+
+    - cert-manager
+    - clusterissuer
+    - metallb
+    - metallb-config
+    - snapshot-controller
+    - longhorn
+
+    - manifest: kubernetes/apps/system/longhorn/app/volumeSnapshotClass.yaml
+
+    - volsync
+    - cloudnative-pg
+    - flux-operator
+    - flux-instance

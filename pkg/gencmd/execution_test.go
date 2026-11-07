@@ -2,8 +2,8 @@ package gencmd
 
 import (
 	"errors"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/helper"
-	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -113,7 +113,7 @@ func TestTwoMemberApplyCannotReboot(t *testing.T) {
 
 func TestBootstrapRequiresClusterEvidence(t *testing.T) {
 	mockExecution(t)
-	inv := &talosconfig.Inventory{Nodes: []talosconfig.Node{{Name: "cp", Role: "control-plane", Address: "192.0.2.11"}, {Name: "worker", Role: "worker", Address: "192.0.2.21"}}}
+	inv := &clusterconfig.Inventory{Nodes: []clusterconfig.Node{{Name: "cp", Role: "control-plane", Address: "192.0.2.11"}, {Name: "worker", Role: "worker", Address: "192.0.2.21"}}}
 	runCommand = func([]string, bool) (string, string, error) {
 		return "NODE ID HOSTNAME PEER URLS CLIENT URLS LEARNER\n192.0.2.11 1 cp https://192.0.2.11:2380 https://192.0.2.11:2379 false\n", "WARNING: version mismatch", nil
 	}

@@ -6,10 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/helper"
 )
 
-func generateInventory(inv *Inventory) error {
+func generateInventory(inv *clusterconfig.Inventory) error {
 	if _, err := os.Stat(SecretsPath()); err != nil {
 		return fmt.Errorf("existing cluster secrets are required: %w", err)
 	}

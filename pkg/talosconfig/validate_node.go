@@ -3,6 +3,7 @@ package talosconfig
 import (
 	"bytes"
 	"fmt"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"gopkg.in/yaml.v3"
 	"io"
 	"net/netip"
@@ -10,7 +11,7 @@ import (
 )
 
 // Validate orchestration invariants after Talos has validated its own schema.
-func validateNodeOutput(node Node, path string) error {
+func validateNodeOutput(node clusterconfig.Node, path string) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
