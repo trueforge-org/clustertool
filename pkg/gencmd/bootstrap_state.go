@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/helper"
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 	"gopkg.in/yaml.v3"
@@ -22,7 +23,7 @@ func bootstrapStatePath() string {
 }
 
 func currentBootstrapState() (bootstrapState, error) {
-	inv, err := talosconfig.LoadInventory()
+	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		return bootstrapState{}, err
 	}

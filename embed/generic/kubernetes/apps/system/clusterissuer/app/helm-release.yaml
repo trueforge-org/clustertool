@@ -7,6 +7,9 @@ metadata:
   namespace: clusterissuer
 spec:
   interval: 1h
+  dependsOn:
+    - name: cert-manager
+      namespace: cert-manager
   chart:
     spec:
       chart: clusterissuer

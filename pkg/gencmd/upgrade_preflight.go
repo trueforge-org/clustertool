@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Masterminds/semver/v3"
 	"github.com/rs/zerolog/log"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 	"strings"
 )
@@ -21,7 +22,7 @@ func imageVersion(image string) (*semver.Version, error) {
 // PreflightUpgrade completes read-only checks for the entire selected set before
 // changing any node. Talos' own dry run validates the cluster-wide Kubernetes plan.
 func PreflightUpgrade(commands []Command, kube Command) error {
-	inv, err := talosconfig.LoadInventory()
+	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		return err
 	}

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 )
 
@@ -19,7 +20,7 @@ func TestBootstrapEndpointsAndResume(t *testing.T) {
 				out, _, err := runCommand(args, true)
 				return []byte(out), err
 			}
-			inv := &talosconfig.Inventory{APIVersion: "clustertool/v1", Kind: "ClusterConfig", ClusterName: "homelab", Nodes: []talosconfig.Node{
+			inv := &clusterconfig.Inventory{APIVersion: "clustertool/v1", Kind: "ClusterConfig", ClusterName: "homelab", Nodes: []clusterconfig.Node{
 				{Name: "cp1", Role: "control-plane", Address: "192.0.2.12"},
 				{Name: "cp2", Role: "control-plane", Address: "192.0.2.11"},
 				{Name: "cp3", Role: "control-plane", Address: "192.0.2.13"},

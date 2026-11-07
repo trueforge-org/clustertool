@@ -12,8 +12,8 @@ dummyEnv:
   METALLB_RANGE: 192.168.20.211-192.168.20.219
 
 skipList:
-  - embed/generic/kubernetes/apps/core/clusterissuer/app
   - embed/generic/kubernetes/apps/flux-system/flux-instance/app
   - embed/generic/kubernetes/apps/kube-system/cilium/app
+  - embed/generic/kubernetes/apps/system/clusterissuer/app  
   - embed/generic/kubernetes/apps/system/longhorn/app
   - embed/generic/kubernetes/apps/system/system-upgrade/tuppr/app

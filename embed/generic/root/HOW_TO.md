@@ -87,7 +87,7 @@ talos/
 └── generated/
 ```
 
-- `clustertool.yaml`: cluster name, Talos/Kubernetes versions and the list of nodes.
+- `clustertool.yaml`: cluster name, Talos/Kubernetes versions, nodes and bootstrap steps.
 - `patches/all/`: shared Talos settings.
 - `patches/control-plane/` and `patches/worker/`: settings for that role.
 - `patches/nodes/<name>/`: a node's hostname, network, disk and installer image.
@@ -180,11 +180,59 @@ or IP selects one node. Do not run generation and apply concurrently.
 For a new cluster, apply asks before bootstrapping. Initial setup applies the
 configuration to all nodes, bootstraps one control plane, then installs Cilium
 and the CSR approver. It waits for the remaining nodes to become ready before
-continuing with the other charts and Flux.
+creating namespaces and completing the base health checks. It then runs the
+configured CRDs and application steps below.
 
 If setup is interrupted, run apply again. When a matching
 `.bootstrap-in-progress.json` exists, ClusterTool asks whether to resume.
 The file is removed after successful setup. Keep the original cluster secrets.
+
+## Configure application bootstrap
+
+Edit the `bootstrap` list in `talos/clustertool.yaml` before initial setup.
+Cilium and the kubelet CSR approver are fixed base charts in code; they run
+before this list and do not need entries here.
+
+Every step contains exactly one of `chart`, `crd` or `manifest`. Unknown fields
+are rejected. All steps run in the order listed.
+
+- `chart`: a HelmRelease `metadata.name`. Helm waits for readiness and completed
+  Jobs by default, with a 15-minute timeout. Set `wait: false` on a chart step
+  to skip these waits; Helm installation hooks retain their own waiting behavior.
+- `crd`: a HelmRelease `metadata.name`. ClusterTool renders the referenced
+  chart version with CRDs included and hooks excluded, then applies only CRDs
+  server-side.
+- `manifest`: a manifest path relative to the cluster repository root.
+
+For example:
+
+```yaml
+bootstrap:
+  - crd: kube-prometheus-stack
+  - manifest: kubernetes/config/cluster-secrets.sops.yaml
+  - chart: flux-operator
+  - chart: flux-instance
+    wait: false
+```
+
+The default list in `talos/clustertool.yaml` applies the three Secrets, installs
+the infrastructure and restore operators, and ends with `flux-operator` and `flux-instance`. The Longhorn
+VolumeSnapshotClass follows snapshot-controller and Longhorn. Monitoring CRDs
+are applied in the first step; Flux installs the monitoring chart and remaining apps.
+Choose your applications and their order; ClusterTool does not enforce required
+charts or dependency ordering. Omitting an app here does not disable its Flux manifests.
+
+ClusterTool looks up HelmReleases once per bootstrap run. Chart installation and
+CRD rendering share the chart source, version and values: chart defaults,
+substituted HelmRelease values, optional `values.yaml`, then `bootstrap-values.yaml.ct`.
+`spec.releaseName` is respected when set. Temporary chart and values files use the
+local Helm cache and are removed after use.
+
+Execution stops on the first error. On resume, deployed releases are retained
+and checked according to their step's wait setting; resolve failed or pending
+Helm releases before resuming. Ordinary `talos apply` configuration changes do
+not look up or execute this bootstrap list. Flux continues deployment after its configured steps;
+bootstrap does not wait for a full GitOps rollout or restores.
 
 ## Restore the Git hook
 
@@ -217,12 +265,14 @@ Flux entry and components are not processed by `genks`.
 Set `GITHUB_REPOSITORY` in `kubernetes/config/cluster-secrets.sops.yaml` before completing
 `init`. Add the generated `ssh-public-key.txt` to that repository's deploy keys. 
 Run `clustertool genconfig` and `clustertool encrypt`, then commit and push 
-the configuration before accepting the Flux bootstrap prompt.
+the configuration before starting bootstrap.
 
-At the end of a new Talos bootstrap, ClusterTool asks whether to bootstrap Flux.
-It applies the required secrets, installs the Flux Operator chart and waits for
-the operator to be ready, then installs the FluxInstance chart. To start this
-separately on an existing cluster:
+The supplied `bootstrap` list applies the required secrets and finishes with
+the Flux Operator and FluxInstance charts. It waits for the operator, then installs
+FluxInstance with `wait: false` so bootstrap can finish before Git synchronization
+is ready.
+To start Flux separately on an existing cluster, use the standalone command,
+which asks for confirmation:
 
 ```sh
 clustertool flux bootstrap

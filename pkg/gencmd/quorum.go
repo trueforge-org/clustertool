@@ -3,6 +3,7 @@ package gencmd
 import (
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/nodestatus"
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 	"strings"
@@ -36,7 +37,7 @@ func parseEtcdMembers(output string, allowLearners bool) ([]string, error) {
 // inventory entries (which may include nodes that have not joined yet).
 // false means only an apply with no-reboot is safe, e.g. a two-member cluster.
 func controlPlaneGuard(address string) (bool, error) {
-	inv, err := talosconfig.LoadInventory()
+	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		return false, err
 	}
@@ -58,7 +59,7 @@ func controlPlaneGuard(address string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	known := map[string]talosconfig.Node{}
+	known := map[string]clusterconfig.Node{}
 	for _, n := range inv.Nodes {
 		if n.Role != "control-plane" {
 			continue

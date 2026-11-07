@@ -1,4 +1,4 @@
-package talosconfig
+package clusterconfig
 
 import (
 	"os"

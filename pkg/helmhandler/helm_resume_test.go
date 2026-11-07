@@ -1,4 +1,4 @@
-package fluxhandler
+package helmhandler
 
 import (
 	"errors"
@@ -21,12 +21,17 @@ type readinessClient struct {
 	fake.PrintingKubeClient
 	fake.PrintingKubeWaiter
 	waits    int
+	jobWaits int
 	creates  int
 	err      error
 	strategy kube.WaitStrategy
 }
 
 func (c *readinessClient) Wait(_ kube.ResourceList, _ time.Duration) error { c.waits++; return c.err }
+func (c *readinessClient) WaitWithJobs(_ kube.ResourceList, _ time.Duration) error {
+	c.jobWaits++
+	return c.err
+}
 func (c *readinessClient) GetWaiter(ws kube.WaitStrategy) (kube.Waiter, error) {
 	return c.GetWaiterWithOptions(ws)
 }
@@ -50,7 +55,7 @@ func TestResumeChecksReadinessWithoutInstalling(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, wait := range []bool{false, true} {
-		found, err := resumeHelmRelease(cfg, "storage", wait)
+		found, err := resumeHelmRelease(cfg, "storage", wait, false)
 		if !found || err != nil {
 			t.Fatal(found, err)
 		}
@@ -61,18 +66,21 @@ func TestResumeChecksReadinessWithoutInstalling(t *testing.T) {
 	if client.strategy != kube.StatusWatcherStrategy {
 		t.Fatalf("resume used wait strategy %q", client.strategy)
 	}
+	if found, err := resumeHelmRelease(cfg, "storage", true, true); !found || err != nil || client.jobWaits != 1 {
+		t.Fatalf("resume did not wait for Jobs: found=%v waits=%d err=%v", found, client.jobWaits, err)
+	}
 	client.err = errors.New("readiness timed out")
-	if _, err := resumeHelmRelease(cfg, "storage", true); !errors.Is(err, client.err) {
+	if _, err := resumeHelmRelease(cfg, "storage", true, true); !errors.Is(err, client.err) {
 		t.Fatal(err)
 	}
 	rel.Info.Status = releasecommon.StatusFailed
 	if err := cfg.Releases.Update(rel); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := resumeHelmRelease(cfg, "storage", true); err == nil {
+	if _, err := resumeHelmRelease(cfg, "storage", true, true); err == nil {
 		t.Fatal("accepted failed release")
 	}
-	if found, err := resumeHelmRelease(cfg, "absent", true); found || err != nil {
+	if found, err := resumeHelmRelease(cfg, "absent", true, true); found || err != nil {
 		t.Fatal(found, err)
 	}
 }

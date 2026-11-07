@@ -2,6 +2,7 @@ package gencmd
 
 import (
 	"github.com/trueforge-org/clustertool/embed"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 	"strings"
 )
@@ -16,7 +17,7 @@ type Command struct {
 
 func (c Command) String() string { return strings.Join(c.Args, " ") }
 
-func nodeCommand(operation string, node talosconfig.Node, extra ...string) Command {
+func nodeCommand(operation string, node clusterconfig.Node, extra ...string) Command {
 	args := []string{embed.GetTalosExec(), operation, "--talosconfig", talosconfig.TalosconfigPath(), "-n", node.Address}
 	return Command{Args: append(args, extra...), Node: node.Address}
 }

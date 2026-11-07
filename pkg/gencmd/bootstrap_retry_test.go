@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/trueforge-org/clustertool/pkg/talosconfig"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 )
 
 func TestBootstrapInstallationRecovery(t *testing.T) {
@@ -15,7 +15,7 @@ func TestBootstrapInstallationRecovery(t *testing.T) {
 		t.Run(scenario, func(t *testing.T) {
 			old := runBootstrapCommand
 			t.Cleanup(func() { runBootstrapCommand = old })
-			inv := &talosconfig.Inventory{Nodes: []talosconfig.Node{{Name: "cp", Role: "control-plane", Address: "192.0.2.11"}}}
+			inv := &clusterconfig.Inventory{Nodes: []clusterconfig.Node{{Name: "cp", Role: "control-plane", Address: "192.0.2.11"}}}
 			calls, probes := 0, 0
 			cause := errors.New("exit status 1")
 			ctx, cancel := context.WithCancel(context.Background())
@@ -89,7 +89,7 @@ func TestTemporaryBootstrapErrors(t *testing.T) {
 func TestBootstrapDeadlineStopsProbes(t *testing.T) {
 	old := runBootstrapCommand
 	t.Cleanup(func() { runBootstrapCommand = old })
-	inv := &talosconfig.Inventory{Nodes: []talosconfig.Node{{Name: "cp", Role: "control-plane", Address: "192.0.2.11"}}}
+	inv := &clusterconfig.Inventory{Nodes: []clusterconfig.Node{{Name: "cp", Role: "control-plane", Address: "192.0.2.11"}}}
 	calls := 0
 	runBootstrapCommand = func(ctx context.Context, args []string) ([]byte, error) { calls++; <-ctx.Done(); return nil, ctx.Err() }
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)

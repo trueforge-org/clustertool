@@ -3,9 +3,9 @@ package gencmd
 import (
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/helper"
 	"github.com/trueforge-org/clustertool/pkg/nodestatus"
-	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 	"strings"
 	"time"
 )
@@ -16,7 +16,7 @@ var waitReady = func(node string) error { _, err := nodestatus.WaitForHealth(nod
 var guardControlPlane = controlPlaneGuard
 var recoveryDelay = func() { time.Sleep(5 * time.Second) }
 var readBootID = func(node string) (string, error) {
-	inv, err := talosconfig.LoadInventory()
+	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		return "", err
 	}
@@ -66,7 +66,7 @@ func resolveControlPlane(cmd Command) (Command, error) {
 	if !cmd.Failover {
 		return cmd, nil
 	}
-	inv, err := talosconfig.LoadInventory()
+	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		return cmd, err
 	}

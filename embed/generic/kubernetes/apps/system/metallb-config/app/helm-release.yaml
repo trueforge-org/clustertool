@@ -6,6 +6,9 @@ metadata:
   namespace: metallb-config
 spec:
   interval: 1h
+  dependsOn:
+    - name: metallb
+      namespace: metallb
   chart:
     spec:
       chart: metallb-config

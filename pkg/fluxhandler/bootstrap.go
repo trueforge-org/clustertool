@@ -8,6 +8,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/trueforge-org/clustertool/pkg/helmhandler"
 	"github.com/trueforge-org/clustertool/pkg/helper"
 	"github.com/trueforge-org/clustertool/pkg/kubectlcmds"
 	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
@@ -17,7 +18,7 @@ func init() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout}).With().Timestamp().Logger()
 }
 
-// FluxBootstrap is shared by Talos bootstrap and the standalone Flux command.
+// FluxBootstrap installs Flux through the standalone Flux command.
 func FluxBootstrap(ctx context.Context) error {
 	if helper.TalEnv["GITHUB_REPOSITORY"] == "" {
 		return nil
@@ -43,7 +44,7 @@ func bootstrapFluxCD(ctx context.Context) error {
 	if !isRepo {
 		return fmt.Errorf("current directory is not a Git repository")
 	}
-	repos, err := LoadAllHelmRepos(filepath.Join(helper.KubernetesPath, "repositories", "helm"))
+	repos, err := helmhandler.LoadAllHelmRepos(filepath.Join(helper.KubernetesPath, "repositories", "helm"))
 	if err != nil {
 		return fmt.Errorf("load Helm repositories: %w", err)
 	}
@@ -63,9 +64,9 @@ func bootstrapFluxCD(ctx context.Context) error {
 	}
 
 	log.Info().Msg("Bootstrap: Installing Flux charts")
-	fluxCharts := []HelmChart{
-		{ChartPath: filepath.Join(fluxPath, "flux-operator", "app"), Retry: false, Wait: true},
-		{ChartPath: filepath.Join(fluxPath, "flux-instance", "app"), Retry: false, Wait: false},
+	fluxCharts := []helmhandler.HelmChart{
+		{ChartPath: filepath.Join(fluxPath, "flux-operator", "app"), Wait: true},
+		{ChartPath: filepath.Join(fluxPath, "flux-instance", "app"), Wait: false},
 	}
-	return InstallCharts(fluxCharts, repos, false)
+	return helmhandler.InstallCharts(fluxCharts, repos, false)
 }

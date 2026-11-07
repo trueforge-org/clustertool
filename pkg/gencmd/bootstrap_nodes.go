@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/nodestatus"
-	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 )
 
 var waitForBootstrapHealth = nodestatus.WaitForHealth
 
-func bootstrapTalosNodes(inv *talosconfig.Inventory, applyNode func(string) error) error {
+func bootstrapTalosNodes(inv *clusterconfig.Inventory, applyNode func(string) error) error {
 	// Configure every node before bootstrap or chart readiness can depend on it.
 	// On resume, keep configurations already applied to booting/running nodes.
 	for _, node := range inv.Nodes {
