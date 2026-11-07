@@ -38,13 +38,8 @@ from generated cluster repositories.
 
 ## Templates and cluster workflows
 
-- For template changes, check both the source templates and the resulting
-  generated configuration.
-- Preserve placeholders such as `DOTREPLACE...`, `REPLACEWITHCLUSTERNAME`, and
-  `${...}`. Verify where substitution occurs before changing generation order.
-- Validate Helm values against the relevant chart version and schema.
-- Check shared Flux defaults before adding per-resource overrides. Keep CRDs
-  and their instances in appropriately ordered Kustomizations.
+- Before changing anything under `embed/`, read
+  [`.github/instructions/templates.instructions.md`](.github/instructions/templates.instructions.md).
 - Preserve bootstrap ordering, dependency relationships, and resume behavior
   unless changing them is explicitly part of the task.
 
