@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
+	"github.com/trueforge-org/clustertool/pkg/helper"
 	"gopkg.in/yaml.v3"
 )
 
@@ -87,5 +88,46 @@ func TestBootstrapOrderAndStopOnError(t *testing.T) {
 		if !reflect.DeepEqual(got, expected) {
 			t.Fatalf("execution order: got %v, want %v", got, expected)
 		}
+	}
+}
+
+func TestBootstrapRequiresExplicitList(t *testing.T) {
+	for _, tc := range []struct {
+		name, bootstrap string
+		emptyList       bool
+	}{
+		{"missing", "", false},
+		{"blank", "bootstrap:\n", false},
+		{"null", "bootstrap: null\n", false},
+		{"empty list", "bootstrap: []\n", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			withSingleNodeFixture(t)
+			t.Chdir(t.TempDir())
+			if err := os.WriteFile(".sops.yaml", []byte("creation_rules: []\n"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			path := filepath.Join(helper.TalosPath, "clustertool.yaml")
+			data, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(path, append(data, []byte(tc.bootstrap)...), 0600); err != nil {
+				t.Fatal(err)
+			}
+			// Day-2 inventory loading must still accept all four forms.
+			if _, err := clusterconfig.LoadInventory(); err != nil {
+				t.Fatal(err)
+			}
+			// A rejected forwarded flag stops the accepted empty list before any cluster action.
+			args := []string{"--nodes"}
+			want := "requires an explicit bootstrap list"
+			if tc.emptyList {
+				want = ValidateExtraArgs(args).Error()
+			}
+			if err := RunBootstrap(args); err == nil || !strings.Contains(err.Error(), want) {
+				t.Fatalf("got %v, want %s", err, want)
+			}
+		})
 	}
 }

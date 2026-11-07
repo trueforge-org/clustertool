@@ -30,6 +30,9 @@ func RunBootstrap(args []string) error {
 	if err != nil {
 		return err
 	}
+	if inv.BootstrapConfig == nil {
+		return fmt.Errorf("clustertool.yaml requires an explicit bootstrap list; use bootstrap: [] to skip application steps")
+	}
 	bootstrapNode := inv.Bootstrap().Address
 	applyCommands := GenApply("", extraArgs)
 	for _, command := range applyCommands {
@@ -112,8 +115,8 @@ func RunBootstrap(args []string) error {
 
 	baseCharts := []helmhandler.HelmChart{
 		// Pulled directly from upstream, due to this being very complex and important
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "kube-system/cilium/app"), Retry: false, Wait: true},
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "kube-system/kubelet-csr-approver/app"), Retry: false, Wait: true},
+		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "kube-system/cilium/app"), Wait: true},
+		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "kube-system/kubelet-csr-approver/app"), Wait: true},
 	}
 
 	if err := helmhandler.InstallCharts(baseCharts, HelmRepos, true); err != nil {

@@ -17,7 +17,6 @@ import (
 
 type HelmChart struct {
 	ChartPath   string
-	Retry       bool
 	Wait        bool
 	WaitForJobs bool
 	Release     *HelmRelease

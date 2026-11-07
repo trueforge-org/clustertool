@@ -128,10 +128,6 @@ func HelmPull(repo string, name string, version string, dest string, silent bool
 // HelmInstall installs a Helm chart with provided parameters
 func HelmInstall(repoURL, chartName, version string, spec HelmChart, helmRelease *HelmRelease) error {
 	releaseName, namespace := helmRelease.releaseName(), helmRelease.Metadata.Namespace
-	if spec.Retry {
-		log.Info().Msg("dryRun not possible...")
-		return nil
-	}
 
 	settings := cli.New()
 	actionConfig := new(action.Configuration)

@@ -65,8 +65,8 @@ func bootstrapFluxCD(ctx context.Context) error {
 
 	log.Info().Msg("Bootstrap: Installing Flux charts")
 	fluxCharts := []helmhandler.HelmChart{
-		{ChartPath: filepath.Join(fluxPath, "flux-operator", "app"), Retry: false, Wait: true},
-		{ChartPath: filepath.Join(fluxPath, "flux-instance", "app"), Retry: false, Wait: false},
+		{ChartPath: filepath.Join(fluxPath, "flux-operator", "app"), Wait: true},
+		{ChartPath: filepath.Join(fluxPath, "flux-instance", "app"), Wait: false},
 	}
 	return helmhandler.InstallCharts(fluxCharts, repos, false)
 }
