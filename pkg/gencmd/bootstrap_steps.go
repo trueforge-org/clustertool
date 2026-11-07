@@ -59,35 +59,41 @@ func RunBootstrapSteps(ctx context.Context, config clusterconfig.BootstrapConfig
 	if err != nil {
 		return err
 	}
-	return runBootstrapSteps(config, func(name string, crdsOnly bool) error {
+	return runBootstrapSteps(config, func(name string, wait bool) error {
 		chart, err := index.lookup(name)
 		if err != nil {
 			return err
 		}
-		if crdsOnly {
-			log.Info().Msgf("Bootstrap: Applying CRDs from %s", name)
-			return helmhandler.ApplyChartCRDs(ctx, chart, repos, kubeVersion)
-		}
+		chart.Wait, chart.WaitForJobs = wait, wait
 		return helmhandler.InstallCharts([]helmhandler.HelmChart{chart}, repos, false)
+	}, func(name string) error {
+		chart, err := index.lookup(name)
+		if err != nil {
+			return err
+		}
+		log.Info().Msgf("Bootstrap: Applying CRDs from %s", name)
+		return helmhandler.ApplyChartCRDs(ctx, chart, repos, kubeVersion)
 	}, func(path string) error {
 		log.Info().Msgf("Bootstrap: Loading Manifest: %s", path)
 		return kubectlcmds.KubectlApply(ctx, filepath.Join(helper.ClusterPath, filepath.FromSlash(path)))
 	})
 }
 
-func runBootstrapSteps(config clusterconfig.BootstrapConfig, runChart func(string, bool) error, applyManifest func(string) error) error {
-	for i, name := range config.CRD {
-		if err := runChart(name, true); err != nil {
-			return fmt.Errorf("bootstrap.crd[%d] %s: %w", i, name, err)
-		}
-	}
-	for i, step := range config.Steps {
-		if step.Manifest != "" {
-			if err := applyManifest(step.Manifest); err != nil {
-				return fmt.Errorf("bootstrap.steps[%d] manifest %s: %w", i, step.Manifest, err)
+func runBootstrapSteps(config clusterconfig.BootstrapConfig, runChart func(string, bool) error, applyCRDs func(string) error, applyManifest func(string) error) error {
+	for i, step := range config {
+		switch {
+		case step.Chart != "":
+			if err := runChart(step.Chart, step.Wait); err != nil {
+				return fmt.Errorf("bootstrap[%d] chart %s: %w", i, step.Chart, err)
 			}
-		} else if err := runChart(step.Chart, false); err != nil {
-			return fmt.Errorf("bootstrap.steps[%d] chart %s: %w", i, step.Chart, err)
+		case step.CRD != "":
+			if err := applyCRDs(step.CRD); err != nil {
+				return fmt.Errorf("bootstrap[%d] crd %s: %w", i, step.CRD, err)
+			}
+		case step.Manifest != "":
+			if err := applyManifest(step.Manifest); err != nil {
+				return fmt.Errorf("bootstrap[%d] manifest %s: %w", i, step.Manifest, err)
+			}
 		}
 	}
 	return nil

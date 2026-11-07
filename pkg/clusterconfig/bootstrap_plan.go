@@ -2,33 +2,80 @@ package clusterconfig
 
 import (
 	"fmt"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
-type BootstrapConfig struct {
-	CRD   []string        `yaml:"crd"`
-	Steps []BootstrapStep `yaml:"steps"`
-}
+type BootstrapConfig []BootstrapStep
 
-// BootstrapStep is either a HelmRelease metadata.name or a manifest path.
+// BootstrapStep selects one chart, CRD source or manifest.
 type BootstrapStep struct {
 	Chart    string
+	CRD      string
 	Manifest string
+	Wait     bool
+}
+
+func (config *BootstrapConfig) UnmarshalYAML(node *yaml.Node) error {
+	if node.Kind != yaml.SequenceNode {
+		return fmt.Errorf("bootstrap line %d: expected a list of steps", node.Line)
+	}
+	steps := make(BootstrapConfig, len(node.Content))
+	for i, entry := range node.Content {
+		if err := steps[i].UnmarshalYAML(entry); err != nil {
+			return fmt.Errorf("bootstrap[%d]: %w", i, err)
+		}
+	}
+	*config = steps
+	return nil
 }
 
 func (step *BootstrapStep) UnmarshalYAML(node *yaml.Node) error {
-	*step = BootstrapStep{}
-	if node.Kind == yaml.ScalarNode && node.Tag == "!!str" && node.Value != "" {
-		step.Chart = node.Value
-		return nil
+	*step = BootstrapStep{Wait: true}
+	if node.Kind != yaml.MappingNode {
+		return fmt.Errorf("line %d: expected a chart, crd or manifest entry", node.Line)
 	}
-	if node.Kind == yaml.MappingNode && len(node.Content) == 2 && node.Content[0].Value == "manifest" {
-		value := node.Content[1]
-		if value.Kind == yaml.ScalarNode && value.Tag == "!!str" && value.Value != "" {
-			step.Manifest = value.Value
-			return nil
+	action, hasWait := "", false
+	for i := 0; i < len(node.Content); i += 2 {
+		key, value := node.Content[i], node.Content[i+1]
+		switch key.Value {
+		case "chart", "crd", "manifest":
+			if action != "" {
+				return fmt.Errorf("line %d: expected exactly one of chart, crd or manifest", key.Line)
+			}
+			if value.Kind != yaml.ScalarNode || value.Tag != "!!str" || strings.TrimSpace(value.Value) == "" {
+				return fmt.Errorf("line %d: %s requires a non-empty string", value.Line, key.Value)
+			}
+			action = key.Value
+			switch action {
+			case "chart":
+				step.Chart = value.Value
+			case "crd":
+				step.CRD = value.Value
+			case "manifest":
+				step.Manifest = value.Value
+			}
+		case "wait":
+			if hasWait {
+				return fmt.Errorf("line %d: duplicate wait field", key.Line)
+			}
+			if value.Kind != yaml.ScalarNode || value.Tag != "!!bool" {
+				return fmt.Errorf("line %d: wait must be true or false", value.Line)
+			}
+			if err := value.Decode(&step.Wait); err != nil {
+				return err
+			}
+			hasWait = true
+		default:
+			return fmt.Errorf("line %d: unknown bootstrap field %q", key.Line, key.Value)
 		}
 	}
-	return fmt.Errorf("bootstrap.steps line %d: expected a HelmRelease name or {manifest: path}", node.Line)
+	if action == "" {
+		return fmt.Errorf("line %d: expected exactly one of chart, crd or manifest", node.Line)
+	}
+	if hasWait && action != "chart" {
+		return fmt.Errorf("line %d: wait is only supported for chart steps", node.Line)
+	}
+	return nil
 }

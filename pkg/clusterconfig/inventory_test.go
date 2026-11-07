@@ -36,19 +36,42 @@ func TestBootstrapConfigDoesNotResolveApplications(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(inv.BootstrapConfig.CRD) == 0 || len(inv.BootstrapConfig.Steps) == 0 ||
-		inv.BootstrapConfig.Steps[0].Manifest != "kubernetes/config/cluster-secrets.sops.yaml" {
-		t.Fatalf("bootstrap configuration not retained: %+v", inv.BootstrapConfig)
+	config := inv.BootstrapConfig
+	if len(config) < 2 || config[0].CRD != "kube-prometheus-stack" ||
+		config[1].Manifest != "kubernetes/config/cluster-secrets.sops.yaml" {
+		t.Fatalf("bootstrap configuration not retained: %+v", config)
 	}
+	last := config[len(config)-1]
+	if last.Chart != "flux-instance" || last.Wait {
+		t.Fatalf("default FluxInstance step must not wait: %+v", last)
+	}
+	for _, step := range config[:len(config)-1] {
+		if step.Chart != "" && !step.Wait {
+			t.Fatalf("chart must wait by default: %+v", step)
+		}
+	}
+}
+
+func TestBootstrapStepValidation(t *testing.T) {
 	var config BootstrapConfig
-	if err := yaml.Unmarshal([]byte("steps:\n  - arbitrary-chart\n  - manifest: custom.yaml\n"), &config); err != nil ||
-		len(config.Steps) != 2 || config.Steps[0].Chart != "arbitrary-chart" || config.Steps[1].Manifest != "custom.yaml" {
+	if err := yaml.Unmarshal([]byte("- chart: arbitrary-chart\n- manifest: custom.yaml\n- crd: monitoring\n- chart: custom-instance\n  wait: false\n"), &config); err != nil ||
+		len(config) != 4 || config[0].Chart != "arbitrary-chart" || !config[0].Wait ||
+		config[1].Manifest != "custom.yaml" || config[2].CRD != "monitoring" || config[3].Wait {
 		t.Fatalf("parse steps: %+v, %v", config, err)
 	}
-	for _, value := range []string{"42", "{}", "{manifest: []}", "{manifest: test.yaml, extra: true}"} {
-		if err := yaml.Unmarshal([]byte("steps: ["+value+"]"), &config); err == nil {
+	for _, value := range []string{
+		"chart-name", "42", "null", "{}",
+		"{chart: []}", "{crd: ''}", "{manifest: test.yaml, extra: true}",
+		"{chrat: test}", "{chart: test, crd: test}", "{chart: first, chart: second}",
+		"{chart: test, wait: 'false'}", "{chart: test, wait: true, wait: false}",
+		"{crd: test, wait: false}", "{manifest: test.yaml, wait: false}",
+	} {
+		if err := yaml.Unmarshal([]byte("["+value+"]"), &config); err == nil {
 			t.Fatalf("accepted invalid step %s", value)
 		}
+	}
+	if err := yaml.Unmarshal([]byte("steps: []"), &config); err == nil {
+		t.Fatal("accepted a mapping instead of the bootstrap list")
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
+	"gopkg.in/yaml.v3"
 )
 
 func TestBootstrapLookupUsesMetadataAndCachesRelease(t *testing.T) {
@@ -45,11 +46,18 @@ func TestBootstrapLookupUsesMetadataAndCachesRelease(t *testing.T) {
 }
 
 func TestBootstrapOrderAndStopOnError(t *testing.T) {
-	config := clusterconfig.BootstrapConfig{
-		CRD:   []string{"monitoring", "other"},
-		Steps: []clusterconfig.BootstrapStep{{Manifest: "secrets.yaml"}, {Chart: "storage"}, {Manifest: "snapshot.yaml"}, {Chart: "flux"}},
+	var config clusterconfig.BootstrapConfig
+	if err := yaml.Unmarshal([]byte(`- crd: monitoring
+- manifest: secrets.yaml
+- chart: storage
+- crd: other
+- manifest: snapshot.yaml
+- chart: custom-instance
+  wait: false
+`), &config); err != nil {
+		t.Fatal(err)
 	}
-	want := []string{"crd:monitoring", "crd:other", "manifest:secrets.yaml", "chart:storage", "manifest:snapshot.yaml", "chart:flux"}
+	want := []string{"crd:monitoring", "manifest:secrets.yaml", "chart:storage", "crd:other", "manifest:snapshot.yaml", "chart:custom-instance"}
 	cause := errors.New("operation failed")
 	for failAt := 0; failAt <= len(want); failAt++ {
 		var got []string
@@ -60,12 +68,13 @@ func TestBootstrapOrderAndStopOnError(t *testing.T) {
 			}
 			return nil
 		}
-		err := runBootstrapSteps(config, func(name string, crdsOnly bool) error {
-			if crdsOnly {
-				return run("crd:" + name)
+		err := runBootstrapSteps(config, func(name string, wait bool) error {
+			if wait != (name == "storage") {
+				t.Fatalf("wrong wait setting for %s: %v", name, wait)
 			}
 			return run("chart:" + name)
-		}, func(path string) error { return run("manifest:" + path) })
+		}, func(name string) error { return run("crd:" + name) },
+			func(path string) error { return run("manifest:" + path) })
 		expected := want
 		if failAt > 0 {
 			expected = want[:failAt]

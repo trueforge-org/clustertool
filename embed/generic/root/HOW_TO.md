@@ -189,21 +189,36 @@ The file is removed after successful setup. Keep the original cluster secrets.
 
 ## Configure application bootstrap
 
-Edit `bootstrap.crd` and `bootstrap.steps` in `talos/clustertool.yaml` before
-initial setup. Cilium and the kubelet CSR approver are fixed base charts in code;
-they run before these lists and do not need entries here.
+Edit the `bootstrap` list in `talos/clustertool.yaml` before initial setup.
+Cilium and the kubelet CSR approver are fixed base charts in code; they run
+before this list and do not need entries here.
 
-- `crd`: HelmRelease `metadata.name` values. ClusterTool renders the referenced
-  chart versions with CRDs included and hooks excluded, then applies only CRDs
-  server-side, in list order.
-- `steps`: HelmRelease `metadata.name` values or `manifest: path` entries.
-  Manifest paths are relative to the cluster repository root. Entries run in order;
-  every chart uses Helm waiting, including Jobs, with a 15-minute timeout.
+Every step contains exactly one of `chart`, `crd` or `manifest`. Unknown fields
+are rejected. All steps run in the order listed.
 
-The supplied example applies the three Secrets, installs the infrastructure and
-restore operators, and ends with `flux-operator` and `flux-instance`. The Longhorn
+- `chart`: a HelmRelease `metadata.name`. Helm waits for readiness and completed
+  Jobs by default, with a 15-minute timeout. Set `wait: false` on a chart step
+  to skip these waits; Helm installation hooks retain their own waiting behavior.
+- `crd`: a HelmRelease `metadata.name`. ClusterTool renders the referenced
+  chart version with CRDs included and hooks excluded, then applies only CRDs
+  server-side.
+- `manifest`: a manifest path relative to the cluster repository root.
+
+For example:
+
+```yaml
+bootstrap:
+  - crd: kube-prometheus-stack
+  - manifest: kubernetes/config/cluster-secrets.sops.yaml
+  - chart: flux-operator
+  - chart: flux-instance
+    wait: false
+```
+
+The default list in `talos/clustertool.yaml` applies the three Secrets, installs
+the infrastructure and restore operators, and ends with `flux-operator` and `flux-instance`. The Longhorn
 VolumeSnapshotClass follows snapshot-controller and Longhorn. Monitoring CRDs
-are prepared separately; Flux installs the monitoring chart and remaining apps.
+are applied in the first step; Flux installs the monitoring chart and remaining apps.
 Choose your applications and their order; ClusterTool does not enforce required
 charts or dependency ordering. Omitting an app here does not disable its Flux manifests.
 
@@ -214,9 +229,9 @@ substituted HelmRelease values, optional `values.yaml`, then `bootstrap-values.y
 local Helm cache and are removed after use.
 
 Execution stops on the first error. On resume, deployed releases are retained
-and checked with the same Helm waiting; resolve failed or pending Helm releases
-before resuming. Ordinary `talos apply` configuration changes do not look up or
-execute these bootstrap lists. Flux continues deployment after its configured steps;
+and checked according to their step's wait setting; resolve failed or pending
+Helm releases before resuming. Ordinary `talos apply` configuration changes do
+not look up or execute this bootstrap list. Flux continues deployment after its configured steps;
 bootstrap does not wait for a full GitOps rollout or restores.
 
 ## Restore the Git hook
@@ -252,8 +267,10 @@ Set `GITHUB_REPOSITORY` in `kubernetes/config/cluster-secrets.sops.yaml` before 
 Run `clustertool genconfig` and `clustertool encrypt`, then commit and push 
 the configuration before starting bootstrap.
 
-The supplied `bootstrap.steps` applies the required secrets and finishes with
-the Flux Operator and FluxInstance charts, waiting for each through Helm.
+The supplied `bootstrap` list applies the required secrets and finishes with
+the Flux Operator and FluxInstance charts. It waits for the operator, then installs
+FluxInstance with `wait: false` so bootstrap can finish before Git synchronization
+is ready.
 To start Flux separately on an existing cluster, use the standalone command,
 which asks for confirmation:
 
