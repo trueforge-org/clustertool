@@ -125,7 +125,7 @@ func (step *BootstrapStep) UnmarshalYAML(node *yaml.Node) error {
 			}
 			hasWait = true
 		default:
-			return invalid(i, key, fmt.Sprintf("unknown bootstrap field %q; expected chart, crd, manifest or wait", key.Value))
+			return invalid(i, key, fmt.Sprintf("unknown bootstrap field '%s'; expected chart, crd, manifest or wait", key.Value))
 		}
 	}
 	if action == "" {

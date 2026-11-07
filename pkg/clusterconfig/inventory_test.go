@@ -84,7 +84,7 @@ bootstrap:
 %s
 `
 	for _, tc := range []struct{ name, step, marker, message string }{
-		{"unknown field", "  - chrt: example-instance", "chrt:", `unknown bootstrap field "chrt"`},
+		{"unknown field", "  - chrt: example-instance", "chrt:", `unknown bootstrap field 'chrt'`},
 		{"invalid wait", "  - chart: example-instance\n    wait: invalid", "wait:", "wait must be true or false"},
 		{"empty variable", "  - chart: ${EMPTY_CHART}", "- chart: ${EMPTY_CHART}", "chart requires a non-empty string"},
 	} {
