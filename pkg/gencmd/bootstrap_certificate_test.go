@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/trueforge-org/clustertool/pkg/talosconfig"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 )
 
 func certificateDelayMessage(seconds int) string {
@@ -41,7 +41,7 @@ func TestBootstrapCertificateRecovery(t *testing.T) {
 			t.Run(fmt.Sprintf("%s-%d", operation, seconds), func(t *testing.T) {
 				old := runBootstrapCommand
 				t.Cleanup(func() { runBootstrapCommand = old })
-				inv := &talosconfig.Inventory{Nodes: []talosconfig.Node{{Name: "cp", Role: "control-plane", Address: "192.0.2.11"}}}
+				inv := &clusterconfig.Inventory{Nodes: []clusterconfig.Node{{Name: "cp", Role: "control-plane", Address: "192.0.2.11"}}}
 				cause := errors.New("exit status 1")
 				probes, calls := 0, 0
 				runBootstrapCommand = func(ctx context.Context, args []string) ([]byte, error) {

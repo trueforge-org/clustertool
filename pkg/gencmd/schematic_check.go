@@ -7,12 +7,13 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 )
 
 // ConfirmTalosInstallation checks maintenance nodes before any configuration is applied.
 // The detected schematic describes the current boot image, not a separate disk inspection.
-func ConfirmTalosInstallation(nodes []talosconfig.Node, confirm func(string, bool) bool) error {
+func ConfirmTalosInstallation(nodes []clusterconfig.Node, confirm func(string, bool) bool) error {
 	warnings := false
 	for _, node := range nodes {
 		stage, err := checkStatus(node.Address)

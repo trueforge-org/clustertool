@@ -9,27 +9,24 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/trueforge-org/clustertool/pkg/fluxhandler"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
+	"github.com/trueforge-org/clustertool/pkg/helmhandler"
 	"github.com/trueforge-org/clustertool/pkg/helper"
 	"github.com/trueforge-org/clustertool/pkg/kubectlcmds"
 	"github.com/trueforge-org/clustertool/pkg/nodestatus"
 	"github.com/trueforge-org/clustertool/pkg/sops"
-	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 )
 
-var HelmRepos map[string]*fluxhandler.HelmRepo
+var HelmRepos map[string]*helmhandler.HelmRepo
 
 func RunBootstrap(args []string) error {
 	extraArgs := args
-	manifestPaths := []string{
-		helper.ClusterSettingsFile,
-	}
 
 	if err := sops.DecryptFiles(); err != nil {
 		return err
 	}
 
-	inv, err := talosconfig.LoadInventory()
+	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		return err
 	}
@@ -102,7 +99,7 @@ func RunBootstrap(args []string) error {
 	ctx := context.Background()
 
 	helmRepoPath := filepath.Join(helper.KubernetesPath, "repositories", "helm")
-	HelmRepos, err = fluxhandler.LoadAllHelmRepos(helmRepoPath)
+	HelmRepos, err = helmhandler.LoadAllHelmRepos(helmRepoPath)
 
 	// Added by Boemeltrein, for linting purposes
 	if err != nil {
@@ -113,13 +110,13 @@ func RunBootstrap(args []string) error {
 	// Call ApprovePendingCertificates with clientset and stopCh
 	go kubectlcmds.ApprovePendingCertificates(clientset, stopCh)
 
-	baseCharts := []fluxhandler.HelmChart{
+	baseCharts := []helmhandler.HelmChart{
 		// Pulled directly from upstream, due to this being very complex and important
 		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "kube-system/cilium/app"), Retry: false, Wait: true},
 		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "kube-system/kubelet-csr-approver/app"), Retry: false, Wait: true},
 	}
 
-	if err := fluxhandler.InstallCharts(baseCharts, HelmRepos, true); err != nil {
+	if err := helmhandler.InstallCharts(baseCharts, HelmRepos, true); err != nil {
 		return err
 	}
 	// Full node readiness is checked only after the CNI is installed.
@@ -138,7 +135,6 @@ func RunBootstrap(args []string) error {
 	log.Info().Msg("Bootstrap: Creating Namespaces...")
 
 	var namespaceFilePaths []string
-	var VSCfilePaths []string
 
 	// Walk through the directory recursively and find all namespace.yaml files
 	err = filepath.WalkDir(helper.KubernetesAppsPath, func(path string, d os.DirEntry, err error) error {
@@ -150,9 +146,6 @@ func RunBootstrap(args []string) error {
 		}
 		if filepath.Base(path) == "namespace.yaml" {
 			namespaceFilePaths = append(namespaceFilePaths, path)
-		}
-		if filepath.Base(path) == "volumeSnapshotClass.yaml" {
-			VSCfilePaths = append(VSCfilePaths, path)
 		}
 		return nil
 	})
@@ -170,14 +163,6 @@ func RunBootstrap(args []string) error {
 		}
 	}
 
-	for _, filePath := range manifestPaths {
-		log.Info().Msgf("Bootstrap: Loading Manifest: %v", filePath)
-		if err := kubectlcmds.KubectlApply(ctx, filePath); err != nil {
-			log.Info().Msgf("Error applying manifest for %s: %v\n", filepath.Base(filePath), err)
-			return fmt.Errorf("bootstrap failed: %w", err)
-		}
-	}
-
 	log.Info().Msg("Bootstrap: Base Cluster Configuration Completed, continuing setup...")
 	log.Info().Msg("Bootstrap: Confirming cluster health...")
 	healthcmd := GenPlain("health", bootstrapNode, []string{})
@@ -186,80 +171,18 @@ func RunBootstrap(args []string) error {
 	}
 	stopApprover()
 
-	prioCharts := []fluxhandler.HelmChart{
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "observability/kube-prometheus-stack/app"), Retry: false, Wait: true},
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "system/cert-manager/app"), Retry: false, Wait: false},
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "system/kubernetes-reflector/app"), Retry: false, Wait: false},
-	}
-	if err := fluxhandler.InstallCharts(prioCharts, HelmRepos, false); err != nil {
-		return err
-	}
-
-	intermediateCharts := []fluxhandler.HelmChart{
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "system/metallb/app"), Retry: false, Wait: false},
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "core/clusterissuer/app"), Retry: false, Wait: false},
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "system/cloudnative-pg/app"), Retry: false, Wait: false},
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "kube-system/node-feature-discovery/app"), Retry: false, Wait: false},
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "kube-system/metrics-server/app"), Retry: false, Wait: false},
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "system/volsync/app"), Retry: false, Wait: true},
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "system/snapshot-controller/app"), Retry: false, Wait: true},
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "system/openebs/app"), Retry: false, Wait: true},
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "system/longhorn/app"), Retry: false, Wait: true},
-	}
-
-	if err := fluxhandler.InstallCharts(intermediateCharts, HelmRepos, true); err != nil {
-		return err
-	}
-
-	// Desired pod names
-	requiredMLBPods := []string{
-		"metallb-controller",
-		"metallb-speaker",
-	}
-
-	log.Info().Msgf("Bootstrap: Waiting for MetalLB Pods to be running for: %v", bootstrapNode)
-	if err := kubectlcmds.CheckStatus(requiredMLBPods, []string{}, 15); err != nil {
-		log.Error().Err(err).Msgf("Error: %v\n", err)
-
-		return fmt.Errorf("bootstrap failed: %w", err)
-	}
-
-	lateCharts := []fluxhandler.HelmChart{
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "core/metallb-config/app"), Retry: false, Wait: false},
-	}
-
-	log.Info().Msgf("Bootstrap: Loading VolumeSnapshotClasses")
-
-	for _, filePath := range VSCfilePaths {
-		log.Info().Msgf("Bootstrap: Loading VolumeSnapshotClass: %v", filePath)
-		if err := kubectlcmds.KubectlApply(ctx, filePath); err != nil {
-			log.Info().Msgf("Error applying manifest for %s: %v\n", filepath.Base(filePath), err)
-			return fmt.Errorf("bootstrap failed: %w", err)
-		}
-	}
-
-	if err := fluxhandler.InstallCharts(lateCharts, HelmRepos, true); err != nil {
-		return err
-	}
-
-	log.Info().Msg("Bootstrap: Installing included applications")
-	postCharts := []fluxhandler.HelmChart{
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "networking/nginx-internal/app"), Retry: false, Wait: true},
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "networking/nginx-external/app"), Retry: false, Wait: true},
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "core/blocky/app"), Retry: false, Wait: true},
-		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "observability/headlamp/app"), Retry: false, Wait: true},
-	}
-
-	if err := fluxhandler.InstallCharts(postCharts, HelmRepos, true); err != nil {
-		return err
-	}
-
-	log.Info().Msg("------")
-
-	if err := fluxhandler.FluxBootstrap(ctx); err != nil {
+	if err := RunBootstrapSteps(ctx, inv.BootstrapConfig, HelmRepos, inv.KubernetesVersion); err != nil {
 		return err
 	}
 
 	log.Info().Msg("Bootstrap: Completed Successfully!")
+	for _, step := range inv.BootstrapConfig {
+		if step.Chart == "flux-instance" {
+			log.Info().Msg("Flux configuration installed. Reconciliation continues in the background.")
+			log.Info().Msg("Ensure the public key from ssh-public-key.txt is added to your GitHub account under Settings > SSH and GPG keys.")
+			log.Info().Msg("Check progress with: kubectl get fluxinstance,gitrepository,kustomization -n flux-system")
+			break
+		}
+	}
 	return os.Remove(bootstrapStatePath())
 }

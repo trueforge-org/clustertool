@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/helper"
 )
 
@@ -47,7 +48,7 @@ func multiFixture(t *testing.T) {
 
 func TestInventorySelection(t *testing.T) {
 	multiFixture(t)
-	inv, err := LoadInventory()
+	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +73,7 @@ func TestInventorySelection(t *testing.T) {
 	data, _ := os.ReadFile(filepath.Join(helper.TalosPath, "clustertool.yaml"))
 	for _, bad := range []string{strings.Replace(string(data), "192.0.2.12", "192.0.2.11", 1), strings.ReplaceAll(string(data), "role: control-plane", "role: worker"), strings.Replace(string(data), "name: worker-1", "name: ../worker", 1), "bootstrapNode: control-1\n" + string(data)} {
 		os.WriteFile(filepath.Join(helper.TalosPath, "clustertool.yaml"), []byte(bad), 0600)
-		if _, err := LoadInventory(); err == nil {
+		if _, err := clusterconfig.LoadInventory(); err == nil {
 			t.Fatal("invalid inventory accepted")
 		}
 	}

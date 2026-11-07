@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/gencmd"
 
 	"github.com/trueforge-org/clustertool/pkg/initfiles"
 
 	"github.com/trueforge-org/clustertool/pkg/sops"
-	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 	fthelper "github.com/trueforge-org/forgetool/v4/pkg/helper"
 )
 
@@ -24,17 +24,14 @@ If the cluster has not been bootstrapped yet, Apply will automatically detect th
 
 Bootstrapping applies the generated native Talos configuration to all configured nodes and then bootstraps the cluster through the alphabetically first control-plane node by name.
 
-After this is done, we apply a number of helm-charts and manifests by default such as:
-
-- Metallb
-- Metallb-Config
-- Cilium (CNI)
-- Certificate-Approver
-- Headlamp
-
-### Bootstrapping Flux
-
-During Bootstrapping, if a "GITHUB_REPOSITORY" is set in "kubernetes/config/cluster-secrets.sops.yaml", you will be asked if you also want to bootstrap Flux, checkout the getting-started guide for more info
+ClusterTool installs Cilium and the kubelet CSR approver, creates namespaces and completes the base health checks.
+It then executes the bootstrap list from talos/clustertool.yaml in the order listed.
+Each step selects exactly one action: chart, crd or manifest.
+Chart and CRD entries refer to HelmRelease metadata.name; manifest entries refer to repository-relative files.
+By default, charts wait for their resources and Jobs with a 15-minute timeout before the next step starts.
+Set wait: false on a chart step to skip these waits; Helm installation hooks retain their own waiting behavior.
+The supplied configuration ends with flux-operator and flux-instance, with wait: false for flux-instance, so Flux can continue the rollout.
+These steps run only during initial bootstrap or an explicitly confirmed resume, never during ordinary Talos configuration changes.
 
 ## About Bootstrapping
 
@@ -74,7 +71,7 @@ var apply = &cobra.Command{
 			return err
 
 		}
-		if err := talosconfig.ValidateNode(node); err != nil {
+		if err := clusterconfig.ValidateNode(node); err != nil {
 			return err
 		}
 		if err := gencmd.ValidateExtraArgs(extraArgs); err != nil {
@@ -83,7 +80,7 @@ var apply = &cobra.Command{
 		if err := gencmd.GenConfig(nil); err != nil {
 			return err
 		}
-		inv, err := talosconfig.LoadInventory()
+		inv, err := clusterconfig.LoadInventory()
 		if err != nil {
 			return err
 		}

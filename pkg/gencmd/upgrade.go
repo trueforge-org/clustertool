@@ -2,12 +2,13 @@ package gencmd
 
 import (
 	"fmt"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 	"strings"
 )
 
 func GenUpgrade(target string, extra []string) ([]Command, error) {
-	inv, err := talosconfig.LoadInventory()
+	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +33,7 @@ func GenUpgrade(target string, extra []string) ([]Command, error) {
 }
 
 func GenKubeUpgrade(target string) (Command, error) {
-	inv, err := talosconfig.LoadInventory()
+	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		return Command{}, err
 	}

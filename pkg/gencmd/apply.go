@@ -1,12 +1,15 @@
 package gencmd
 
-import "github.com/trueforge-org/clustertool/pkg/talosconfig"
+import (
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
+	"github.com/trueforge-org/clustertool/pkg/talosconfig"
+)
 
 func GenApply(target string, extra []string) []Command {
 	if err := ValidateExtraArgs(extra); err != nil {
 		return []Command{{Err: err}}
 	}
-	inv, err := talosconfig.LoadInventory()
+	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		return []Command{{Err: err}}
 	}

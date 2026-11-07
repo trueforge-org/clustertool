@@ -1,6 +1,7 @@
-package talosconfig
+package clusterconfig
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/netip"
@@ -17,12 +18,13 @@ import (
 
 // Inventory contains cluster versions and command targeting metadata. Node settings stay in patches.
 type Inventory struct {
-	ClusterName       string `yaml:"clusterName"`
-	TalosVersion      string `yaml:"talosVersion"`
-	KubernetesVersion string `yaml:"kubernetesVersion"`
-	APIVersion        string `yaml:"apiVersion"`
-	Kind              string `yaml:"kind"`
-	Nodes             []Node `yaml:"nodes"`
+	ClusterName       string          `yaml:"clusterName"`
+	TalosVersion      string          `yaml:"talosVersion"`
+	KubernetesVersion string          `yaml:"kubernetesVersion"`
+	APIVersion        string          `yaml:"apiVersion"`
+	Kind              string          `yaml:"kind"`
+	Nodes             []Node          `yaml:"nodes"`
+	BootstrapConfig   BootstrapConfig `yaml:"bootstrap"`
 }
 
 type Node struct {
@@ -38,12 +40,13 @@ func LoadInventory() (*Inventory, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read required clustertool.yaml: %w", err)
 	}
+	source := data
 	// The embedded inventory is a template so init can copy one consistent
 	// layout while the actual management addresses remain in kubernetes/config/cluster-secrets.sops.yaml.
 	// Render only when a template variable is present; hand-written inventories
 	// remain ordinary YAML files.
 	if strings.Contains(string(data), "${") {
-		data, err = render(data, helper.TalEnv)
+		data, err = helper.RenderYAML(data, helper.TalEnv)
 		if err != nil {
 			return nil, fmt.Errorf("render clustertool.yaml: %w", err)
 		}
@@ -52,6 +55,10 @@ func LoadInventory() (*Inventory, error) {
 	dec := yaml.NewDecoder(strings.NewReader(string(data)))
 	dec.KnownFields(true)
 	if err := dec.Decode(&inv); err != nil {
+		var bootstrapErr *bootstrapConfigError
+		if errors.As(err, &bootstrapErr) {
+			bootstrapErr.useSourceLine(source, data)
+		}
 		return nil, fmt.Errorf("read clustertool.yaml: %w", err)
 	}
 	var extra any
@@ -145,4 +152,11 @@ func (i *Inventory) Endpoints() []string {
 	return result
 }
 
-func NodeConfigPath(n Node) string { return filepath.Join(helper.TalosGenerated, n.Name+".yaml") }
+func ValidateNode(node string) error {
+	inv, err := LoadInventory()
+	if err != nil {
+		return err
+	}
+	_, err = inv.Select(node)
+	return err
+}

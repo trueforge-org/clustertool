@@ -9,11 +9,12 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/helper"
 	"github.com/trueforge-org/clustertool/pkg/talosconfig"
 )
 
-func schematicCheckFixture(t *testing.T, nodes []talosconfig.Node, image string) *bytes.Buffer {
+func schematicCheckFixture(t *testing.T, nodes []clusterconfig.Node, image string) *bytes.Buffer {
 	t.Helper()
 	mockExecution(t)
 	previousGenerated, previousLogger := helper.TalosGenerated, log.Logger
@@ -66,7 +67,7 @@ func schematicGetTarget(t *testing.T, args []string) (string, string) {
 func TestConfirmTalosInstallationSkipsSafeNodes(t *testing.T) {
 	wanted := strings.Repeat("a", 64)
 	other := strings.Repeat("b", 64)
-	nodes := []talosconfig.Node{{Name: "control-1", Role: "control-plane", Address: "192.0.2.11"}}
+	nodes := []clusterconfig.Node{{Name: "control-1", Role: "control-plane", Address: "192.0.2.11"}}
 	for _, tc := range []struct {
 		name, stage, phase, current string
 		wantGets                    int
@@ -104,7 +105,7 @@ func TestConfirmTalosInstallationSkipsSafeNodes(t *testing.T) {
 
 func TestConfirmTalosInstallationInspectsAllNodesBeforeOnePrompt(t *testing.T) {
 	wanted, current := strings.Repeat("a", 64), strings.Repeat("b", 64)
-	nodes := []talosconfig.Node{
+	nodes := []clusterconfig.Node{
 		{Name: "control-1", Role: "control-plane", Address: "192.0.2.11"},
 		{Name: "worker-1", Role: "worker", Address: "192.0.2.21"},
 		{Name: "worker-2", Role: "worker", Address: "192.0.2.22"},
@@ -156,7 +157,7 @@ func TestConfirmTalosInstallationInspectsAllNodesBeforeOnePrompt(t *testing.T) {
 
 func TestConfirmTalosInstallationWarnsWhenInspectionIsInconclusive(t *testing.T) {
 	wanted := strings.Repeat("a", 64)
-	nodes := []talosconfig.Node{{Name: "worker-1", Role: "worker", Address: "192.0.2.21"}}
+	nodes := []clusterconfig.Node{{Name: "worker-1", Role: "worker", Address: "192.0.2.21"}}
 	for _, tc := range []struct {
 		name, meta, schematic, failedResource, image string
 	}{
@@ -216,7 +217,7 @@ func TestConfirmTalosInstallationWarnsWhenInspectionIsInconclusive(t *testing.T)
 
 func TestConfirmTalosInstallationWarnsWithMatchingSchematic(t *testing.T) {
 	wanted := strings.Repeat("a", 64)
-	nodes := []talosconfig.Node{{Name: "control-1", Role: "control-plane", Address: "192.0.2.11"}}
+	nodes := []clusterconfig.Node{{Name: "control-1", Role: "control-plane", Address: "192.0.2.11"}}
 	for _, tc := range []struct {
 		name, disk string
 		diskError  bool

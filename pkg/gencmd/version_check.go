@@ -7,12 +7,12 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/rs/zerolog/log"
 	"github.com/trueforge-org/clustertool/embed"
-	"github.com/trueforge-org/clustertool/pkg/talosconfig"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 )
 
 // Check the binary actually used for generation, rather than a template version.
 func confirmTalosVersion(confirm func(string, bool) bool) error {
-	inv, err := talosconfig.LoadInventory()
+	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		return err
 	}

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/trueforge-org/clustertool/embed"
+	"github.com/trueforge-org/clustertool/pkg/clusterconfig"
 	"github.com/trueforge-org/clustertool/pkg/helper"
 )
 
@@ -70,7 +71,7 @@ func EnsureSecrets() error {
 
 // Generate validates every configured node before publishing the output.
 func Generate() error {
-	inv, err := LoadInventory()
+	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		return err
 	}
@@ -110,7 +111,7 @@ func renderPatchDirs(workDir string, dirs []string, env map[string]string) ([]st
 		if err != nil {
 			return nil, err
 		}
-		content, err := render(raw, env)
+		content, err := helper.RenderYAML(raw, env)
 		if err != nil {
 			return nil, fmt.Errorf("render Talos document %s: %w", source, err)
 		}
@@ -133,4 +134,8 @@ func runTalosctl(args ...string) error {
 		return fmt.Errorf("talosctl %s failed: %w: %s", strings.Join(args, " "), err, strings.TrimSpace(output.String()))
 	}
 	return nil
+}
+
+func NodeConfigPath(n clusterconfig.Node) string {
+	return filepath.Join(helper.TalosGenerated, n.Name+".yaml")
 }
