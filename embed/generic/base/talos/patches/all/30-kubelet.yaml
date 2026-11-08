@@ -23,7 +23,7 @@ config:
     # system-node-critical
     - priority: 2000001000
       shutdownGracePeriodSeconds: 30
-  # Garbage collection thresholds for images. 
+  # Garbage collection thresholds for images.
   imageGCHighThresholdPercent: 50
   imageGCLowThresholdPercent: 30
   imageMinimumGCAge: "30m"
