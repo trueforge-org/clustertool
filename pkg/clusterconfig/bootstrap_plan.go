@@ -7,18 +7,22 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type BootstrapConfig []BootstrapStep
+// BootstrapConfig separates CRDs applied before the base charts from later application steps.
+type BootstrapConfig struct {
+	CRD   []string        `yaml:"crd"`
+	Steps []BootstrapStep `yaml:"steps"`
+}
 
-// BootstrapStep selects one chart, CRD source or manifest.
+// BootstrapStep selects one chart or manifest.
 type BootstrapStep struct {
 	Chart    string
-	CRD      string
 	Manifest string
 	Wait     bool
 }
 
-// Keep the step and field position so errors can use the original source line.
+// Keep the section, step and field position so errors can use the original source line.
 type bootstrapConfigError struct {
+	section string
 	step    int
 	field   int
 	line    int
@@ -27,8 +31,15 @@ type bootstrapConfigError struct {
 
 func (err *bootstrapConfigError) Error() string {
 	location := "bootstrap"
+	if err.section != "" {
+		location += "." + err.section
+	}
 	if err.step > 0 {
-		location = fmt.Sprintf("bootstrap step %d", err.step)
+		if err.section == "crd" {
+			location = fmt.Sprintf("bootstrap.crd entry %d", err.step)
+		} else {
+			location = fmt.Sprintf("bootstrap step %d", err.step)
+		}
 	}
 	return fmt.Sprintf("%s, line %d: %s", location, err.line, err.message)
 }
@@ -41,47 +52,90 @@ func (err *bootstrapConfigError) useSourceLine(source, rendered []byte) {
 	if len(original.Content) == 0 || len(expanded.Content) == 0 {
 		return
 	}
-	originalRoot, expandedRoot := original.Content[0], expanded.Content[0]
-	for i := 0; i+1 < len(expandedRoot.Content) && i+1 < len(originalRoot.Content); i += 2 {
-		if expandedRoot.Content[i].Value != "bootstrap" {
+	node, renderedNode := original.Content[0], expanded.Content[0]
+	for _, name := range []string{"bootstrap", err.section} {
+		if name == "" {
 			continue
 		}
-		node := originalRoot.Content[i+1]
 		for node.Kind == yaml.AliasNode {
 			node = node.Alias
 		}
-		if err.step > 0 {
-			if node.Kind != yaml.SequenceNode || err.step > len(node.Content) {
-				return
-			}
-			node = node.Content[err.step-1]
+		for renderedNode.Kind == yaml.AliasNode {
+			renderedNode = renderedNode.Alias
 		}
-		if err.field >= 0 {
-			if err.field >= len(node.Content) {
-				return
-			}
-			node = node.Content[err.field]
+		if node.Kind != yaml.MappingNode || renderedNode.Kind != yaml.MappingNode {
+			return
 		}
-		err.line = node.Line
-		return
+		found := false
+		for i := 0; i+1 < len(renderedNode.Content) && i+1 < len(node.Content); i += 2 {
+			if renderedNode.Content[i].Value == name {
+				node, renderedNode = node.Content[i+1], renderedNode.Content[i+1]
+				found = true
+				break
+			}
+		}
+		if !found {
+			return
+		}
 	}
+	for node.Kind == yaml.AliasNode {
+		node = node.Alias
+	}
+	if err.step > 0 {
+		if node.Kind != yaml.SequenceNode || err.step > len(node.Content) {
+			return
+		}
+		node = node.Content[err.step-1]
+	}
+	if err.field >= 0 {
+		if err.field >= len(node.Content) {
+			return
+		}
+		node = node.Content[err.field]
+	}
+	err.line = node.Line
 }
 
 func (config *BootstrapConfig) UnmarshalYAML(node *yaml.Node) error {
-	if node.Kind != yaml.SequenceNode {
-		return &bootstrapConfigError{field: -1, line: node.Line, message: "expected a list of steps"}
+	*config = BootstrapConfig{}
+	if node.Kind != yaml.MappingNode {
+		return &bootstrapConfigError{field: -1, line: node.Line, message: "expected a mapping with crd and steps lists"}
 	}
-	steps := make(BootstrapConfig, len(node.Content))
-	for i, entry := range node.Content {
-		if err := steps[i].UnmarshalYAML(entry); err != nil {
-			if configErr, ok := err.(*bootstrapConfigError); ok {
-				configErr.step = i + 1
-				return configErr
+	seen := map[string]bool{}
+	for i := 0; i < len(node.Content); i += 2 {
+		key, value := node.Content[i], node.Content[i+1]
+		if key.Value != "crd" && key.Value != "steps" {
+			return &bootstrapConfigError{field: i, line: key.Line, message: fmt.Sprintf("unknown bootstrap field '%s'; expected crd or steps", key.Value)}
+		}
+		if seen[key.Value] {
+			return &bootstrapConfigError{field: i, line: key.Line, message: fmt.Sprintf("duplicate bootstrap field '%s'", key.Value)}
+		}
+		seen[key.Value] = true
+		if value.Kind != yaml.SequenceNode {
+			return &bootstrapConfigError{section: key.Value, field: -1, line: value.Line, message: "expected a list; use [] for an empty list"}
+		}
+		switch key.Value {
+		case "crd":
+			config.CRD = make([]string, len(value.Content))
+			for j, entry := range value.Content {
+				if entry.Kind != yaml.ScalarNode || entry.Tag != "!!str" || strings.TrimSpace(entry.Value) == "" {
+					return &bootstrapConfigError{section: "crd", step: j + 1, field: -1, line: entry.Line, message: "expected a non-empty HelmRelease name"}
+				}
+				config.CRD[j] = entry.Value
 			}
-			return fmt.Errorf("bootstrap step %d: %w", i+1, err)
+		case "steps":
+			config.Steps = make([]BootstrapStep, len(value.Content))
+			for j, entry := range value.Content {
+				if err := config.Steps[j].UnmarshalYAML(entry); err != nil {
+					if configErr, ok := err.(*bootstrapConfigError); ok {
+						configErr.section, configErr.step = "steps", j+1
+						return configErr
+					}
+					return fmt.Errorf("bootstrap step %d: %w", j+1, err)
+				}
+			}
 		}
 	}
-	*config = steps
 	return nil
 }
 
@@ -91,15 +145,15 @@ func (step *BootstrapStep) UnmarshalYAML(node *yaml.Node) error {
 		return &bootstrapConfigError{field: field, line: node.Line, message: message}
 	}
 	if node.Kind != yaml.MappingNode {
-		return invalid(-1, node, "expected a chart, crd or manifest entry")
+		return invalid(-1, node, "expected a chart or manifest entry")
 	}
 	action, hasWait := "", false
 	for i := 0; i < len(node.Content); i += 2 {
 		key, value := node.Content[i], node.Content[i+1]
 		switch key.Value {
-		case "chart", "crd", "manifest":
+		case "chart", "manifest":
 			if action != "" {
-				return invalid(i, key, "expected exactly one of chart, crd or manifest")
+				return invalid(i, key, "expected exactly one of chart or manifest")
 			}
 			if value.Kind != yaml.ScalarNode || value.Tag != "!!str" || strings.TrimSpace(value.Value) == "" {
 				return invalid(i+1, value, fmt.Sprintf("%s requires a non-empty string", key.Value))
@@ -108,8 +162,6 @@ func (step *BootstrapStep) UnmarshalYAML(node *yaml.Node) error {
 			switch action {
 			case "chart":
 				step.Chart = value.Value
-			case "crd":
-				step.CRD = value.Value
 			case "manifest":
 				step.Manifest = value.Value
 			}
@@ -125,11 +177,11 @@ func (step *BootstrapStep) UnmarshalYAML(node *yaml.Node) error {
 			}
 			hasWait = true
 		default:
-			return invalid(i, key, fmt.Sprintf("unknown bootstrap field '%s'; expected chart, crd, manifest or wait", key.Value))
+			return invalid(i, key, fmt.Sprintf("unknown bootstrap field '%s'; expected chart, manifest or wait", key.Value))
 		}
 	}
 	if action == "" {
-		return invalid(-1, node, "expected exactly one of chart, crd or manifest")
+		return invalid(-1, node, "expected exactly one of chart or manifest")
 	}
 	if hasWait && action != "chart" {
 		return invalid(-1, node, "wait is only supported for chart steps")

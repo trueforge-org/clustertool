@@ -24,9 +24,9 @@ If the cluster has not been bootstrapped yet, Apply will automatically detect th
 
 Bootstrapping applies the generated native Talos configuration to all configured nodes and then bootstraps the cluster through the alphabetically first control-plane node by name.
 
-ClusterTool installs Cilium and the kubelet CSR approver, creates namespaces and completes the base health checks.
-It then executes the bootstrap list from talos/clustertool.yaml in the order listed.
-Each step selects exactly one action: chart, crd or manifest.
+ClusterTool first applies bootstrap.crd from talos/clustertool.yaml once the Kubernetes API is available.
+It then installs Cilium and the kubelet CSR approver, waits for the remaining nodes, creates namespaces and completes the base health checks.
+Finally, it executes bootstrap.steps. Each list runs in order; each step selects exactly one action: chart or manifest.
 Chart and CRD entries refer to HelmRelease metadata.name; manifest entries refer to repository-relative files.
 By default, charts wait for their resources and Jobs with a 15-minute timeout before the next step starts.
 Set wait: false on a chart step to skip these waits; Helm installation hooks retain their own waiting behavior.

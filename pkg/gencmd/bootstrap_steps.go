@@ -54,11 +54,7 @@ func (index helmReleaseIndex) lookup(name string) (helmhandler.HelmChart, error)
 }
 
 // RunBootstrapSteps is called only during initial setup or an explicit bootstrap resume.
-func RunBootstrapSteps(ctx context.Context, config clusterconfig.BootstrapConfig, repos map[string]*helmhandler.HelmRepo, kubeVersion string) error {
-	index, err := loadHelmReleaseIndex(helper.KubernetesAppsPath)
-	if err != nil {
-		return err
-	}
+func RunBootstrapSteps(ctx context.Context, config []clusterconfig.BootstrapStep, index helmReleaseIndex, repos map[string]*helmhandler.HelmRepo) error {
 	return runBootstrapSteps(config, func(name string, wait bool) error {
 		chart, err := index.lookup(name)
 		if err != nil {
@@ -66,29 +62,18 @@ func RunBootstrapSteps(ctx context.Context, config clusterconfig.BootstrapConfig
 		}
 		chart.Wait, chart.WaitForJobs = wait, wait
 		return helmhandler.InstallCharts([]helmhandler.HelmChart{chart}, repos, false)
-	}, func(name string) error {
-		chart, err := index.lookup(name)
-		if err != nil {
-			return err
-		}
-		log.Info().Msgf("Bootstrap: Applying CRDs from %s", name)
-		return helmhandler.ApplyChartCRDs(ctx, chart, repos, kubeVersion)
 	}, func(path string) error {
 		log.Info().Msgf("Bootstrap: Loading Manifest: %s", path)
 		return kubectlcmds.KubectlApply(ctx, filepath.Join(helper.ClusterPath, filepath.FromSlash(path)))
 	})
 }
 
-func runBootstrapSteps(config clusterconfig.BootstrapConfig, runChart func(string, bool) error, applyCRDs func(string) error, applyManifest func(string) error) error {
+func runBootstrapSteps(config []clusterconfig.BootstrapStep, runChart func(string, bool) error, applyManifest func(string) error) error {
 	for i, step := range config {
 		switch {
 		case step.Chart != "":
 			if err := runChart(step.Chart, step.Wait); err != nil {
 				return fmt.Errorf("bootstrap step %d, chart %s: %w", i+1, step.Chart, err)
-			}
-		case step.CRD != "":
-			if err := applyCRDs(step.CRD); err != nil {
-				return fmt.Errorf("bootstrap step %d, crd %s: %w", i+1, step.CRD, err)
 			}
 		case step.Manifest != "":
 			if err := applyManifest(step.Manifest); err != nil {

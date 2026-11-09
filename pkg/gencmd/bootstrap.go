@@ -26,12 +26,13 @@ func RunBootstrap(args []string) error {
 		return err
 	}
 
+	// Load the configured phases before preparing any nodes.
 	inv, err := clusterconfig.LoadInventory()
 	if err != nil {
 		return err
 	}
 	if inv.BootstrapConfig == nil {
-		return fmt.Errorf("clustertool.yaml requires an explicit bootstrap list; use bootstrap: [] to skip application steps")
+		return fmt.Errorf("clustertool.yaml requires an explicit bootstrap configuration; use bootstrap: {crd: [], steps: []} to skip application steps")
 	}
 	bootstrapNode := inv.Bootstrap().Address
 	applyCommands := GenApply("", extraArgs)
@@ -55,6 +56,7 @@ func RunBootstrap(args []string) error {
 		return err
 	}
 
+	// Configure all nodes before bootstrapping the first control plane.
 	if err := bootstrapTalosNodes(inv, applyNode); err != nil {
 		return err
 	}
@@ -71,7 +73,7 @@ func RunBootstrap(args []string) error {
 		return err
 	}
 
-	// Desired pod names
+	// Wait for the Kubernetes control plane before applying cluster resources.
 	requiredPods := []string{
 		"kube-controller-manager",
 		"kube-scheduler",
@@ -86,8 +88,7 @@ func RunBootstrap(args []string) error {
 	}
 
 	log.Info().Msg("Bootstrap: Starting Cluster configuration...")
-	// Start process to approve any cert requests till our manifests are loaded
-	// Set up a signal handler to handle termination gracefully
+	// Keep approving node certificates while the base cluster starts.
 	stopCh := make(chan struct{})
 	var stopOnce sync.Once
 	stopApprover := func() { stopOnce.Do(func() { close(stopCh) }) }
@@ -113,6 +114,25 @@ func RunBootstrap(args []string) error {
 	// Call ApprovePendingCertificates with clientset and stopCh
 	go kubectlcmds.ApprovePendingCertificates(clientset, stopCh)
 
+	// Read HelmReleases once for both CRD extraction and later chart installation.
+	index, err := loadHelmReleaseIndex(helper.KubernetesAppsPath)
+	if err != nil {
+		return err
+	}
+
+	// Apply the configured CRDs in order before installing Cilium.
+	for i, name := range inv.BootstrapConfig.CRD {
+		chart, err := index.lookup(name)
+		if err != nil {
+			return fmt.Errorf("bootstrap.crd entry %d, %s: %w", i+1, name, err)
+		}
+		log.Info().Msgf("Bootstrap: Applying CRDs from %s", name)
+		if err := helmhandler.ApplyChartCRDs(ctx, chart, HelmRepos, inv.KubernetesVersion); err != nil {
+			return fmt.Errorf("bootstrap.crd entry %d, %s: %w", i+1, name, err)
+		}
+	}
+
+	// Install the fixed base charts before waiting for all nodes to become ready.
 	baseCharts := []helmhandler.HelmChart{
 		// Pulled directly from upstream, due to this being very complex and important
 		{ChartPath: filepath.Join(helper.KubernetesAppsPath, "kube-system/cilium/app"), Wait: true},
@@ -167,6 +187,7 @@ func RunBootstrap(args []string) error {
 	}
 
 	log.Info().Msg("Bootstrap: Base Cluster Configuration Completed, continuing setup...")
+	// Confirm base cluster health before running application steps.
 	log.Info().Msg("Bootstrap: Confirming cluster health...")
 	healthcmd := GenPlain("health", bootstrapNode, []string{})
 	if err := ExecCmd(healthcmd[0]); err != nil {
@@ -174,12 +195,13 @@ func RunBootstrap(args []string) error {
 	}
 	stopApprover()
 
-	if err := RunBootstrapSteps(ctx, inv.BootstrapConfig, HelmRepos, inv.KubernetesVersion); err != nil {
+	// Run the configured manifests and charts in order, using the same release index.
+	if err := RunBootstrapSteps(ctx, inv.BootstrapConfig.Steps, index, HelmRepos); err != nil {
 		return err
 	}
 
 	log.Info().Msg("Bootstrap: Completed Successfully!")
-	for _, step := range inv.BootstrapConfig {
+	for _, step := range inv.BootstrapConfig.Steps {
 		if step.Chart == "flux-instance" {
 			log.Info().Msg("Flux configuration installed. Reconciliation continues in the background.")
 			log.Info().Msg("Ensure the public key from ssh-public-key.txt is added to your GitHub account under Settings > SSH and GPG keys.")

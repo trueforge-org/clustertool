@@ -18,13 +18,13 @@ import (
 
 // Inventory contains cluster versions and command targeting metadata. Node settings stay in patches.
 type Inventory struct {
-	ClusterName       string          `yaml:"clusterName"`
-	TalosVersion      string          `yaml:"talosVersion"`
-	KubernetesVersion string          `yaml:"kubernetesVersion"`
-	APIVersion        string          `yaml:"apiVersion"`
-	Kind              string          `yaml:"kind"`
-	Nodes             []Node          `yaml:"nodes"`
-	BootstrapConfig   BootstrapConfig `yaml:"bootstrap"`
+	ClusterName       string           `yaml:"clusterName"`
+	TalosVersion      string           `yaml:"talosVersion"`
+	KubernetesVersion string           `yaml:"kubernetesVersion"`
+	APIVersion        string           `yaml:"apiVersion"`
+	Kind              string           `yaml:"kind"`
+	Nodes             []Node           `yaml:"nodes"`
+	BootstrapConfig   *BootstrapConfig `yaml:"bootstrap"`
 }
 
 type Node struct {

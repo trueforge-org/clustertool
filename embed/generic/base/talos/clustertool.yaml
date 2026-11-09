@@ -27,23 +27,26 @@ nodes:
   #   role: worker
   #   address: ${WORKER1IP}
 
-# Cilium and the kubelet CSR approver are installed before this list.
-# Chart and CRD names refer to HelmRelease metadata.name. All steps run in order.
+# CRDs are applied before Cilium and the kubelet CSR approver.
+# Steps run after the base charts, node readiness, namespaces and health checks.
+# Chart and CRD names refer to HelmRelease metadata.name. Each list runs in order.
 bootstrap:
-  - crd: kube-prometheus-stack
-  - manifest: kubernetes/config/cluster-secrets.sops.yaml
-  - manifest: kubernetes/apps/flux-system/flux-instance/app/deploy-key.sops.yaml
-  - manifest: kubernetes/apps/flux-system/sops-age.sops.yaml
-  - chart: cert-manager
-  - chart: clusterissuer
-    wait: false
-  - chart: metallb
-  - chart: metallb-config
-  - chart: snapshot-controller
-  - chart: longhorn
-  - manifest: kubernetes/apps/system/longhorn/app/volumeSnapshotClass.yaml
-  - chart: volsync
-  - chart: cloudnative-pg
-  - chart: flux-operator
-  - chart: flux-instance
-    wait: false
+  crd:
+    - kube-prometheus-stack
+  steps:
+    - manifest: kubernetes/config/cluster-secrets.sops.yaml
+    - manifest: kubernetes/apps/flux-system/flux-instance/app/deploy-key.sops.yaml
+    - manifest: kubernetes/apps/flux-system/sops-age.sops.yaml
+    - chart: cert-manager
+    - chart: clusterissuer
+      wait: false
+    - chart: metallb
+    - chart: metallb-config
+    - chart: snapshot-controller
+    - chart: longhorn
+    - manifest: kubernetes/apps/system/longhorn/app/volumeSnapshotClass.yaml
+    - chart: volsync
+    - chart: cloudnative-pg
+    - chart: flux-operator
+    - chart: flux-instance
+      wait: false

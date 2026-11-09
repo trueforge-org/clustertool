@@ -178,10 +178,10 @@ then applies all nodes sequentially, control planes before workers. A node name
 or IP selects one node. Do not run generation and apply concurrently.
 
 For a new cluster, apply asks before bootstrapping. Initial setup applies the
-configuration to all nodes, bootstraps one control plane, then installs Cilium
-and the CSR approver. It waits for the remaining nodes to become ready before
-creating namespaces and completing the base health checks. It then runs the
-configured CRDs and application steps below.
+configuration to all nodes and bootstraps one control plane. Once the Kubernetes
+API is available, it applies the configured CRDs, then installs Cilium and the
+CSR approver. It waits for the remaining nodes to become ready before creating
+namespaces and completing the base health checks, then runs the application steps.
 
 If setup is interrupted, run apply again. When a matching
 `.bootstrap-in-progress.json` exists, ClusterTool asks whether to resume.
@@ -189,36 +189,44 @@ The file is removed after successful setup. Keep the original cluster secrets.
 
 ## Configure application bootstrap
 
-Edit the `bootstrap` list in `talos/clustertool.yaml` before initial setup.
-Cilium and the kubelet CSR approver are fixed base charts in code; they run
-before this list and do not need entries here.
+Configure `bootstrap` in `talos/clustertool.yaml` before initial setup:
 
-Every step contains exactly one of `chart`, `crd` or `manifest`. Unknown fields
-are rejected. All steps run in the order listed.
+- `crd`: a list of HelmRelease `metadata.name` values. ClusterTool renders each
+  referenced chart version with CRDs included and hooks excluded, then applies
+  only CRDs server-side, before Cilium is installed.
+- `steps`: an ordered list of charts and manifests, run after the fixed base
+  charts, node readiness, namespace creation and base health checks.
+
+Cilium and the kubelet CSR approver remain fixed base charts in code and do not
+need entries here. Each list runs in order. Every entry in `steps` contains
+exactly one of `chart` or `manifest`; unknown fields are rejected.
 
 - `chart`: a HelmRelease `metadata.name`. Helm waits for readiness and completed
   Jobs by default, with a 15-minute timeout. Set `wait: false` on a chart step
   to skip these waits; Helm installation hooks retain their own waiting behavior.
-- `crd`: a HelmRelease `metadata.name`. ClusterTool renders the referenced
-  chart version with CRDs included and hooks excluded, then applies only CRDs
-  server-side.
 - `manifest`: a manifest path relative to the cluster repository root.
 
 For example:
 
 ```yaml
 bootstrap:
-  - crd: kube-prometheus-stack
-  - manifest: kubernetes/config/cluster-secrets.sops.yaml
-  - chart: flux-operator
-  - chart: flux-instance
-    wait: false
+  crd:
+    - kube-prometheus-stack
+  steps:
+    - manifest: kubernetes/config/cluster-secrets.sops.yaml
+    - chart: flux-operator
+    - chart: flux-instance
+      wait: false
 ```
 
-The default list in `talos/clustertool.yaml` applies the three Secrets, installs
-the infrastructure and restore operators, and ends with `flux-operator` and `flux-instance`. The Longhorn
+Either list may be empty (`[]`). To skip both lists explicitly, use
+`bootstrap: {crd: [], steps: []}`. Existing configurations using a single
+bootstrap list must move CRD names into `crd` and chart/manifest entries into `steps`.
+
+The default steps apply the three Secrets, install the infrastructure and restore
+operators, and end with `flux-operator` and `flux-instance`. The Longhorn
 VolumeSnapshotClass follows snapshot-controller and Longhorn. Monitoring CRDs
-are applied in the first step; Flux installs the monitoring chart and remaining apps.
+are applied before Cilium; Flux installs the monitoring chart and remaining apps.
 Choose your applications and their order; ClusterTool does not enforce required
 charts or dependency ordering. Omitting an app here does not disable its Flux manifests.
 
@@ -231,7 +239,7 @@ local Helm cache and are removed after use.
 Execution stops on the first error. On resume, deployed releases are retained
 and checked according to their step's wait setting; resolve failed or pending
 Helm releases before resuming. Ordinary `talos apply` configuration changes do
-not look up or execute this bootstrap list. Flux continues deployment after its configured steps;
+not look up or execute these bootstrap lists. Flux continues deployment after its configured steps;
 bootstrap does not wait for a full GitOps rollout or restores.
 
 ## Restore the Git hook
