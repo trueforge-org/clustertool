@@ -28,7 +28,7 @@ nodes:
   #   address: ${WORKER1IP}
 
 # CRDs are applied before Cilium and the kubelet CSR approver.
-# Steps run after the base charts, node readiness, namespaces and health checks.
+# Steps run once both charts and all nodes are ready, namespaces exist and health checks pass.
 # Chart and CRD names refer to HelmRelease metadata.name. Each list runs in order.
 bootstrap:
   crd:
