@@ -47,18 +47,16 @@ func TestBootstrapLookupUsesMetadataAndCachesRelease(t *testing.T) {
 }
 
 func TestBootstrapOrderAndStopOnError(t *testing.T) {
-	var config clusterconfig.BootstrapConfig
-	if err := yaml.Unmarshal([]byte(`- crd: monitoring
-- manifest: secrets.yaml
+	var steps []clusterconfig.BootstrapStep
+	if err := yaml.Unmarshal([]byte(`- manifest: secrets.yaml
 - chart: storage
-- crd: other
 - manifest: snapshot.yaml
 - chart: custom-instance
   wait: false
-`), &config); err != nil {
+`), &steps); err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"crd:monitoring", "manifest:secrets.yaml", "chart:storage", "crd:other", "manifest:snapshot.yaml", "chart:custom-instance"}
+	want := []string{"manifest:secrets.yaml", "chart:storage", "manifest:snapshot.yaml", "chart:custom-instance"}
 	cause := errors.New("operation failed")
 	for failAt := 0; failAt <= len(want); failAt++ {
 		var got []string
@@ -69,13 +67,12 @@ func TestBootstrapOrderAndStopOnError(t *testing.T) {
 			}
 			return nil
 		}
-		err := runBootstrapSteps(config, func(name string, wait bool) error {
+		err := runBootstrapSteps(steps, func(name string, wait bool) error {
 			if wait != (name == "storage") {
 				t.Fatalf("wrong wait setting for %s: %v", name, wait)
 			}
 			return run("chart:" + name)
-		}, func(name string) error { return run("crd:" + name) },
-			func(path string) error { return run("manifest:" + path) })
+		}, func(path string) error { return run("manifest:" + path) })
 		expected := want
 		if failAt > 0 {
 			expected = want[:failAt]
@@ -91,15 +88,15 @@ func TestBootstrapOrderAndStopOnError(t *testing.T) {
 	}
 }
 
-func TestBootstrapRequiresExplicitList(t *testing.T) {
+func TestBootstrapRequiresExplicitConfiguration(t *testing.T) {
 	for _, tc := range []struct {
 		name, bootstrap string
-		emptyList       bool
+		emptyConfig     bool
 	}{
 		{"missing", "", false},
 		{"blank", "bootstrap:\n", false},
 		{"null", "bootstrap: null\n", false},
-		{"empty list", "bootstrap: []\n", true},
+		{"empty lists", "bootstrap: {crd: [], steps: []}\n", true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			withSingleNodeFixture(t)
@@ -119,10 +116,10 @@ func TestBootstrapRequiresExplicitList(t *testing.T) {
 			if _, err := clusterconfig.LoadInventory(); err != nil {
 				t.Fatal(err)
 			}
-			// A rejected forwarded flag stops the accepted empty list before any cluster action.
+			// A rejected forwarded flag stops the accepted empty configuration before any cluster action.
 			args := []string{"--nodes"}
-			want := "requires an explicit bootstrap list"
-			if tc.emptyList {
+			want := "requires an explicit bootstrap configuration"
+			if tc.emptyConfig {
 				want = ValidateExtraArgs(args).Error()
 			}
 			if err := RunBootstrap(args); err == nil || !strings.Contains(err.Error(), want) {

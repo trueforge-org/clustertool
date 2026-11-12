@@ -38,26 +38,43 @@ func TestBootstrapConfigDoesNotResolveApplications(t *testing.T) {
 	}
 }
 
-func TestBootstrapStepValidation(t *testing.T) {
+func TestBootstrapConfigValidation(t *testing.T) {
 	var config BootstrapConfig
-	if err := yaml.Unmarshal([]byte("- chart: arbitrary-chart\n- manifest: custom.yaml\n- crd: monitoring\n- chart: custom-instance\n  wait: false\n"), &config); err != nil ||
-		len(config) != 4 || config[0].Chart != "arbitrary-chart" || !config[0].Wait ||
-		config[1].Manifest != "custom.yaml" || config[2].CRD != "monitoring" || config[3].Wait {
-		t.Fatalf("parse steps: %+v, %v", config, err)
+	if err := yaml.Unmarshal([]byte(`crd: [monitoring, other]
+steps:
+  - chart: arbitrary-chart
+  - manifest: custom.yaml
+  - chart: custom-instance
+    wait: false
+`), &config); err != nil ||
+		len(config.CRD) != 2 || config.CRD[0] != "monitoring" || config.CRD[1] != "other" ||
+		len(config.Steps) != 3 || config.Steps[0].Chart != "arbitrary-chart" || !config.Steps[0].Wait ||
+		config.Steps[1].Manifest != "custom.yaml" || config.Steps[2].Wait {
+		t.Fatalf("parse bootstrap: %+v, %v", config, err)
 	}
 	for _, value := range []string{
 		"chart-name", "42", "null", "{}",
-		"{chart: []}", "{crd: ''}", "{manifest: test.yaml, extra: true}",
-		"{chrat: test}", "{chart: test, crd: test}", "{chart: first, chart: second}",
+		"{chart: []}", "{manifest: test.yaml, extra: true}",
+		"{chrat: test}", "{chart: test, manifest: test.yaml}", "{chart: first, chart: second}",
 		"{chart: test, wait: 'false'}", "{chart: test, wait: true, wait: false}",
-		"{crd: test, wait: false}", "{manifest: test.yaml, wait: false}",
+		"{crd: test}", "{manifest: test.yaml, wait: false}",
 	} {
-		if err := yaml.Unmarshal([]byte("["+value+"]"), &config); err == nil {
+		if err := yaml.Unmarshal([]byte("steps: ["+value+"]"), &config); err == nil {
 			t.Fatalf("accepted invalid step %s", value)
 		}
 	}
-	if err := yaml.Unmarshal([]byte("steps: []"), &config); err == nil {
-		t.Fatal("accepted a mapping instead of the bootstrap list")
+	for _, value := range []string{
+		"[]", "[chart: test]", "crd: monitoring", "crd: null", "crd: [42]", "crd: ['']",
+		"crd: [{chart: test}]", "steps: {}", "steps: null", "charts: []", "crd: []\ncrd: []",
+	} {
+		if err := yaml.Unmarshal([]byte(value), &config); err == nil {
+			t.Fatalf("accepted invalid bootstrap %s", value)
+		}
+	}
+	for _, value := range []string{"{crd: [], steps: []}", "{crd: []}", "{steps: []}", "{}"} {
+		if err := yaml.Unmarshal([]byte(value), &config); err != nil || len(config.CRD) != 0 || len(config.Steps) != 0 {
+			t.Fatalf("empty bootstrap %s: %+v, %v", value, config, err)
+		}
 	}
 }
 
@@ -77,26 +94,28 @@ nodes:
     role: control-plane
     address: ${CONTROL1IP}
 
-# Bootstrap runs in order.
+# Each bootstrap list runs in order.
 bootstrap:
-  - chart: example-controller
-
 %s
 `
-	for _, tc := range []struct{ name, step, marker, message string }{
-		{"unknown field", "  - chrt: example-instance", "chrt:", `unknown bootstrap field 'chrt'`},
-		{"invalid wait", "  - chart: example-instance\n    wait: invalid", "wait:", "wait must be true or false"},
-		{"empty variable", "  - chart: ${EMPTY_CHART}", "- chart: ${EMPTY_CHART}", "chart requires a non-empty string"},
+	const steps = "  crd: [monitoring]\n  steps:\n    - chart: example-controller\n\n"
+	for _, tc := range []struct{ name, bootstrap, marker, location, message string }{
+		{"unknown field", steps + "    - chrt: example-instance", "chrt:", "bootstrap step 2", `unknown bootstrap field 'chrt'`},
+		{"invalid wait", steps + "    - chart: example-instance\n      wait: invalid", "wait:", "bootstrap step 2", "wait must be true or false"},
+		{"empty variable", steps + "    - chart: ${EMPTY_CHART}", "- chart: ${EMPTY_CHART}", "bootstrap step 2", "chart requires a non-empty string"},
+		{"invalid CRD", "  crd:\n    - monitoring\n\n    - 42\n  steps: []", "- 42", "bootstrap.crd entry 2", "expected a non-empty HelmRelease name"},
+		{"invalid list", "  crd: monitoring\n  steps: []", "crd:", "bootstrap.crd", "expected a list"},
+		{"unknown section", "  crd: []\n\n  charts: []", "charts:", "bootstrap", "unknown bootstrap field 'charts'"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			data := fmt.Sprintf(config, tc.step)
+			data := fmt.Sprintf(config, tc.bootstrap)
 			line := strings.Count(data[:strings.Index(data, tc.marker)], "\n") + 1
 			path := filepath.Join(helper.TalosPath, "clustertool.yaml")
 			if err := os.WriteFile(path, []byte(data), 0600); err != nil {
 				t.Fatal(err)
 			}
 			_, err := LoadInventory()
-			want := fmt.Sprintf("read clustertool.yaml: bootstrap step 2, line %d: %s", line, tc.message)
+			want := fmt.Sprintf("read clustertool.yaml: %s, line %d: %s", tc.location, line, tc.message)
 			if err == nil || !strings.Contains(err.Error(), want) {
 				t.Fatalf("got %v, want %s", err, want)
 			}
