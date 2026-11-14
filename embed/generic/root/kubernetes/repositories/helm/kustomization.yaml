@@ -7,7 +7,6 @@ resources:
   - cilium.yaml
   - cloudnative-pg.yaml
   - home-ops-mirror.yaml
-  - ingress-nginx.yaml
   - jetstack.yaml
   - metallb.yaml
   - node-feature-discovery.yaml

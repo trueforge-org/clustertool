@@ -23,16 +23,14 @@ spec:
         namespace: flux-system
   values:
 
-    # ingress:
+    # route:
     #   main:
     #     enabled: true
-    #     ingressClassName: internal
-    #     hosts:
-    #       - host: librespeed.${DOMAIN_0}
-    #     integrations:
-    #       certManager:
-    #         enabled: true
-    #         certificateIssuer: domain-0-le-prod
+    #     parentRefs:
+    #       - name: envoy-internal
+    #         namespace: envoy-gateway
+    #     hostnames: 
+    #       - librespeed.${DOMAIN_0}
 
     resources:
       requests:
