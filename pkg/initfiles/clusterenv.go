@@ -70,8 +70,13 @@ func CheckEnvVariables() error {
 	if err := LoadTalEnv(false); err != nil {
 		return err
 	}
-	for _, key := range []string{"VIP", "HEADLAMP_IP", "GATEWAY", "METALLB_RANGE", "PODNET", "SVCNET", "DOMAIN_0", "DOMAIN_0_EMAIL", "DOMAIN_0_CLOUDFLARE_TOKEN"} {
+	for _, key := range []string{"VIP", "GATEWAY", "PODNET", "SVCNET"} {
 		if helper.TalEnv[key] == "" {
+			return fmt.Errorf("%s cannot be empty", key)
+		}
+	}
+	for _, key := range []string{"DOMAIN_0", "DOMAIN_0_EMAIL", "DOMAIN_0_CLOUDFLARE_TOKEN", "GITHUB_REPOSITORY"} {
+		if value, exists := helper.TalEnv[key]; exists && value == "" {
 			return fmt.Errorf("%s cannot be empty", key)
 		}
 	}
@@ -80,33 +85,46 @@ func CheckEnvVariables() error {
 		return err
 	}
 	addresses := map[string]netip.Addr{}
-	for _, key := range []string{"VIP", "GATEWAY", "HEADLAMP_IP"} {
-		ip, err := netip.ParseAddr(helper.TalEnv[key])
+	for _, key := range []string{"VIP", "GATEWAY", "ENVOY_INTERNAL_IP", "ENVOY_EXTERNAL_IP", "BLOCKY_IP", "HEADLAMP_IP"} {
+		value, exists := helper.TalEnv[key]
+		if !exists {
+			continue
+		}
+		ip, err := netip.ParseAddr(value)
 		if err != nil || ip.Zone() != "" {
 			return fmt.Errorf("%s must be an IP address without a subnet prefix", key)
 		}
 		addresses[key] = ip.Unmap()
 	}
-	parts := strings.Split(helper.TalEnv["METALLB_RANGE"], "-")
-	if len(parts) != 2 {
-		return fmt.Errorf("METALLB_RANGE must be a start-end IP range")
-	}
-	start, e1 := netip.ParseAddr(strings.TrimSpace(parts[0]))
-	end, e2 := netip.ParseAddr(strings.TrimSpace(parts[1]))
-	start, end = start.Unmap(), end.Unmap()
-	if e1 != nil || e2 != nil || start.Zone() != "" || end.Zone() != "" || start.BitLen() != end.BitLen() || start.Compare(end) > 0 {
-		return fmt.Errorf("METALLB_RANGE must contain valid, ordered IP addresses of the same family")
+	metallbRange, hasMetalLBRange := helper.TalEnv["METALLB_RANGE"]
+	var start, end netip.Addr
+	if hasMetalLBRange {
+		parts := strings.Split(metallbRange, "-")
+		if len(parts) != 2 {
+			return fmt.Errorf("METALLB_RANGE must be a start-end IP range")
+		}
+		var e1, e2 error
+		start, e1 = netip.ParseAddr(strings.TrimSpace(parts[0]))
+		end, e2 = netip.ParseAddr(strings.TrimSpace(parts[1]))
+		start, end = start.Unmap(), end.Unmap()
+		if e1 != nil || e2 != nil || start.Zone() != "" || end.Zone() != "" || start.BitLen() != end.BitLen() || start.Compare(end) > 0 {
+			return fmt.Errorf("METALLB_RANGE must contain valid, ordered IP addresses of the same family")
+		}
 	}
 	inRange := func(ip netip.Addr) bool {
-		return ip.BitLen() == start.BitLen() && ip.Compare(start) >= 0 && ip.Compare(end) <= 0
+		return hasMetalLBRange && ip.BitLen() == start.BitLen() && ip.Compare(start) >= 0 && ip.Compare(end) <= 0
 	}
 	for _, key := range []string{"VIP", "GATEWAY"} {
 		if inRange(addresses[key]) {
 			return fmt.Errorf("%s cannot be in METALLB_RANGE", key)
 		}
 	}
-	if !inRange(addresses["HEADLAMP_IP"]) {
-		return fmt.Errorf("HEADLAMP_IP must be in METALLB_RANGE")
+	if hasMetalLBRange {
+		for _, key := range []string{"ENVOY_INTERNAL_IP", "ENVOY_EXTERNAL_IP", "BLOCKY_IP", "HEADLAMP_IP"} {
+			if ip, exists := addresses[key]; exists && !inRange(ip) {
+				return fmt.Errorf("%s must be in METALLB_RANGE", key)
+			}
+		}
 	}
 	for _, node := range inv.Nodes {
 		ip := netip.MustParseAddr(node.Address).Unmap()
@@ -132,7 +150,7 @@ func CheckEnvVariables() error {
 				return fmt.Errorf("node %s management address conflicts with %s", node.Name, key)
 			}
 		}
-		if prefix.Contains(net.ParseIP(start.String())) || prefix.Contains(net.ParseIP(end.String())) || inRange(netip.MustParseAddr(prefix.IP.String()).Unmap()) {
+		if hasMetalLBRange && (prefix.Contains(net.ParseIP(start.String())) || prefix.Contains(net.ParseIP(end.String())) || inRange(netip.MustParseAddr(prefix.IP.String()).Unmap())) {
 			return fmt.Errorf("METALLB_RANGE overlaps %s", key)
 		}
 	}
