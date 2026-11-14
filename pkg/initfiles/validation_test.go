@@ -126,6 +126,18 @@ func TestOptionalSettingsValidation(t *testing.T) {
 			}
 			cases = append(cases, testCase{name: key + " " + tc.name, values: map[string]string{key: tc.value}, want: want})
 		}
+		for _, tc := range []struct{ name, value, want string }{
+			{"node conflict", "192.0.2.11", "conflicts with node cp management address"},
+			{"VIP conflict", "192.0.2.10", "cannot overlap VIP or gateway"},
+			{"gateway conflict", "192.0.2.1", "cannot overlap VIP or gateway"},
+			{"pod network conflict", "198.51.100.10", "cannot be in PODNET"},
+			{"service network conflict", "203.0.113.10", "cannot be in SVCNET"},
+		} {
+			cases = append(cases, testCase{
+				name: key + " " + tc.name + " without range", omit: []string{"METALLB_RANGE"},
+				values: map[string]string{key: tc.value}, want: key + " " + tc.want,
+			})
+		}
 		cases = append(cases,
 			testCase{name: key + " outside former range", omit: []string{"METALLB_RANGE"}, values: map[string]string{key: "192.0.2.50"}},
 			testCase{name: key + " invalid without range", omit: []string{"METALLB_RANGE"}, values: map[string]string{key: "invalid"}, want: key + " must be an IP address"},

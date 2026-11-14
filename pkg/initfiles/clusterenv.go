@@ -119,10 +119,20 @@ func CheckEnvVariables() error {
 			return fmt.Errorf("%s cannot be in METALLB_RANGE", key)
 		}
 	}
-	if hasMetalLBRange {
-		for _, key := range []string{"ENVOY_INTERNAL_IP", "ENVOY_EXTERNAL_IP", "BLOCKY_IP", "HEADLAMP_IP"} {
-			if ip, exists := addresses[key]; exists && !inRange(ip) {
-				return fmt.Errorf("%s must be in METALLB_RANGE", key)
+	for _, key := range []string{"ENVOY_INTERNAL_IP", "ENVOY_EXTERNAL_IP", "BLOCKY_IP", "HEADLAMP_IP"} {
+		ip, exists := addresses[key]
+		if !exists {
+			continue
+		}
+		if hasMetalLBRange && !inRange(ip) {
+			return fmt.Errorf("%s must be in METALLB_RANGE", key)
+		}
+		if ip == addresses["VIP"] || ip == addresses["GATEWAY"] {
+			return fmt.Errorf("%s cannot overlap VIP or gateway", key)
+		}
+		for _, node := range inv.Nodes {
+			if ip == netip.MustParseAddr(node.Address).Unmap() {
+				return fmt.Errorf("%s conflicts with node %s management address", key, node.Name)
 			}
 		}
 	}
@@ -140,8 +150,8 @@ func CheckEnvVariables() error {
 		if err != nil {
 			return fmt.Errorf("invalid %s: %w", key, err)
 		}
-		for _, name := range []string{"VIP", "GATEWAY"} {
-			if prefix.Contains(net.ParseIP(addresses[name].String())) {
+		for _, name := range []string{"VIP", "GATEWAY", "ENVOY_INTERNAL_IP", "ENVOY_EXTERNAL_IP", "BLOCKY_IP", "HEADLAMP_IP"} {
+			if ip, exists := addresses[name]; exists && prefix.Contains(net.ParseIP(ip.String())) {
 				return fmt.Errorf("%s cannot be in %s", name, key)
 			}
 		}
