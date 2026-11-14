@@ -12,7 +12,7 @@ spec:
     type: Kubernetes
     kubernetes:
       envoyDeployment:
-        replicas: 1
+        replicas: 1  # Set to 2 if you are running in a multi-node cluster
         container:
           imageRepository: mirror.gcr.io/envoyproxy/envoy
           resources:
@@ -34,7 +34,6 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
   name: envoy
-  namespace: envoy-gateway
 spec:
   controllerName: gateway.envoyproxy.io/gatewayclass-controller
   parametersRef:
