@@ -36,9 +36,10 @@ jobs:
     if: needs.check_changes.outputs.changes_detected == 'true'
     steps:
       # Toolchain + source setup
-      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
-        with:
-          go-version: stable
+      # Go is provided by the self-hosted runner.
+      # - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+      #   with:
+      #     go-version: stable
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Download Talos CLI assets
