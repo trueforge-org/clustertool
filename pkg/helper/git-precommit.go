@@ -126,11 +126,12 @@ func buildPreCommitHookScript() (string, error) {
 }
 
 func buildExecutableHookScript(scriptPath string) string {
+	var script string
 	switch hookGOOS {
 	case "windows":
 		// Git for Windows invokes extensionless hooks through its bundled shell.
 		scriptPath = "'" + strings.ReplaceAll(filepath.ToSlash(scriptPath)+".exe", "'", "'\"'\"'") + "'"
-		return fmt.Sprintf(`#!/bin/sh
+		script = fmt.Sprintf(`#!/bin/sh
 # Pre-commit hook script
 scriptPath=%s
 if [ ! -f "$scriptPath" ]; then
@@ -142,11 +143,11 @@ echo "Running pre-commit script..."
 status=$?
 if [ "$status" -ne 0 ]; then
     echo "Pre-commit script failed. Commit aborted."
+    exit "$status"
 fi
-exit "$status"
 `, scriptPath)
 	default:
-		return fmt.Sprintf(`#!/bin/sh
+		script = fmt.Sprintf(`#!/bin/sh
 # Pre-commit hook script
 
 # Check if the script exists and is executable
@@ -163,4 +164,11 @@ else
 fi
 `, scriptPath, scriptPath, scriptPath)
 	}
+	return script + `
+# Run optional user checks after the encryption check succeeds.
+if [ -f "$0.local" ]; then
+    echo "Running local pre-commit script..."
+    exec "$0.local"
+fi
+`
 }
