@@ -31,8 +31,6 @@ spec:
     kubeProxy:
       enabled: false
     prometheus:
-      ingress:
-        enabled: false
       prometheusSpec:
         disableCompaction: true
         podMonitorSelectorNilUsesHelmValues: false

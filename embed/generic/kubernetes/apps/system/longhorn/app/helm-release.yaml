@@ -47,14 +47,10 @@ spec:
       # Increase to 3 for a multi-node cluster
       replicas: "1"
 
-    # ingress:
+    # httproute:
     #   enabled: true
-    #   ingressClassName: internal
-    #   host: longhorn.${DOMAIN_0}    
-    #   annotations:
-    #     cert-manager.io/cluster-issuer: domain-0-le-prod
-    #     cert-manager.io/private-key-rotation-policy: Always
-    #   path: /
-    #   pathType: ImplementationSpecific
-    #   tls: true
-    #   tlsSecret: longhorn-tls
+    #   parentRefs:
+    #     - name: envoy-internal
+    #       namespace: envoy-gateway
+    #   hostnames:
+    #     - longhorn.${DOMAIN_0}

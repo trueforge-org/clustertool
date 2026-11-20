@@ -33,6 +33,7 @@ nodes:
 bootstrap:
   crd:
     - kube-prometheus-stack
+    - envoy-gateway
   steps:
     - manifest: kubernetes/config/cluster-secrets.sops.yaml
     - manifest: kubernetes/apps/flux-system/flux-instance/app/deploy-key.sops.yaml
