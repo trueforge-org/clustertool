@@ -88,6 +88,7 @@ const (
 	formatJson   = "json"
 	formatDotenv = "dotenv"
 	formatIni    = "ini"
+	formatBinary = "binary"
 )
 
 type Cypher interface {
@@ -137,6 +138,18 @@ func (m *cypher) Encrypt(content []byte, encrConfig EncryptionConfig) (result []
 		store = common.StoreForFormat(formats.Dotenv, &encrConfig.Stores)
 	case formatIni:
 		store = common.StoreForFormat(formats.Ini, &encrConfig.Stores)
+	case formatBinary:
+		store = common.StoreForFormat(formats.Binary, &encrConfig.Stores)
+		// Binary files contain one value that must always be encrypted, as in SOPS.
+		if encrConfig.EncryptedRegex != "" || encrConfig.UnencryptedRegex != "" ||
+			encrConfig.EncryptedSuffix != "" || encrConfig.UnencryptedSuffix != "" {
+			log.Warn().Msg("Ignoring field selectors for binary encryption; the entire file will be encrypted")
+		}
+		encrConfig.EncryptedRegex = ""
+		encrConfig.UnencryptedRegex = ""
+		encrConfig.EncryptedSuffix = ""
+		encrConfig.UnencryptedSuffix = ""
+		encrConfig.MACOnlyEncrypted = false
 	default:
 		return nil, fmt.Errorf("unsupported encryption format %q", encrConfig.Format)
 	}

@@ -264,7 +264,8 @@ func isEncrypted(data []byte, filePath string) bool {
 	case ".env", ".ini":
 		return containsEncMarker(data)
 	default:
-		return false
+		// SOPS stores encrypted binary content in a JSON document with metadata.
+		return containsSopsField(data)
 	}
 }
 
