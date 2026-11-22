@@ -53,6 +53,11 @@ spec:
     annotations:
       metallb.io/ip-allocated-from-pool: main
       metallb.io/loadBalancerIPs: ${ENVOY_EXTERNAL_IP}
+  ## Uncomment to enable per-app TLS via ListenerSets, including the TrueCharts cert-manager route integration.
+  ## Allows all namespaces to attach listeners; only enable if users/controllers with ListenerSet write access are trusted.
+  # allowedListeners:
+  #   namespaces:
+  #     from: All
   listeners:
     - name: http
       protocol: HTTP
@@ -82,6 +87,11 @@ spec:
     annotations:
       metallb.io/ip-allocated-from-pool: main
       metallb.io/loadBalancerIPs: ${ENVOY_INTERNAL_IP}
+  ## Uncomment to enable per-app TLS via ListenerSets, including the TrueCharts cert-manager route integration.
+  ## Allows all namespaces to attach listeners; only enable if users/controllers with ListenerSet write access are trusted.
+  # allowedListeners:
+  #   namespaces:
+  #     from: All    
   listeners:
     - name: http
       protocol: HTTP
