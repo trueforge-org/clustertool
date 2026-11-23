@@ -14,4 +14,8 @@ spec:
         kind: HelmRepository
         name: truecharts
         namespace: flux-system
-  values: {}
+  values:
+    workload:
+      main:
+        # Increase to 3 for high availability on multi-node clusters.
+        replicas: 1
