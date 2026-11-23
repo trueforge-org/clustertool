@@ -68,7 +68,7 @@ jobs:
             changed_files=$(git diff \
               "${{ github.event.pull_request.base.sha }}" \
               "${{ github.sha }}" \
-              --name-only)
+              --name-only --diff-filter=d)
           fi
 
           tooling_changed=false
@@ -290,6 +290,7 @@ jobs:
           k3d-args: >-
             --k3s-arg --disable=metrics-server@server:*
             --k3s-arg --disable=traefik@server:*
+            --k3s-arg --disable=gateway-api-crd@server:*
       # --------------------------------------------------
       # Deploy & test HelmRelease
       # --------------------------------------------------
