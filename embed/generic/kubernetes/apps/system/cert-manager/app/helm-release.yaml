@@ -19,12 +19,9 @@ spec:
     dns01RecursiveNameservers: "1.1.1.1:53,1.0.0.1:53"
     dns01RecursiveNameserversOnly: false
     enableCertificateOwnerRef: true
-    ## Uncomment to enable automatic TLS certificates for Gateways and ListenerSets.
-    ## Requires Gateway API v1.5+ CRDs to be installed before cert-manager starts.
-    ## For ListenerSets, each target Gateway must also configure spec.allowedListeners.
-    # config:
-    #   gatewayAPI:
-    #     enabled: true
-    #     enableListenerSet: true
-    #   featureGates:
-    #     ListenerSets: true
+    config:
+      gatewayAPI:
+        enabled: true
+        enableListenerSet: true
+      featureGates:
+        ListenerSets: true
