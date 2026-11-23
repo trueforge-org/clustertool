@@ -32,13 +32,11 @@ spec:
       enabled: false
     prometheus:
       prometheusSpec:
-        disableCompaction: true
         podMonitorSelectorNilUsesHelmValues: false
         probeSelectorNilUsesHelmValues: false
         ruleSelectorNilUsesHelmValues: false
         scrapeConfigSelectorNilUsesHelmValues: false
         serviceMonitorSelectorNilUsesHelmValues: false
-        enableAdminAPI: true
         walCompression: true
         enableFeatures:
           - memory-snapshot-on-shutdown
