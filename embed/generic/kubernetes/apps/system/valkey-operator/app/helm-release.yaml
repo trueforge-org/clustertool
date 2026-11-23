@@ -1,0 +1,15 @@
+---
+# WARNING: Valkey Operator is in early development and not ready for production use.
+# The v1alpha1 API may change in future releases.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: valkey-operator
+  namespace: valkey-operator
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: valkey-operator
+    namespace: flux-system
+  values: {}

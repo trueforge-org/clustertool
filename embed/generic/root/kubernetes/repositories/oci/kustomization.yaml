@@ -5,3 +5,4 @@ resources:
   - flux-operator.yaml
   - flux-instance.yaml
   - tuppr.yaml
+  - valkey-operator.yaml
