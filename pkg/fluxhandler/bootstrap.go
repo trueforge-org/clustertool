@@ -20,10 +20,10 @@ func init() {
 
 // FluxBootstrap installs Flux through the standalone Flux command.
 func FluxBootstrap(ctx context.Context) error {
-	if helper.TalEnv["GITHUB_REPOSITORY"] == "" {
+	if helper.TalEnv["GIT_REPOSITORY"] == "" {
 		return nil
 	}
-	log.Info().Msg("GITHUB_Repository for Flux configured.")
+	log.Info().Msg("Git repository for Flux configured.")
 	if !fthelper.GetYesOrNo("Do you want to bootstrap Flux? [y/n]: ", false) {
 		return nil
 	}
@@ -31,7 +31,7 @@ func FluxBootstrap(ctx context.Context) error {
 		return fmt.Errorf("bootstrap Flux: %w", err)
 	}
 	log.Info().Msg("Flux configuration installed. Reconciliation continues in the background.")
-	log.Info().Msg("Ensure the public key from ssh-public-key.txt is added to your GitHub account under Settings > SSH and GPG keys.")
+	log.Info().Msg("Ensure the public key from ssh-public-key.txt is added to your Git repository's deploy keys with read access.")
 	log.Info().Msg("Check progress with: kubectl get fluxinstance,gitrepository,kustomization -n flux-system")
 	return nil
 }

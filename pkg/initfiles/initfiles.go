@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -51,11 +50,11 @@ func InitFiles() error {
 	if err := genKubernetes(); err != nil {
 		return err
 	}
+	if err := fluxhandler.CreateGitSecret(helper.TalEnv["GIT_REPOSITORY"]); err != nil {
+		return fmt.Errorf("create Git deploy secret: %w", err)
+	}
 	if err := UpdateFluxConfig(); err != nil {
 		return err
-	}
-	if err := fluxhandler.CreateGitSecret(helper.TalEnv["GITHUB_REPOSITORY"]); err != nil {
-		return fmt.Errorf("create Git deploy secret: %w", err)
 	}
 	if err := GenSopsSecret(); err != nil {
 		return err
@@ -89,6 +88,14 @@ func genKubernetes() error {
 
 // UpdateFluxConfig renders template placeholders without overwriting user settings.
 func UpdateFluxConfig() error {
+	var gitURL string
+	if repo := helper.TalEnv["GIT_REPOSITORY"]; repo != "" {
+		parsed, err := fluxhandler.ParseGitURL(repo)
+		if err != nil {
+			return err
+		}
+		gitURL = parsed.String()
+	}
 	files := []string{
 		filepath.Join(helper.KubernetesPath, "flux-entry", "ks.yaml"),
 		filepath.Join(helper.KubernetesAppsPath, "flux-system", "flux-operator", "ks.yaml"),
@@ -106,8 +113,8 @@ func UpdateFluxConfig() error {
 			return fmt.Errorf("read Flux configuration %s: %w", file, err)
 		}
 		content := string(data)
-		if repo := helper.TalEnv["GITHUB_REPOSITORY"]; repo != "" {
-			content = strings.ReplaceAll(content, "ssh://REPLACEWITHGITREPO", FormatGitURL(repo))
+		if gitURL != "" {
+			content = strings.ReplaceAll(content, "ssh://REPLACEWITHGITREPO", gitURL)
 		}
 		if content != string(data) {
 			if err := os.WriteFile(file, []byte(content), 0644); err != nil {
@@ -116,39 +123,6 @@ func UpdateFluxConfig() error {
 		}
 	}
 	return nil
-}
-
-// FormatGitURL formats the input Git URL according to the specified rules.
-func FormatGitURL(input string) string {
-	// Remove "https://" prefix if present
-	input = strings.TrimPrefix(input, "https://")
-
-	if !strings.HasPrefix(input, "ssh://") {
-		input = "ssh://" + input
-	}
-
-	// Ensure input starts with "ssh://git@"
-	if !strings.HasPrefix(input, "ssh://git@") {
-		// Prepend "ssh://git@" if neither "ssh://" nor "git@" is present
-		input = strings.Replace(input, "ssh://", "ssh://git@", 1)
-	}
-
-	if strings.Contains(input, "git@git@") {
-		input = strings.Replace(input, "git@git@", "git@", 1)
-	}
-
-	// Compile a regex to match and replace the URL pattern
-	re := regexp.MustCompile(`^ssh://git@([^:/]+)([:/])([\w-]+)/([\w-]+)\.git$`)
-	matches := re.FindStringSubmatch(input)
-
-	if len(matches) == 5 {
-		// Determine the user and repo based on the separator used
-		user := matches[3] // Always captured as part of the matched group
-		repo := matches[4] // Always captured as part of the matched group
-		return fmt.Sprintf("ssh://git@%s/%s/%s.git", matches[1], user, repo)
-	}
-
-	return input // Return the input as is if it doesn't match
 }
 
 func genBaseFiles() error {

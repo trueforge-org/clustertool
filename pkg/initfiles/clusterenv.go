@@ -49,6 +49,9 @@ func LoadTalEnv(noFail bool) error {
 		}
 		return err
 	}
+	if repository, exists := sourceEnv["GIT_REPOSITORY"]; exists {
+		sourceEnv["GIT_REPOSITORY"] = strings.TrimSpace(repository)
+	}
 	helper.TalEnv = sourceEnv
 	if err := clusterEnvtoEnv(); err != nil {
 		return err
@@ -75,7 +78,7 @@ func CheckEnvVariables() error {
 			return fmt.Errorf("%s cannot be empty", key)
 		}
 	}
-	for _, key := range []string{"DOMAIN_0", "DOMAIN_0_EMAIL", "DOMAIN_0_CLOUDFLARE_TOKEN", "GITHUB_REPOSITORY"} {
+	for _, key := range []string{"DOMAIN_0", "DOMAIN_0_EMAIL", "DOMAIN_0_CLOUDFLARE_TOKEN", "GIT_REPOSITORY"} {
 		if value, exists := helper.TalEnv[key]; exists && value == "" {
 			return fmt.Errorf("%s cannot be empty", key)
 		}
