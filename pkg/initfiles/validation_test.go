@@ -70,12 +70,12 @@ func TestOptionalSettingsValidation(t *testing.T) {
 		"ENVOY_INTERNAL_IP": "192.0.2.103", "ENVOY_EXTERNAL_IP": "192.0.2.104",
 		"BLOCKY_IP": "192.0.2.102", "HEADLAMP_IP": "192.0.2.101",
 		"DOMAIN_0": "example.test", "DOMAIN_0_EMAIL": "operator@example.test",
-		"DOMAIN_0_CLOUDFLARE_TOKEN": "test-token", "GITHUB_REPOSITORY": "https://github.com/example/cluster.git",
+		"DOMAIN_0_CLOUDFLARE_TOKEN": "test-token", "GIT_REPOSITORY": "https://github.com/example/cluster.git",
 	}
 	for key, value := range base {
 		t.Setenv(key, value)
 	}
-	optionalKeys := []string{"METALLB_RANGE", "ENVOY_INTERNAL_IP", "ENVOY_EXTERNAL_IP", "BLOCKY_IP", "HEADLAMP_IP", "DOMAIN_0", "DOMAIN_0_EMAIL", "DOMAIN_0_CLOUDFLARE_TOKEN", "GITHUB_REPOSITORY"}
+	optionalKeys := []string{"METALLB_RANGE", "ENVOY_INTERNAL_IP", "ENVOY_EXTERNAL_IP", "BLOCKY_IP", "HEADLAMP_IP", "DOMAIN_0", "DOMAIN_0_EMAIL", "DOMAIN_0_CLOUDFLARE_TOKEN", "GIT_REPOSITORY"}
 	type testCase struct {
 		name   string
 		values map[string]string
@@ -84,6 +84,7 @@ func TestOptionalSettingsValidation(t *testing.T) {
 	}
 	cases := []testCase{
 		{name: "all settings present"},
+		{name: "blank Git repository", values: map[string]string{"GIT_REPOSITORY": "  "}, want: "GIT_REPOSITORY cannot be empty"},
 		{name: "all optional settings absent", omit: optionalKeys},
 		{name: "range absent", omit: []string{"METALLB_RANGE"}},
 		{name: "VIP in former range", omit: []string{"METALLB_RANGE"}, values: map[string]string{"VIP": "192.0.2.105"}},
@@ -96,7 +97,7 @@ func TestOptionalSettingsValidation(t *testing.T) {
 		{name: "invalid pod network without range", omit: []string{"METALLB_RANGE"}, values: map[string]string{"PODNET": "invalid"}, want: "invalid PODNET"},
 		{name: "mixed range families", values: map[string]string{"METALLB_RANGE": "192.0.2.100-2001:db8::120"}, want: "METALLB_RANGE"},
 		{name: "range with subnet prefix", values: map[string]string{"METALLB_RANGE": "192.0.2.100/24-192.0.2.120"}, want: "METALLB_RANGE"},
-		{name: "non-empty text only", values: map[string]string{"DOMAIN_0": "placeholder", "DOMAIN_0_EMAIL": "placeholder", "DOMAIN_0_CLOUDFLARE_TOKEN": "placeholder", "GITHUB_REPOSITORY": "placeholder"}},
+		{name: "non-empty text only", values: map[string]string{"DOMAIN_0": "placeholder", "DOMAIN_0_EMAIL": "placeholder", "DOMAIN_0_CLOUDFLARE_TOKEN": "placeholder", "GIT_REPOSITORY": "placeholder"}},
 	}
 	for _, key := range optionalKeys {
 		cases = append(cases,

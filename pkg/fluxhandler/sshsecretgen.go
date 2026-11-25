@@ -27,16 +27,18 @@ type Config struct {
 
 // CreateGitSecret generates a Kubernetes secret YAML file and a public key text file.
 func CreateGitSecret(gitURL string) error {
-	if gitURL == "" {
-		gitURL = "github.com"
-	}
-
 	// Paths for files
 	secretPath := filepath.Join(helper.KubernetesAppsPath, "flux-system", "flux-instance", "app", "deploy-key.sops.yaml")
 	publicKeyPath := filepath.Join(".", "ssh-public-key.txt")
 
 	// Check if secret YAML already exists
 	if _, err := os.Stat(secretPath); os.IsNotExist(err) {
+		// Resolve and confirm the host key before writing either key file.
+		knownHosts, err := getKnownHostsEntry(gitURL)
+		if err != nil {
+			return err
+		}
+
 		// Generate ECDSA private key
 		privateKey, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 		if err != nil {
@@ -61,9 +63,6 @@ func CreateGitSecret(gitURL string) error {
 			return fmt.Errorf("failed to write public key to file: %w", err)
 		}
 		log.Info().Msgf("Git public key saved to: %s", publicKeyPath)
-
-		// Generate known_hosts entry
-		knownHosts := getKnownHostsEntry(gitURL)
 
 		// Generate Kubernetes secret YAML content
 		secret := map[string]interface{}{
@@ -131,6 +130,7 @@ func CreateGitSecret(gitURL string) error {
 }
 
 // indentYaml indents each line of the YAML string with the specified indentation.
+//
 //nolint:unused
 func indentYaml(yamlStr, indent string) string {
 	lines := strings.Split(yamlStr, "\n")
@@ -178,31 +178,15 @@ func publicKeyToOpenSSH(pub *ecdsa.PublicKey) (string, error) {
 	return string(ssh.MarshalAuthorizedKey(pubKey)), nil
 }
 
-// getKnownHostsEntry generates the known_hosts entry for the given URL
-func getKnownHostsEntry(url string) string {
-	if strings.Contains(url, "github.com") {
-		return getGithubKnownHostsEntry()
-	}
-	return generateKnownHostsEntry(url)
-}
-
-// getGithubKnownHostsEntry generates the known_hosts entry specifically for github.com
-func getGithubKnownHostsEntry() string {
-	return "github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg="
-}
-
-// generateKnownHostsEntry generates an SSH known_hosts entry for the given URL
-func generateKnownHostsEntry(url string) string {
-	return fmt.Sprintf("%s ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=", url)
-}
-
 // encodeToBase64 encodes data to a base64 string
+//
 //nolint:unused
 func encodeToBase64(data []byte) string {
 	return string(data)
 }
 
 // decodeBase64 decodes a base64 string
+//
 //nolint:unused
 func decodeBase64(data string) ([]byte, error) {
 	return []byte(data), nil

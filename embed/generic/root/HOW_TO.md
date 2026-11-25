@@ -270,10 +270,29 @@ Flux entry and components are not processed by `genks`.
 
 ## Flux Operator
 
-Set `GITHUB_REPOSITORY` in `kubernetes/config/cluster-secrets.sops.yaml` before completing
+Set `GIT_REPOSITORY` in `kubernetes/config/cluster-secrets.sops.yaml` before completing
 `init`. Add the generated `ssh-public-key.txt` to that repository's deploy keys. 
 Run `clustertool genconfig` and `clustertool encrypt`, then commit and push 
 the configuration before starting bootstrap.
+
+GitHub.com and GitLab.com use their officially published Ed25519 and ECDSA host
+keys bundled with ClusterTool. For other hosts, the second `init` retrieves an SSH host key
+and displays its type and SHA256 fingerprint. Verify that fingerprint with the
+server administrator before answering `yes`. Empty input, `no`, or unavailable
+input cancels initialization; correct the settings if necessary and run `init`
+again. The confirmed host key is saved in `deploy-key.sops.yaml`. An existing
+deploy secret is preserved without fetching or confirming its host key again.
+
+For self-hosted servers, ClusterTool prefers Ed25519, then ECDSA (P-256, P-384,
+P-521), then RSA with SHA-512 or SHA-256 signatures. RSA keys must be at least
+2048 bits. RSA/SHA-1 and DSA are not accepted; initialization stops before the
+trust prompt or deploy key creation if no allowed host key is available.
+
+HTTPS repository URLs and `git@host:group/repo.git` are converted to SSH for
+Flux. For a custom SSH user or port, specify the full SSH clone URL, for example
+`ssh://git@gitlab.example.com:2222/group/subgroup/cluster.git`. Both the computer
+running `init` and the cluster running Flux must be able to reach that SSH
+endpoint. HTTPS credentials and SSH configuration aliases are not used.
 
 The supplied `bootstrap` list applies the required secrets and finishes with
 the Flux Operator and FluxInstance charts. It waits for the operator, then installs
