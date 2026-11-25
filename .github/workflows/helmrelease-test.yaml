@@ -110,7 +110,7 @@ jobs:
               done < <(find embed/generic/kubernetes/apps -type f -name 'helm-release.yaml')
             done < <(
               printf '%s\n' "$changed_files" \
-                | grep '^embed/generic/root/kubernetes/repositories/oci/.*\.yaml$' || true
+                | grep '^embed/generic/kubernetes/repositories/oci/.*\.yaml$' || true
             )
           } | sort -u)"
           
