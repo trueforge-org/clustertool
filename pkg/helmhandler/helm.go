@@ -28,6 +28,11 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+func init() {
+	// Use Flux's field manager so bootstrap ownership does not prevent later removals.
+	kube.ManagedFieldsManager = "helm-controller"
+}
+
 func newDefaultRegistryClient(plainHTTP bool, settings *cli.EnvSettings) (*registry.Client, error) {
 	opts := []registry.ClientOption{
 		registry.ClientOptDebug(settings.Debug),
