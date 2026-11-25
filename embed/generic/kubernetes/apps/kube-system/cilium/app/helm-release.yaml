@@ -13,7 +13,7 @@ spec:
   chart:
     spec:
       chart: cilium
-      version: 1.20.2
+      version: 1.20.5
       sourceRef:
         kind: HelmRepository
         name: cilium
@@ -46,7 +46,8 @@ spec:
           - SYS_ADMIN
           - SYS_RESOURCE
     cgroup:
-      automount:
+      # Talos already mounts cgroup v2 at /sys/fs/cgroup.
+      autoMount:
         enabled: false
       hostRoot: /sys/fs/cgroup
     endpointRoutes:
@@ -61,5 +62,6 @@ spec:
       enabled: true
     operator:
       rollOutPods: true
-      replicas: 1     # When running multi node cluster, remove this line to let the operator decide how many replicas to run based on the number of nodes in the cluster.
+      # Set to 2 for high availability on multi-node clusters.
+      replicas: 1
     rollOutCiliumPods: true
