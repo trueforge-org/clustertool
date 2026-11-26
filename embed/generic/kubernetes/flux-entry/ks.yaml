@@ -141,19 +141,21 @@ spec:
                 group: helm.toolkit.fluxcd.io
                 kind: HelmRelease
                 labelSelector: helmrelease.flux.home.arpa/defaults notin (disabled)
-            - # Allow individual HelmReleases to opt out of the default drift mode
-              patch: |-
-                apiVersion: helm.toolkit.fluxcd.io/v2
-                kind: HelmRelease
-                metadata:
-                  name: not-used
-                spec:
-                  driftDetection:
-                    mode: warn
-              target:
-                group: helm.toolkit.fluxcd.io
-                kind: HelmRelease
-                labelSelector: drift-detection.flux.home.arpa/defaults notin (disabled)
+            # # Enable Helm drift warnings for matching HelmReleases.
+            # # With mode set to "warn", Flux reports drift. Use "enabled" to also correct it.
+            # # To opt out of this patch, label a HelmRelease with drift-detection.flux.home.arpa/defaults: disabled.
+            # - patch: |-
+            #     apiVersion: helm.toolkit.fluxcd.io/v2
+            #     kind: HelmRelease
+            #     metadata:
+            #       name: not-used
+            #     spec:
+            #       driftDetection:
+            #         mode: warn
+            #   target:
+            #     group: helm.toolkit.fluxcd.io
+            #     kind: HelmRelease
+            #     labelSelector: drift-detection.flux.home.arpa/defaults notin (disabled)
       target:
         group: kustomize.toolkit.fluxcd.io
         kind: Kustomization
